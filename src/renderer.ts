@@ -1,9 +1,10 @@
 
-import { Structure } from "@webmc/core"
 import { read as readNbt } from '@webmc/nbt'
 import { StructureRenderer } from '@webmc/render';
 import { ResourceManager } from './ResourceManager'
 import { mat4 } from 'gl-matrix'
+import { CompoundStructure, Rotation } from "./CompoundStructure";
+import { Structure } from '@webmc/core';
 
 let viewDist = 4;
 let xRotation = 0.8;
@@ -19,10 +20,19 @@ async function main() {
     throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.')
   }
 
-  const exampleRes = await fetch('public/example.nbt')
-  const exampleData = await exampleRes.arrayBuffer()
-  const exampleNbt = readNbt(new Uint8Array(exampleData))
-  const structure = Structure.fromNbt(exampleNbt.result)
+  const structure = new CompoundStructure()
+
+  const exampleRes1 = await fetch('public/example.nbt')
+  const exampleData1 = await exampleRes1.arrayBuffer()
+  const exampleNbt1 = readNbt(new Uint8Array(exampleData1))
+  const structure1 = Structure.fromNbt(exampleNbt1.result)
+  structure.addStructure(structure1, [0,0,0], Rotation.Rotate0)
+
+  const exampleRes2 = await fetch('public/example.nbt')
+  const exampleData2 = await exampleRes2.arrayBuffer()
+  const exampleNbt2 = readNbt(new Uint8Array(exampleData2))
+  const structure2 = Structure.fromNbt(exampleNbt2.result)
+  structure.addStructure(structure2, [4,0,0], Rotation.Rotate270)
 
   const resources = new ResourceManager()
   await resources.loadFromZip('public/assets.zip')

@@ -6,9 +6,14 @@
     "outDir": "dist",
     "baseUrl": ".",
     "esModuleInterop": true,
+    "target": "ES2017",
     "paths": {
       "*": ["node_modules/*"]
-    }
+    },
+    "lib": [
+      "DOM",
+      "es2019"
+    ]    
   },
   "include": [
     "src/**/*"
