@@ -1,24 +1,17 @@
 {
-  "name": "electron-quick-start-typescript",
-  "version": "1.0.0",
-  "description": "A minimal Electron application written with Typescript",
+  "name": "minecraft-jigsaw-preview",
+  "version": "0.0.1",
+  "description": "Display Minecraft Jigsaw Structures",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
     "start": "npm run build && electron ./dist/main.js"
   },
-  "repository": "https://github.com/electron/electron-quick-start-typescript",
-  "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo",
-    "typescript"
-  ],
-  "author": "GitHub",
-  "license": "CC0-1.0",
+  "repository": "",
+  "keywords": [],
+  "author": "jacobsjo",
+  "license": "MIT",
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^3.4.0",
     "@typescript-eslint/parser": "^3.4.0",
@@ -26,5 +19,10 @@
     "electron": "^9.4.0",
     "typescript": "^3.9.5"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@webmc/core": "^0.1.3",
+    "@webmc/nbt": "^0.1.1",
+    "@webmc/render": "^0.4.1",
+    "jszip": "^3.5.0"
+  }
 }
