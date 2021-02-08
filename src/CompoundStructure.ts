@@ -21,7 +21,7 @@ export namespace Rotation {
           "west": "west",
           "up": "up",
           "down": "down",
-          "ascending": "ascending"
+          "ascending": "ascending"  // ascending: hack to allow easy use of facing mapping with rails
         }
       case Rotation.Rotate270:
         return {
@@ -191,7 +191,30 @@ export class CompoundStructure extends Structure {
     //Rail shapes
     if ('shape' in properties){
       const facings = properties['shape'].split("_");
-      properties['shape'] = facingMapping[facings[0]] + "_" + facingMapping[facings[1]]
+      let shape = facingMapping[facings[0]] + "_" + facingMapping[facings[1]]
+
+      //fix wrong order
+      switch (shape) {
+        case "west_east":
+          shape = "east_west"
+          break;
+        case "east_north":
+          shape = "north_east"
+          break;
+        case "south_north":
+          shape = "north_south"
+          break;
+        case "west_north":
+          shape = "north_west"
+          break;
+        case "east_south":
+          shape = "south_east"
+          break;
+        case "west_south":
+          shape = "south_west"
+          break;
+      }
+      properties['shape'] = shape
     }
 
     //Connections of Fences, Glass-Pains, Redstone etc.
