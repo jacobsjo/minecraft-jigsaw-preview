@@ -87,7 +87,7 @@ async function main() {
       requestAnimationFrame(render);
     }
   })
-  canvas.addEventListener('mouseup', evt => {
+  canvas.addEventListener('mouseup', () => {
     dragPos = null
   })
   canvas.addEventListener('contextmenu', evt => {
