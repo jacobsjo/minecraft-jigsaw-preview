@@ -24,13 +24,13 @@ export class StructureFeatureManger{
         const newPos : BlockPos = [pos[0], pos[1], pos[2]]
         switch (dir) {
             case "north":
-                newPos[2] ++
+                newPos[2] --
                 break;
             case "west":
                 newPos[0] --
                 break;
             case "south":
-                newPos[2] --
+                newPos[2] ++
                 break;
             case "east":
                 newPos[0] ++
@@ -75,9 +75,12 @@ export class StructureFeatureManger{
         
         while (placing.length > 0){
             const piece = placing.shift()
+            console.log(piece)
 
             const bb = this.world.getBB(piece.piece)
             //getElementBlocks returns blocks rotated and moved correctly
+
+            const checkInsideList: number[] = []
 
             const jigsawBlocks = shuffleArray(this.world.getElementBlocks(piece.piece).filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
             for (let i = 0 ; i < jigsawBlocks.length ; i++){
@@ -94,12 +97,15 @@ export class StructureFeatureManger{
 
                 let check: number[], inside: number;
                 if (isInside) {
-                    check = [];
+                    check = checkInsideList;
                     inside = piece.piece;
                 } else {
                     check = piece.check;
                     inside = piece.inside;
                 }
+
+                const rollable: boolean = (typeof block.nbt.rollable === "boolean") ? block.nbt.rollable : true;
+                const target: string = (typeof block.nbt.target.value === "string") ? block.nbt.target.value : "minecraft:empty"
 
                 const pool: TemplatePool = await TemplatePool.fromName(this.datapackRoot, block.nbt.pool.value);
                 const fallbackPool: TemplatePool = await TemplatePool.fromName(this.datapackRoot, pool.fallback);
@@ -128,7 +134,11 @@ export class StructureFeatureManger{
                         const placingBlock = placingJigsawBlocks[k]
                         const placingOrientation: string = placingBlock.state.getProperties()['orientation'];
                         const [placingForward, placingUp] = placingOrientation.split("_");
-                        const rollable: boolean = (typeof placingBlock.nbt.rollable === "boolean") ? placingBlock.nbt.rollable : true;
+
+                        const name: string = (typeof placingBlock.nbt.name.value === "string") ? placingBlock.nbt.name.value : "minecraft:empty"
+
+                        if (target !== name)
+                            continue
 
                         const rotation = this.getRotation(forward, up, placingForward, placingUp, rollable);
                         if (rotation === undefined)
@@ -142,13 +152,13 @@ export class StructureFeatureManger{
                         parentJigsawFacingPos[1] - rotatedPlacingJigsawPos[1],
                         parentJigsawFacingPos[2] - rotatedPlacingJigsawPos[2]];
 
+                        const newSize: BlockPos = [size[0], size[1], size[2]]
                         if (rotation === Rotation.Rotate90 || rotation === Rotation.Rotate270) {
-                            const size0 = size[0];
-                            size[0] = size[2];
-                            size[2] = size0;
+                            newSize[0] = size[2];
+                            newSize[2] = size[0];
                         }
 
-                        const placingBB = new BoundingBox(offset, size);
+                        const placingBB = new BoundingBox(offset, newSize);
 
                         if (inside !== undefined && !placingBB.containedIn(this.world.getBB(inside)))
                             continue
@@ -204,7 +214,7 @@ export class StructureFeatureManger{
         const csf = await ConfiguedStructureFeature.fromName(datapackRoot, namespace + ":" + name)
 
 //        return new StructureFeatureManger(datapackRoot, csf.getStartPool(), csf.getDepth())
-        return new StructureFeatureManger(datapackRoot, csf.getStartPool(), 1)
+        return new StructureFeatureManger(datapackRoot, csf.getStartPool(), 2)
     }
 
 

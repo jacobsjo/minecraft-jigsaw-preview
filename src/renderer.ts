@@ -100,7 +100,7 @@ async function main() {
 
     const viewMatrix = getViewMatrix()
 
-    renderer.drawGrid(viewMatrix);
+    //renderer.drawGrid(viewMatrix);
     renderer.drawStructure(viewMatrix);
   }
   requestAnimationFrame(render);
