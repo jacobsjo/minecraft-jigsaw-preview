@@ -1,6 +1,5 @@
 //import { NamedNbtTag, NbtTag, getTag, getListTag, getOptional } from "@webmc/nbt";
 import { BlockNbt, BlockPos, BlockState, Structure} from "@webmc/core";
-import { stat } from "fs";
 
 export enum Rotation {
   Rotate0 = 0,

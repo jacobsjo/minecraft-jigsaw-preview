@@ -12,41 +12,42 @@ export class ResourceManager implements BlockModelProvider {
     this.blockAtlas = BlockAtlas.empty()
   }
 
-  public getBlockDefinition(id: string) {
+  public getBlockDefinition(id: string): BlockDefinition {
     return this.blockDefinitions[id]
   }
 
-  public getBlockModel(id: string) {
+  public getBlockModel(id: string): BlockModel {
     return this.blockModels[id]
   }
 
-  public getTextureUV(id: string) {
+  public getTextureUV(id: string): [number, number] {
     return this.blockAtlas.getUV(id)
   }
 
-  public getBlockAtlas() {
+  public getBlockAtlas(): BlockAtlas {
     return this.blockAtlas
   }
 
-  public async loadFromZip(url: string) {
+  public async loadFromZip(url: string): Promise<void> {
     const assetsBuffer = await (await fetch(url)).arrayBuffer()
     const assets = await jszip.loadAsync(assetsBuffer)
-    await this.loadFromFolderJson(assets.folder('minecraft/blockstates')!, async (id, data) => {
+    await this.loadFromFolderJson(assets.folder('minecraft/blockstates'), async (id, data) => {
       id = 'minecraft:' + id
       this.blockDefinitions[id] = BlockDefinition.fromJson(id, data)
     })
-    await this.loadFromFolderJson(assets.folder('minecraft/models/block')!, async (id, data) => {
+    await this.loadFromFolderJson(assets.folder('minecraft/models/block'), async (id, data) => {
       id = 'minecraft:block/' + id
       this.blockModels[id] = BlockModel.fromJson(id, data)
     })
     const textures: { [id: string]: Blob } = {}
-    await this.loadFromFolderPng(assets.folder('minecraft/textures/block')!, async (id, data) => {
+    await this.loadFromFolderPng(assets.folder('minecraft/textures/block'), async (id, data) => {
       textures['minecraft:block/' + id] = data
     })
     this.blockAtlas = await BlockAtlas.fromBlobs(textures)
     Object.values(this.blockModels).forEach(m => m.flatten(this))
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private loadFromFolderJson(folder: jszip, callback: (id: string, data: any) => Promise<void>) {
     const promises: Promise<void>[] = []
     folder.forEach((path, file) => {
