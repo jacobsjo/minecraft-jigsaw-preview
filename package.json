@@ -13,16 +13,18 @@
   "author": "jacobsjo",
   "license": "MIT",
   "devDependencies": {
+    "@types/node-fetch": "^2.5.8",
     "@typescript-eslint/eslint-plugin": "^3.4.0",
     "@typescript-eslint/parser": "^3.4.0",
-    "eslint": "^7.3.1",
     "electron": "^9.4.0",
+    "eslint": "^7.3.1",
     "typescript": "^3.9.5"
   },
   "dependencies": {
     "@webmc/core": "^0.1.3",
     "@webmc/nbt": "^0.1.1",
     "@webmc/render": "^0.4.1",
-    "jszip": "^3.5.0"
+    "jszip": "^3.5.0",
+    "node-fetch": "^2.6.1"
   }
 }

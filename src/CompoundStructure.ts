@@ -1,5 +1,9 @@
 //import { NamedNbtTag, NbtTag, getTag, getListTag, getOptional } from "@webmc/nbt";
 import { BlockNbt, BlockPos, BlockState, Structure} from "@webmc/core";
+import { read as readNbt } from '@webmc/nbt'
+import * as path from 'path';
+import fs from 'fs';
+import {BoundingBox} from "./BoundingBox"
 
 export enum Rotation {
   Rotate0 = 0,
@@ -80,41 +84,79 @@ export class CompoundStructure extends Structure {
     throw "addBlock not supported in CompoundStructure"
   }
 
+  public static mapElementBlocks(element: { structure: Structure; rot: Rotation; pos: number[]; }) : {
+    pos: BlockPos;
+    state: BlockState;
+    nbt: BlockNbt;
+}[]  {
+    const size = element.structure.getSize()
+    const blocks = element.structure.getBlocks()
+    return blocks.map(block => {
+      return {
+        "pos": CompoundStructure.mapPos(element.rot, block.pos, element.pos, size),
+        "state": CompoundStructure.getRotatedBlockState(block.state, element.rot),
+        "nbt": block.nbt
+      }
+    });
+  }
+
+  public static mapPos(rot: Rotation, pos: BlockPos, offset: number[], size: BlockPos): BlockPos{
+    const newPos : BlockPos = [0,0,0]
+    switch (rot) {
+      case Rotation.Rotate0:
+        newPos[0] = offset[0] + pos[0]
+        newPos[1] = offset[1] + pos[1]
+        newPos[2] = offset[2] + pos[2]
+        break
+      case Rotation.Rotate90:
+        newPos[0] = offset[0] + size[0] - 1 - pos[2]
+        newPos[1] = offset[1] + pos[1]
+        newPos[2] = offset[2] + pos[0]
+        break
+      case Rotation.Rotate180:
+        newPos[0] = offset[0] + size[0] - 1 - pos[0]
+        newPos[1] = offset[1] + pos[1]
+        newPos[2] = offset[2] + size[2] - 1 - pos[2]
+        break
+      case Rotation.Rotate270:
+        newPos[0] = offset[0] + pos[2]
+        newPos[1] = offset[1] + pos[1]
+        newPos[2] = offset[2] + size[2] - 1 - pos[0]
+        break
+    } 
+    return newPos
+  }
+
+  public getBB(nr: number) : BoundingBox{
+    const size =  this.elements[nr].structure.getSize()
+    const newSize : BlockPos = [size[0], size[1], size[2]]
+    if (this.elements[nr].rot === Rotation.Rotate90 || this.elements[nr].rot === Rotation.Rotate270){
+      newSize[0] = size[2]
+      newSize[2] = size[0]
+    }
+    return new BoundingBox(this.elements[nr].pos, newSize)
+  }
+
+  public getElementBlocks(nr: number) : {
+    pos: BlockPos;
+    state: BlockState;
+    nbt: BlockNbt;
+  }[]{
+    return CompoundStructure.mapElementBlocks(this.elements[nr])
+  }
+
   public getBlocks() : {
     pos: BlockPos;
     state: BlockState;
     nbt: BlockNbt;
   }[] {
-    return this.elements.flatMap(element => {
-      const size = element.structure.getSize()
-      const blocks = element.structure.getBlocks()
-      blocks.forEach(block => {
-        block.state = CompoundStructure.getRotatedBlockState(block.state, element.rot)
-        const pos_0 = block.pos[0]
-        switch (element.rot) {
-          case Rotation.Rotate0:
-            block.pos[0] = element.pos[0] + block.pos[0] - this.minPos[0]
-            block.pos[1] = element.pos[1] + block.pos[1] - this.minPos[1]
-            block.pos[2] = element.pos[2] + block.pos[2] - this.minPos[2]
-            break
-          case Rotation.Rotate90:
-            block.pos[0] = element.pos[0] + size[0] - 1 - block.pos[2] - this.minPos[0]
-            block.pos[1] = element.pos[1] + block.pos[1] - this.minPos[1]
-            block.pos[2] = element.pos[2] + pos_0 - this.minPos[2]
-            break
-          case Rotation.Rotate180:
-            block.pos[0] = element.pos[0] + size[0] - 1 - block.pos[0] - this.minPos[0]
-            block.pos[1] = element.pos[1] + block.pos[1] - this.minPos[1]
-            block.pos[2] = element.pos[2] + size[2] - 1 - block.pos[2] - this.minPos[2]
-            break
-          case Rotation.Rotate270:
-            block.pos[0] = element.pos[0] + block.pos[2] - this.minPos[0]
-            block.pos[1] = element.pos[1] + block.pos[1] - this.minPos[1]
-            block.pos[2] = element.pos[2] + size[2] - 1 - pos_0 - this.minPos[1]
-            break
-        } 
-      });
-      return blocks
+    return this.elements.flatMap(CompoundStructure.mapElementBlocks).map(block => {
+      const newPos : BlockPos = [
+        block.pos[0] - this.minPos[0],
+        block.pos[1] - this.minPos[1],
+        block.pos[2] - this.minPos[2]
+      ]
+      return {"pos": newPos, "state": block.state, "nbt": block.nbt}
     })
   }
 
@@ -126,43 +168,43 @@ export class CompoundStructure extends Structure {
     return this.getBlocks().find(b => b.pos[0] === pos[0] && b.pos[1] === pos[1] && b.pos[2] === pos[2])
   }
 
-  public addStructure(structure: Structure, pos: BlockPos, rot: Rotation): void{
+  public addStructure(structure: Structure, pos: BlockPos, rot: Rotation): number{
 
     const size = structure.getSize()
+    const newSize : BlockPos = [size[0], size[1], size[2]]
     if (rot === Rotation.Rotate90 || rot === Rotation.Rotate270){
-      const size0 = size[0]
-      size[0] = size[2]
-      size[2] = size0
+      newSize[0] = size[2]
+      newSize[2] = size[0]
     }
 
     if (this.elements.length === 0){
       this.minPos[0] = pos[0]
       this.minPos[1] = pos[1]
       this.minPos[2] = pos[2]
-      this.maxPos[0] = pos[0] + size[0] - 1
-      this.maxPos[1] = pos[1] + size[1] - 1
-      this.maxPos[2] = pos[2] + size[2] - 1
+      this.maxPos[0] = pos[0] + newSize[0] - 1
+      this.maxPos[1] = pos[1] + newSize[1] - 1
+      this.maxPos[2] = pos[2] + newSize[2] - 1
     } else {
       this.minPos[0] = Math.min(this.minPos[0], pos[0])
       this.minPos[1] = Math.min(this.minPos[1], pos[1])
       this.minPos[2] = Math.min(this.minPos[2], pos[2])
 
-      this.maxPos[0] = Math.max(this.maxPos[0], pos[0] + size[0] - 1)
-      this.maxPos[1] = Math.max(this.maxPos[1], pos[1] + size[1] - 1)
-      this.maxPos[2] = Math.max(this.maxPos[2], pos[2] + size[2] - 1)
+      this.maxPos[0] = Math.max(this.maxPos[0], pos[0] + newSize[0] - 1)
+      this.maxPos[1] = Math.max(this.maxPos[1], pos[1] + newSize[1] - 1)
+      this.maxPos[2] = Math.max(this.maxPos[2], pos[2] + newSize[2] - 1)
     }
 
-    this.elements.push({
+    return this.elements.push({
       structure: structure,
       pos: pos,
       rot: rot
-    })
+    }) - 1
   }
 
   private static getRotatedBlockState(state: BlockState, rot: Rotation): BlockState{
     const swapXZ : {[name: string]: string} = {'x': 'z', 'y': 'y', 'z': 'x'}
     
-    const properties = state.getProperties()
+    const properties = Object.assign({}, state.getProperties())
 
     const facingMapping = Rotation.getFacingMapping(rot)
     
@@ -232,6 +274,10 @@ export class CompoundStructure extends Structure {
     return new BlockState(state.getName(), properties)
   }
 
-
-
+  static async StructureFromId(datapackRoot: string, id: string): Promise<Structure>{
+    const [namespace, name] = id.split(":")
+    const Data = fs.readFileSync(path.join(datapackRoot, 'data', namespace, 'structures', name + ".nbt"));
+    const Nbt = readNbt(new Uint8Array(Data))
+    return Structure.fromNbt(Nbt.result)
+  }
 }
