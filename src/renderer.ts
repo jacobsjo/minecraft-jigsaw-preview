@@ -22,17 +22,17 @@ async function main() {
 
   const structure = new CompoundStructure()
 
-  const exampleRes1 = await fetch('public/example.nbt')
+  const exampleRes1 = await fetch('public/blueprint.nbt')
   const exampleData1 = await exampleRes1.arrayBuffer()
   const exampleNbt1 = readNbt(new Uint8Array(exampleData1))
   const structure1 = Structure.fromNbt(exampleNbt1.result)
   structure.addStructure(structure1, [0,0,0], Rotation.Rotate0)
 
-  const exampleRes2 = await fetch('public/example.nbt')
+  const exampleRes2 = await fetch('public/blueprint.nbt')
   const exampleData2 = await exampleRes2.arrayBuffer()
   const exampleNbt2 = readNbt(new Uint8Array(exampleData2))
   const structure2 = Structure.fromNbt(exampleNbt2.result)
-  structure.addStructure(structure2, [4,0,0], Rotation.Rotate270)
+  structure.addStructure(structure2, [6,0,0], Rotation.Rotate90)
 
   const resources = new ResourceManager()
   await resources.loadFromZip('public/assets.zip')

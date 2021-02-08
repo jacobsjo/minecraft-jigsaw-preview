@@ -1,11 +1,60 @@
 //import { NamedNbtTag, NbtTag, getTag, getListTag, getOptional } from "@webmc/nbt";
 import { BlockNbt, BlockPos, BlockState, Structure} from "@webmc/core";
+import { stat } from "fs";
 
 export enum Rotation {
   Rotate0 = 0,
   Rotate90 = 1,
   Rotate180 = 2,
   Rotate270 = 3,
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace Rotation {
+  export function getFacingMapping(rot: Rotation): {[name: string]: string}{
+    switch (rot) {
+      case Rotation.Rotate0:
+        return {
+          "north": "north",
+          "east": "east",
+          "south": "south",
+          "west": "west",
+          "up": "up",
+          "down": "down",
+          "ascending": "ascending"
+        }
+      case Rotation.Rotate270:
+        return {
+          "north": "west",
+          "east": "north",
+          "south": "east",
+          "west": "south",
+          "up": "up",
+          "down": "down",
+          "ascending": "ascending"
+        }
+      case Rotation.Rotate180:
+        return {
+          "north": "south",
+          "east": "west",
+          "south": "north",
+          "west": "east",
+          "up": "up",
+          "down": "down",
+          "ascending": "ascending"
+        }
+    case Rotation.Rotate90:
+      return {
+        "north": "east",
+        "east": "south",
+        "south": "west",
+        "west": "north",
+        "up": "up",
+        "down": "down",
+        "ascending": "ascending"
+    }
+    }
+  }  
 }
 
 export class CompoundStructure extends Structure {
@@ -40,38 +89,33 @@ export class CompoundStructure extends Structure {
     return this.elements.flatMap(element => {
       const size = element.structure.getSize()
       const blocks = element.structure.getBlocks()
-      switch (element.rot) {
-        case Rotation.Rotate0:
-          blocks.forEach(block => {
+      blocks.forEach(block => {
+        block.state = CompoundStructure.getRotatedBlockState(block.state, element.rot)
+        const pos_0 = block.pos[0]
+        switch (element.rot) {
+          case Rotation.Rotate0:
             block.pos[0] = element.pos[0] + block.pos[0] - this.minPos[0]
             block.pos[1] = element.pos[1] + block.pos[1] - this.minPos[1]
             block.pos[2] = element.pos[2] + block.pos[2] - this.minPos[2]
-          });
-          return blocks
-        case Rotation.Rotate90:
-          blocks.forEach(block => {
-            const pos_0 = block.pos[0]
-            block.pos[0] = element.pos[0] + size[2] - 1 - block.pos[2] - this.minPos[0]
+            break
+          case Rotation.Rotate90:
+            block.pos[0] = element.pos[0] + size[0] - 1 - block.pos[2] - this.minPos[0]
             block.pos[1] = element.pos[1] + block.pos[1] - this.minPos[1]
             block.pos[2] = element.pos[2] + pos_0 - this.minPos[2]
-          });
-          return blocks
-        case Rotation.Rotate180:
-          blocks.forEach(block => {
+            break
+          case Rotation.Rotate180:
             block.pos[0] = element.pos[0] + size[0] - 1 - block.pos[0] - this.minPos[0]
             block.pos[1] = element.pos[1] + block.pos[1] - this.minPos[1]
             block.pos[2] = element.pos[2] + size[2] - 1 - block.pos[2] - this.minPos[2]
-          });
-          return blocks
-        case Rotation.Rotate270:
-          blocks.forEach(block => {
-            const pos_0 = block.pos[0]
+            break
+          case Rotation.Rotate270:
             block.pos[0] = element.pos[0] + block.pos[2] - this.minPos[0]
             block.pos[1] = element.pos[1] + block.pos[1] - this.minPos[1]
-            block.pos[2] = element.pos[2] + size[0] - 1 - pos_0 - this.minPos[1]
-          });
-          return blocks
-      }
+            block.pos[2] = element.pos[2] + size[2] - 1 - pos_0 - this.minPos[1]
+            break
+        } 
+      });
+      return blocks
     })
   }
 
@@ -87,9 +131,9 @@ export class CompoundStructure extends Structure {
 
     const size = structure.getSize()
     if (rot === Rotation.Rotate90 || rot === Rotation.Rotate270){
-      const tmp = size[0]
-      size[2] = size[0]
-      size[0] = tmp
+      const size0 = size[0]
+      size[0] = size[2]
+      size[2] = size0
     }
 
     if (this.elements.length === 0){
@@ -115,4 +159,57 @@ export class CompoundStructure extends Structure {
       rot: rot
     })
   }
+
+  private static getRotatedBlockState(state: BlockState, rot: Rotation): BlockState{
+    const swapXZ : {[name: string]: string} = {'x': 'z', 'y': 'y', 'z': 'x'}
+    
+    const properties = state.getProperties()
+
+    const facingMapping = Rotation.getFacingMapping(rot)
+    
+    //General Rotation of Blocks on an axis (logs etc.)
+    if ('axis' in properties && (rot === Rotation.Rotate90 || rot === Rotation.Rotate270)){
+      properties['axis'] = swapXZ[properties['axis']]
+    }
+
+    //General Facing of Most Blocks
+    if ('facing' in properties){
+      properties['facing'] = facingMapping[properties['facing']]
+    }
+
+    //Jigsaw orientations
+    if ('orientation' in properties){
+      const facings = properties['orientation'].split("_");
+      properties['orientation'] = facingMapping[facings[0]] + "_" + facingMapping[facings[1]]
+    }
+
+    //Rotation of Signs and Banners
+    if ('rotation' in properties){
+      properties['rotation'] = properties['rotation'] + 4
+    }
+
+    //Rail shapes
+    if ('shape' in properties){
+      const facings = properties['shape'].split("_");
+      properties['shape'] = facingMapping[facings[0]] + "_" + facingMapping[facings[1]]
+    }
+
+    //Connections of Fences, Glass-Pains, Redstone etc.
+    if ('east' in properties){
+      const east = properties['east']
+      const west = properties['west']
+      const north = properties['north']
+      const south = properties['south']
+
+      properties[facingMapping['east']] = east
+      properties[facingMapping['west']] = west
+      properties[facingMapping['north']] = north
+      properties[facingMapping['south']] = south
+    }
+
+    return new BlockState(state.getName(), properties)
+  }
+
+
+
 }
