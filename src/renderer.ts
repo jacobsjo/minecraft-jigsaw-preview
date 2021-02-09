@@ -1,12 +1,13 @@
 
-import { read as readNbt } from '@webmc/nbt'
 import { StructureRenderer } from '@webmc/render';
 import { ResourceManager } from './ResourceManager'
 import { mat4 , vec2, vec3 } from 'gl-matrix'
-import { CompoundStructure, Rotation } from "./CompoundStructure";
+import { CompoundStructure } from "./CompoundStructure";
 import { BlockState, Structure } from '@webmc/core';
-import electron, { MouseWheelInputEvent } from 'electron';
+import electron from 'electron';
 import { clamp, clampVec3, negVec3 } from './util'
+import { BBRenderer } from './BoundingBoxRenderer';
+import { BoundingBox } from './BoundingBox';
 
 //let viewDist = 4;
 //let xRotation = 0.8;
@@ -27,7 +28,7 @@ async function main() {
 
   let structure = new CompoundStructure()
 
-  const exampleRes1 = await fetch('public/blueprint.nbt')
+/*  const exampleRes1 = await fetch('public/blueprint.nbt')
   const exampleData1 = await exampleRes1.arrayBuffer()
   const exampleNbt1 = readNbt(new Uint8Array(exampleData1))
   const structure1 = Structure.fromNbt(exampleNbt1.result)
@@ -37,12 +38,17 @@ async function main() {
   const exampleData2 = await exampleRes2.arrayBuffer()
   const exampleNbt2 = readNbt(new Uint8Array(exampleData2))
   const structure2 = Structure.fromNbt(exampleNbt2.result)
-  structure.addStructure(structure2, [6,0,0], Rotation.Rotate90)
+  structure.addStructure(structure2, [6,0,0], Rotation.Rotate90)*/
 
   const resources = new ResourceManager()
   await resources.loadFromZip('public/assets.zip')
 
   const renderer = new StructureRenderer(gl, resources, resources, resources.getBlockAtlas(), structure)
+  const bbRenderer = new BBRenderer(gl)
+
+  let ownBB: BoundingBox
+  let insideBB: BoundingBox | undefined
+  let checkBBs: BoundingBox[]
 
   electron.ipcRenderer.on('structure-update', (event, message) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,10 +60,20 @@ async function main() {
     });
 //    console.log(message)
     structure = Object.assign(new CompoundStructure, message)
-    renderer.setStructure(structure)
-    console.log(structure)
+    refreshStructure()
     requestAnimationFrame(render)
   })
+
+  function refreshStructure() {
+    renderer.setStructure(structure)
+
+    const bbs = structure.getDisplayBoundingBoxes()
+    ownBB = bbs[0]
+    insideBB = bbs[1]
+    checkBBs = bbs[2]
+
+    console.log(structure)
+  }
 
   function resize() {
     const displayWidth = canvas.clientWidth;
@@ -68,6 +84,7 @@ async function main() {
       canvas.height = displayHeight;
 
       renderer.setViewport(0, 0, canvas.width, canvas.height)
+      bbRenderer.setViewport(0, 0, canvas.width, canvas.height)
       return true
     }
   }
@@ -102,6 +119,13 @@ async function main() {
 
     //renderer.drawGrid(viewMatrix);
     renderer.drawStructure(viewMatrix);
+
+
+    bbRenderer.drawBB(viewMatrix, ownBB, 0)
+    if (insideBB !== undefined)
+      bbRenderer.drawBB(viewMatrix, insideBB, 1)
+    checkBBs.forEach(bb => bbRenderer.drawBB(viewMatrix, bb, 2))
+
   }
   requestAnimationFrame(render);
 
@@ -155,6 +179,19 @@ async function main() {
   canvas.addEventListener('contextmenu', evt => {
     evt.preventDefault()
   })
+
+  window.addEventListener('keyup', (evt:KeyboardEvent) => {
+    if (evt.key === "ArrowLeft"){
+      structure.prevStep()
+      refreshStructure()
+      requestAnimationFrame(render)
+      } else if (evt.key === "ArrowRight"){
+      structure.nextStep()
+      refreshStructure()
+      requestAnimationFrame(render)
+      }
+  } , true)
+
 
   window.addEventListener('resize', () => {
     if (resize()) {

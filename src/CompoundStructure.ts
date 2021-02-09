@@ -61,9 +61,11 @@ export namespace Rotation {
 }
 
 export class CompoundStructure extends Structure {
-  private elements: { structure: Structure, pos: BlockPos, rot: Rotation } [] = []
+  private elements: { structure: Structure, pos: BlockPos, rot: Rotation, annotation: {check: number[], inside: number | undefined}} [] = []
   private minPos: BlockPos = [0,0,0]
   private maxPos: BlockPos = [0,0,0]
+
+  private displayMaxStep = 5
 
   constructor() {
     super([0,0,0], [], []);
@@ -73,6 +75,13 @@ export class CompoundStructure extends Structure {
     return [this.minPos, this.maxPos]
   }
 
+  public nextStep(): void{
+    this.displayMaxStep = Math.min(this.displayMaxStep+1, this.elements.length)
+  }
+
+  public prevStep(): void{
+    this.displayMaxStep = Math.max(this.displayMaxStep-1, 1)
+  }
 
   public getSize(): BlockPos {
     const [minPos, maxPos] = this.getBounds()
@@ -145,12 +154,34 @@ export class CompoundStructure extends Structure {
     return CompoundStructure.mapElementBlocks(this.elements[nr])
   }
 
+  public getDisplayBoundingBoxes(): [BoundingBox, BoundingBox | undefined, BoundingBox[]]{
+    const ownBB = this.getBB(this.displayMaxStep-1)
+    const newOwnBB = new BoundingBox([ownBB.min[0] - this.minPos[0], ownBB.min[1] - this.minPos[1],ownBB.min[2] - this.minPos[2]], ownBB.size)
+
+    const inside = this.elements[this.displayMaxStep-1].annotation.inside
+    let newInsideBB = undefined
+    if (inside !== undefined){
+      const insideBB = inside !== undefined ? this.getBB(inside) : undefined
+      newInsideBB = new BoundingBox([insideBB.min[0] - this.minPos[0], insideBB.min[1] - this.minPos[1], insideBB.min[2] - this.minPos[2]], insideBB.size)
+    }
+
+    const check = this.elements[this.displayMaxStep-1].annotation.check
+    const checkBBs = check.map(c => {
+      const BB = this.getBB(c)
+      const newBB = new BoundingBox([BB.min[0] - this.minPos[0], BB.min[1] - this.minPos[1], BB.min[2] - this.minPos[2]], BB.size)
+      return newBB
+    })
+
+    return [newOwnBB, newInsideBB, checkBBs]
+  }
+
+
   public getBlocks() : {
     pos: BlockPos;
     state: BlockState;
     nbt: BlockNbt;
   }[] {
-    return this.elements.flatMap(CompoundStructure.mapElementBlocks).map(block => {
+    return this.elements.slice(0, this.displayMaxStep).flatMap(CompoundStructure.mapElementBlocks).map(block => {
       const newPos : BlockPos = [
         block.pos[0] - this.minPos[0],
         block.pos[1] - this.minPos[1],
@@ -168,7 +199,7 @@ export class CompoundStructure extends Structure {
     return this.getBlocks().find(b => b.pos[0] === pos[0] && b.pos[1] === pos[1] && b.pos[2] === pos[2])
   }
 
-  public addStructure(structure: Structure, pos: BlockPos, rot: Rotation): number{
+  public addStructure(structure: Structure, pos: BlockPos, rot: Rotation, annotation: {check: number[], inside: number | undefined}): number{
 
     const size = structure.getSize()
     const newSize : BlockPos = [size[0], size[1], size[2]]
@@ -197,7 +228,8 @@ export class CompoundStructure extends Structure {
     return this.elements.push({
       structure: structure,
       pos: pos,
-      rot: rot
+      rot: rot,
+      annotation: annotation
     }) - 1
   }
 

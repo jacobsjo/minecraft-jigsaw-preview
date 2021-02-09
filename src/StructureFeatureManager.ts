@@ -70,12 +70,11 @@ export class StructureFeatureManger{
         const poolElement = pool.getShuffeledElements().pop()
         const startingPiece = await CompoundStructure.StructureFromId(this.datapackRoot, poolElement.location)
 
-        const startingPieceNr = this.world.addStructure(startingPiece, [0,0,0], Rotation.Rotate0)
+        const startingPieceNr = this.world.addStructure(startingPiece, [0,0,0], Rotation.Rotate0, {check: [], inside: undefined})
         const placing : {"piece": number, "check": number[], "inside": number|undefined, "depth": number}[] = [{"piece": startingPieceNr, "check": [startingPieceNr], "inside": undefined, "depth": this.depth}]
         
         while (placing.length > 0){
             const piece = placing.shift()
-            console.log(piece)
 
             const bb = this.world.getBB(piece.piece)
             //getElementBlocks returns blocks rotated and moved correctly
@@ -163,11 +162,12 @@ export class StructureFeatureManger{
                         if (inside !== undefined && !placingBB.containedIn(this.world.getBB(inside)))
                             continue
 
-                        if (check.some(element => { return placingBB.intersects(this.world.getBB(element)); }))
-                            continue
+                        for (let l=0 ; l < check.length ; l++){
+                            if (placingBB.intersects(this.world.getBB(check[l])))
+                                continue
+                        }
 
-
-                        const placingNr = this.world.addStructure(placingStructure, offset, rotation);
+                        const placingNr = this.world.addStructure(placingStructure, offset, rotation, {"check": Object.assign([], check), "inside": inside});
                         check.push(placingNr);
                         placing.push({ "piece": placingNr, "check": check, "inside": inside, "depth": piece.depth - 1 });
                         break try_all_pool_element // successfully placed structure, don't try more

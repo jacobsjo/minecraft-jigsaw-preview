@@ -22,8 +22,14 @@ export class BoundingBox{
     }
     
     public intersects(other : BoundingBox): boolean{
-        return Math.abs(this.min[0] + this.size[0]/2 - other.min[0] + other.size[0]/2) * 2 < (this.size[0] + other.size[0]) &&
-               Math.abs(this.min[1] + this.size[1]/2 - other.min[1] + other.size[1]/2) * 2 < (this.size[1] + other.size[1]) &&
-               Math.abs(this.min[2] + this.size[2]/2 - other.min[2] + other.size[2]/2) * 2 < (this.size[2] + other.size[2])
+        const x = this.max[0] < other.min[0] || this.min[0] > other.max[0]
+        const y = this.max[1] < other.min[1] || this.min[1] > other.max[1]
+        const z = this.max[2] < other.min[2] || this.min[2] > other.max[2]
+
+        return !(x || y || z)
+
+//        return Math.abs(this.min[0] + this.size[0]/2 - other.min[0] + other.size[0]/2) * 2 < (this.size[0] + other.size[0]) &&
+//               Math.abs(this.min[1] + this.size[1]/2 - other.min[1] + other.size[1]/2) * 2 < (this.size[1] + other.size[1]) &&
+//               Math.abs(this.min[2] + this.size[2]/2 - other.min[2] + other.size[2]/2) * 2 < (this.size[2] + other.size[2])
     }
 }
