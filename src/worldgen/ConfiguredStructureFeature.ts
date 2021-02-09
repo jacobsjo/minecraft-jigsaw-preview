@@ -24,7 +24,7 @@ export class ConfiguedStructureFeature{
     public static async fromJsonFile(file: string): Promise<ConfiguedStructureFeature>{
         const filecontent = fs.readFileSync(file);
         const json = JSON.parse(filecontent.toString())
-        if (json.type !== 'minecraft:village' && json.type !== 'minecraft:pillager_outpost' && json.type !== 'minecraft:bastion'){
+        if (json.type !== 'minecraft:village' && json.type !== 'minecraft:pillager_outpost' && json.type !== 'minecraft:bastion_remnant'){
             throw "Only Jigsaw Configured Structures are Supported (Village, Pillager Outpose, Bastion)"
         }
 

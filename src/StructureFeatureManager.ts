@@ -129,6 +129,7 @@ export class StructureFeatureManger{
 
                     const placingStructure = await CompoundStructure.StructureFromId(this.datapackRoot, placingElement.location);
                     const placingJigsawBlocks = shuffleArray(placingStructure.getBlocks().filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
+                    nextPlacingJigsawBlocks:
                     for (let k = 0 ; k < placingJigsawBlocks.length ; k++){
                         const placingBlock = placingJigsawBlocks[k]
                         const placingOrientation: string = placingBlock.state.getProperties()['orientation'];
@@ -164,7 +165,7 @@ export class StructureFeatureManger{
 
                         for (let l=0 ; l < check.length ; l++){
                             if (placingBB.intersects(this.world.getBB(check[l])))
-                                continue
+                                continue nextPlacingJigsawBlocks
                         }
 
                         const placingNr = this.world.addStructure(placingStructure, offset, rotation, {"check": Object.assign([], check), "inside": inside});
@@ -213,8 +214,8 @@ export class StructureFeatureManger{
 
         const csf = await ConfiguedStructureFeature.fromName(datapackRoot, namespace + ":" + name)
 
-//        return new StructureFeatureManger(datapackRoot, csf.getStartPool(), csf.getDepth())
-        return new StructureFeatureManger(datapackRoot, csf.getStartPool(), 2)
+        return new StructureFeatureManger(datapackRoot, csf.getStartPool(), csf.getDepth())
+//        return new StructureFeatureManger(datapackRoot, csf.getStartPool(), 2)
     }
 
 

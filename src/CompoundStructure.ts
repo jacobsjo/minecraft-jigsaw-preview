@@ -118,7 +118,7 @@ export class CompoundStructure extends Structure {
         newPos[2] = offset[2] + pos[2]
         break
       case Rotation.Rotate90:
-        newPos[0] = offset[0] + size[0] - 1 - pos[2]
+        newPos[0] = offset[0] + size[2] - 1 - pos[2]
         newPos[1] = offset[1] + pos[1]
         newPos[2] = offset[2] + pos[0]
         break
@@ -130,7 +130,7 @@ export class CompoundStructure extends Structure {
       case Rotation.Rotate270:
         newPos[0] = offset[0] + pos[2]
         newPos[1] = offset[1] + pos[1]
-        newPos[2] = offset[2] + size[2] - 1 - pos[0]
+        newPos[2] = offset[2] + size[0] - 1 - pos[0]
         break
     } 
     return newPos
