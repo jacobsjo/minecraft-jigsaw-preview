@@ -104,7 +104,7 @@ export class StructureFeatureManger{
                     inside = piece.inside;
                 }
 
-                const rollable: boolean = (typeof block.nbt.rollable === "boolean") ? block.nbt.rollable : true;
+                const rollable: boolean = (block.nbt.joint !== undefined &&  typeof block.nbt.joint.value === "string") ? block.nbt.joint.value === "rollable" : true;
                 const target: string = (typeof block.nbt.target.value === "string") ? block.nbt.target.value : "minecraft:empty"
 
                 const pool: TemplatePool = await TemplatePool.fromName(this.datapackRoot, block.nbt.pool.value);
