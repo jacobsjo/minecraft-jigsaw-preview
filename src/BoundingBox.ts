@@ -17,8 +17,15 @@ export class BoundingBox{
                pos[2] >= this.min[2] && pos[2] <= this.max[2]
     }
 
-    public containedIn(other : BoundingBox): boolean{
-        return other.isInside(this.min) && other.isInside(this.max)
+    public containedIn(other : BoundingBox, allowYExtrusion: boolean): boolean{
+        const min: BlockPos = [this.min[0], this.min[1], this.min[2]]
+        const max: BlockPos = [this.max[0], this.max[1], this.max[2]]
+        if (allowYExtrusion){
+            if (max[1] > other.max[1]){
+                max[1] = other.max[1]
+            }
+        }
+        return other.isInside(min) && other.isInside(max)
     }
     
     public intersects(other : BoundingBox): boolean{

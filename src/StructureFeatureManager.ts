@@ -14,7 +14,8 @@ export class StructureFeatureManger{
     constructor(
         private datapackRoot: string,
         private startingPool: string,
-        private depth: number
+        private depth: number,
+        private doExpansionHack: boolean
     ){
         this.world = new CompoundStructure()
     }
@@ -160,7 +161,7 @@ export class StructureFeatureManger{
 
                         const placingBB = new BoundingBox(offset, newSize);
 
-                        if (inside !== undefined && !placingBB.containedIn(this.world.getBB(inside)))
+                        if (inside !== undefined && !placingBB.containedIn(this.world.getBB(inside), this.doExpansionHack))
                             continue
 
                         for (let l=0 ; l < check.length ; l++){
@@ -214,7 +215,7 @@ export class StructureFeatureManger{
 
         const csf = await ConfiguedStructureFeature.fromName(datapackRoot, namespace + ":" + name)
 
-        return new StructureFeatureManger(datapackRoot, csf.getStartPool(), csf.getDepth())
+        return new StructureFeatureManger(datapackRoot, csf.getStartPool(), csf.getDepth(), csf.doExpansionHack())
 //        return new StructureFeatureManger(datapackRoot, csf.getStartPool(), 2)
     }
 

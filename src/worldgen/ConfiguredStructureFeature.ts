@@ -4,7 +4,8 @@ import fs from 'fs';
 export class ConfiguedStructureFeature{
     constructor(
         private start_pool: string,
-        private depth: number
+        private depth: number,
+        private exp_hack: boolean
     ){}
 
     public getStartPool(): string{
@@ -13,6 +14,10 @@ export class ConfiguedStructureFeature{
 
     public getDepth(): number{
         return this.depth
+    }
+
+    public doExpansionHack(): boolean{
+        return this.exp_hack
     }
 
     public static async fromName(datapackRoot: string, id: string): Promise<ConfiguedStructureFeature>{
@@ -32,6 +37,6 @@ export class ConfiguedStructureFeature{
             throw "Configured Structure Config not correct"
         }
 
-        return new ConfiguedStructureFeature(json.config.start_pool, json.config.size)
+        return new ConfiguedStructureFeature(json.config.start_pool, json.config.size, json.type === 'minecraft:village')
     }
 }

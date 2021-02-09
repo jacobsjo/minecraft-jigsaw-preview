@@ -1,5 +1,5 @@
 //import { NamedNbtTag, NbtTag, getTag, getListTag, getOptional } from "@webmc/nbt";
-import { BlockNbt, BlockPos, BlockState, Structure} from "@webmc/core";
+import { BlockNbt, BlockPos, BlockState, StructureProvider, Structure} from "@webmc/core";
 import { read as readNbt } from '@webmc/nbt'
 import * as path from 'path';
 import fs from 'fs';
@@ -60,16 +60,12 @@ export namespace Rotation {
   }  
 }
 
-export class CompoundStructure extends Structure {
-  private elements: { structure: Structure, pos: BlockPos, rot: Rotation, annotation: {check: number[], inside: number | undefined}} [] = []
+export class CompoundStructure implements StructureProvider {
+  private elements: { structure: StructureProvider, pos: BlockPos, rot: Rotation, annotation: {check: number[], inside: number | undefined}} [] = []
   private minPos: BlockPos = [0,0,0]
   private maxPos: BlockPos = [0,0,0]
 
   private displayMaxStep = 5
-
-  constructor() {
-    super([0,0,0], [], []);
-  }
 
   private getBounds(): [BlockPos, BlockPos]{
     return [this.minPos, this.maxPos]
@@ -93,7 +89,7 @@ export class CompoundStructure extends Structure {
     throw "addBlock not supported in CompoundStructure"
   }
 
-  public static mapElementBlocks(element: { structure: Structure; rot: Rotation; pos: number[]; }) : {
+  public static mapElementBlocks(element: { structure: StructureProvider; rot: Rotation; pos: number[]; }) : {
     pos: BlockPos;
     state: BlockState;
     nbt: BlockNbt;
@@ -199,7 +195,7 @@ export class CompoundStructure extends Structure {
     return this.getBlocks().find(b => b.pos[0] === pos[0] && b.pos[1] === pos[1] && b.pos[2] === pos[2])
   }
 
-  public addStructure(structure: Structure, pos: BlockPos, rot: Rotation, annotation: {check: number[], inside: number | undefined}): number{
+  public addStructure(structure: StructureProvider, pos: BlockPos, rot: Rotation, annotation: {check: number[], inside: number | undefined}): number{
 
     const size = structure.getSize()
     const newSize : BlockPos = [size[0], size[1], size[2]]
