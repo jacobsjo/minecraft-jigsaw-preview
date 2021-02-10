@@ -2,12 +2,13 @@
 import { StructureRenderer } from '@webmc/render';
 import { ResourceManager } from './ResourceManager'
 import { mat4 , vec2, vec3 } from 'gl-matrix'
-import { CompoundStructure } from "./CompoundStructure";
+import { CompoundStructure, Rotation } from "./CompoundStructure";
 import { BlockState, Structure } from '@webmc/core';
 import electron from 'electron';
 import { clamp, clampVec3, negVec3 } from './util'
 import { BBRenderer } from './BoundingBoxRenderer';
 import { BoundingBox } from './BoundingBox';
+import { read as readNbt } from '@webmc/nbt'
 
 //let viewDist = 4;
 //let xRotation = 0.8;
@@ -28,12 +29,13 @@ async function main() {
 
   let structure = new CompoundStructure()
 
-/*  const exampleRes1 = await fetch('public/blueprint.nbt')
+  const exampleRes1 = await fetch('public/example.nbt')
   const exampleData1 = await exampleRes1.arrayBuffer()
   const exampleNbt1 = readNbt(new Uint8Array(exampleData1))
   const structure1 = Structure.fromNbt(exampleNbt1.result)
-  structure.addStructure(structure1, [0,0,0], Rotation.Rotate0)
+  structure.addStructure(structure1, [0,0,0], Rotation.Rotate0, { check: [], inside: undefined})
 
+  /*
   const exampleRes2 = await fetch('public/blueprint.nbt')
   const exampleData2 = await exampleRes2.arrayBuffer()
   const exampleNbt2 = readNbt(new Uint8Array(exampleData2))

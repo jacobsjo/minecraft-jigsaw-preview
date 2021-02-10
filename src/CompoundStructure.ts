@@ -65,7 +65,13 @@ export class CompoundStructure implements StructureProvider {
   private minPos: BlockPos = [0,0,0]
   private maxPos: BlockPos = [0,0,0]
 
-  private displayMaxStep = 5
+  private displayMaxStep = 1
+
+  private cachedBlocks: {
+    pos: BlockPos;
+    state: BlockState;
+    nbt: BlockNbt;
+  }[] | undefined = undefined
 
   private getBounds(): [BlockPos, BlockPos]{
     return [this.minPos, this.maxPos]
@@ -73,20 +79,17 @@ export class CompoundStructure implements StructureProvider {
 
   public nextStep(): void{
     this.displayMaxStep = Math.min(this.displayMaxStep+1, this.elements.length)
+    this.cachedBlocks = undefined
   }
 
   public prevStep(): void{
     this.displayMaxStep = Math.max(this.displayMaxStep-1, 1)
+    this.cachedBlocks = undefined
   }
 
   public getSize(): BlockPos {
     const [minPos, maxPos] = this.getBounds()
     return [maxPos[0] - minPos[0] + 1, maxPos[1] - minPos[1] + 1, maxPos[2] - minPos[2] + 1]
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public addBlock(pos: BlockPos, name: string, properties?: { [key: string]: string }, nbt?: BlockNbt): this {
-    throw "addBlock not supported in CompoundStructure"
   }
 
   public static mapElementBlocks(element: { structure: StructureProvider; rot: Rotation; pos: number[]; }) : {
@@ -106,30 +109,41 @@ export class CompoundStructure implements StructureProvider {
   }
 
   public static mapPos(rot: Rotation, pos: BlockPos, offset: number[], size: BlockPos): BlockPos{
-    const newPos : BlockPos = [0,0,0]
+    const newPos : BlockPos = [offset[0],offset[1],offset[2]]
     switch (rot) {
       case Rotation.Rotate0:
-        newPos[0] = offset[0] + pos[0]
-        newPos[1] = offset[1] + pos[1]
-        newPos[2] = offset[2] + pos[2]
+        newPos[0] += pos[0]
+        newPos[1] += pos[1]
+        newPos[2] += pos[2]
         break
       case Rotation.Rotate90:
-        newPos[0] = offset[0] + size[2] - 1 - pos[2]
-        newPos[1] = offset[1] + pos[1]
-        newPos[2] = offset[2] + pos[0]
+        newPos[0] += size[2] - 1 - pos[2]
+        newPos[1] += pos[1]
+        newPos[2] += pos[0]
         break
       case Rotation.Rotate180:
-        newPos[0] = offset[0] + size[0] - 1 - pos[0]
-        newPos[1] = offset[1] + pos[1]
-        newPos[2] = offset[2] + size[2] - 1 - pos[2]
+        newPos[0] += size[0] - 1 - pos[0]
+        newPos[1] += pos[1]
+        newPos[2] += size[2] - 1 - pos[2]
         break
       case Rotation.Rotate270:
-        newPos[0] = offset[0] + pos[2]
-        newPos[1] = offset[1] + pos[1]
-        newPos[2] = offset[2] + size[0] - 1 - pos[0]
+        newPos[0] += pos[2]
+        newPos[1] += pos[1]
+        newPos[2] += size[0] - 1 - pos[0]
         break
     } 
     return newPos
+  }
+
+  public static inverseMapPos(rot: Rotation, pos: BlockPos, offset: number[], size: BlockPos): BlockPos{
+    const invRot = [0,3,2,1][rot]
+    const newSize : BlockPos = [size[0], size[1], size[2]]
+    if (rot === Rotation.Rotate90 || rot === Rotation.Rotate270){
+      newSize[0] = size[2]
+      newSize[2] = size[0]
+    }
+    const newPos: BlockPos = [pos[0] - offset[0], pos[1] - offset[1], pos[2] - offset[2]]
+    return this.mapPos(invRot, newPos, [0, 0, 0], newSize)
   }
 
   public getBB(nr: number) : BoundingBox{
@@ -139,7 +153,9 @@ export class CompoundStructure implements StructureProvider {
       newSize[0] = size[2]
       newSize[2] = size[0]
     }
-    return new BoundingBox(this.elements[nr].pos, newSize)
+
+    const min: BlockPos = [this.elements[nr].pos[0], this.elements[nr].pos[1], this.elements[nr].pos[2]]
+    return new BoundingBox(min, newSize)
   }
 
   public getElementBlocks(nr: number) : {
@@ -177,14 +193,17 @@ export class CompoundStructure implements StructureProvider {
     state: BlockState;
     nbt: BlockNbt;
   }[] {
-    return this.elements.slice(0, this.displayMaxStep).flatMap(CompoundStructure.mapElementBlocks).map(block => {
-      const newPos : BlockPos = [
-        block.pos[0] - this.minPos[0],
-        block.pos[1] - this.minPos[1],
-        block.pos[2] - this.minPos[2]
-      ]
-      return {"pos": newPos, "state": block.state, "nbt": block.nbt}
-    })
+    if (!this.cachedBlocks)
+      this.cachedBlocks = this.elements.slice(0, this.displayMaxStep).flatMap(CompoundStructure.mapElementBlocks).map(block => {
+        const newPos : BlockPos = [
+          block.pos[0] - this.minPos[0],
+          block.pos[1] - this.minPos[1],
+          block.pos[2] - this.minPos[2]
+        ]
+        return {"pos": newPos, "state": block.state, "nbt": block.nbt}
+      })
+
+    return this.cachedBlocks
   }
 
   public getBlock(pos: BlockPos) : {
@@ -192,7 +211,23 @@ export class CompoundStructure implements StructureProvider {
     state: BlockState;
     nbt: BlockNbt;
   } {
-    return this.getBlocks().find(b => b.pos[0] === pos[0] && b.pos[1] === pos[1] && b.pos[2] === pos[2])
+    const newPos : BlockPos = [
+      pos[0] + this.minPos[0],
+      pos[1] + this.minPos[1],
+      pos[2] + this.minPos[2]
+    ]
+
+    //search reverse to find inner blocks first
+    for (let i=this.displayMaxStep-1 ; i>=0 ; i--){
+      if (this.getBB(i).isInside(newPos)){
+        const b = this.elements[i].structure.getBlock(CompoundStructure.inverseMapPos(this.elements[i].rot, newPos, this.elements[i].pos, this.elements[i].structure.getSize()))
+        if (b && b.state.getName() !== "minecraft:air") return b
+      }
+    }
+    
+    return undefined
+
+//    return this.getBlocks().find(b => b.pos[0] === pos[0] && b.pos[1] === pos[1] && b.pos[2] === pos[2])
   }
 
   public addStructure(structure: StructureProvider, pos: BlockPos, rot: Rotation, annotation: {check: number[], inside: number | undefined}): number{
