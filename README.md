@@ -1,4 +1,5 @@
 # Minecraft Jigsaw Preview
+![](docs/TitleImage.jpg)
 
 This tool lets you preview and debug minecraft jigsaw structures.
 
@@ -21,5 +22,3 @@ see [Releases](https://github.com/jacobsjo/minecraft-jigsaw-preview/releases)
 - Red: Other structures that can't intersect
 
 Note that "inside" is defined loosly in y axis for villages.
-
-![](docs/TitleImage.jpg)
