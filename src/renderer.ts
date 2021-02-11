@@ -52,7 +52,8 @@ async function main() {
   structure.addStructure(structure2, [6,0,0], Rotation.Rotate90)*/
 
   const resources = new ResourceManager()
-  await resources.loadFromZip('public/assets.zip')
+//  await resources.loadFromZip('public/assets.zip')
+  await resources.loadFromMinecraftJar()
 
   const renderer = new StructureRenderer(gl, resources, resources, resources.getBlockAtlas(), structure)
   const bbRenderer = new BBRenderer(gl)

@@ -28,6 +28,31 @@ export class ResourceManager implements BlockModelProvider {
     return this.blockAtlas
   }
 
+  public async loadFromMinecraftJar(): Promise<void> {
+    const manifest = await (await fetch('https://launchermeta.mojang.com/mc/game/version_manifest.json')).json()
+    const latestReleaseUrl = manifest.versions.find((v: any) => v.id === manifest.latest.release).url
+    const version = await (await fetch(latestReleaseUrl)).json()
+    const clientJarUrl = version.downloads.client.url
+    const client = await (await fetch(clientJarUrl)).arrayBuffer()
+    const assets = await jszip.loadAsync(client)
+  
+    await this.loadFromFolderJson(assets.folder('assets/minecraft/blockstates'), async (id, data) => {
+      id = 'minecraft:' + id
+      this.blockDefinitions[id] = BlockDefinition.fromJson(id, data)
+    })
+    await this.loadFromFolderJson(assets.folder('assets/minecraft/models/block'), async (id, data) => {
+      id = 'minecraft:block/' + id
+      this.blockModels[id] = BlockModel.fromJson(id, data)
+    })
+    const textures: { [id: string]: Blob } = {}
+    await this.loadFromFolderPng(assets.folder('assets/minecraft/textures/block'), async (id, data) => {
+      textures['minecraft:block/' + id] = data
+    })
+    this.blockAtlas = await BlockAtlas.fromBlobs(textures)
+    Object.values(this.blockModels).forEach(m => m.flatten(this))
+
+  }
+
   public async loadFromZip(url: string): Promise<void> {
     const assetsBuffer = await (await fetch(url)).arrayBuffer()
     const assets = await jszip.loadAsync(assetsBuffer)

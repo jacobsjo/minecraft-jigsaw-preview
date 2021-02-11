@@ -287,6 +287,7 @@ export class CompoundStructure implements StructureProvider {
   private static getRotatedBlockState(state: BlockState, rot: Rotation): BlockState{
     const swapXZ : {[name: string]: string} = {'x': 'z', 'y': 'y', 'z': 'x'}
     
+    const name: string = state.getName()
     const properties = Object.assign({}, state.getProperties())
 
     const facingMapping = Rotation.getFacingMapping(rot)
@@ -313,7 +314,7 @@ export class CompoundStructure implements StructureProvider {
     }
 
     //Rail shapes
-    if ('shape' in properties){
+    if (name.endsWith('rail') && 'shape' in properties){
       const facings = properties['shape'].split("_");
       let shape = facingMapping[facings[0]] + "_" + facingMapping[facings[1]]
 
