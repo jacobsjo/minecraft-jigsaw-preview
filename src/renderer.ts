@@ -52,10 +52,9 @@ async function main() {
   structure.addStructure(structure2, [6,0,0], Rotation.Rotate90)*/
 
   const resources = new ResourceManager()
-//  await resources.loadFromZip('public/assets.zip')
-  await resources.loadFromMinecraftJar()
+  await resources.loadFromMinecraftJar('release')
 
-  const renderer = new StructureRenderer(gl, resources, resources, resources.getBlockAtlas(), structure)
+  let renderer = new StructureRenderer(gl, resources, resources, resources.getBlockAtlas(), structure)
   const bbRenderer = new BBRenderer(gl)
 
   let drawBB = true
@@ -78,6 +77,10 @@ async function main() {
     structure = Object.assign(new CompoundStructure, message)
 
     structure.lastStep()
+
+    cPos[0] = structure.getBounds()[0][0]
+    cPos[1] = structure.getBounds()[0][1]
+    cPos[2] = structure.getBounds()[0][2]
     refreshStructure()
     requestAnimationFrame(render)
   })
@@ -85,6 +88,16 @@ async function main() {
   electron.ipcRenderer.on('toggle-bounding-boxes', (event) => {
     drawBB = !drawBB
     requestAnimationFrame(render)
+  })
+
+  electron.ipcRenderer.on('set-version', async (event, message) => {
+    const resources = new ResourceManager()
+    await resources.loadFromMinecraftJar(message)
+  
+    renderer = new StructureRenderer(gl, resources, resources, resources.getBlockAtlas(), structure)
+    refreshStructure()
+    requestAnimationFrame(render)
+
   })
 
   function refreshStructure() {

@@ -73,7 +73,7 @@ export class CompoundStructure implements StructureProvider {
     nbt: BlockNbt;
   }[] | undefined = undefined
 
-  private getBounds(): [BlockPos, BlockPos]{
+  public getBounds(): [BlockPos, BlockPos]{
     return [this.minPos, this.maxPos]
   }
 

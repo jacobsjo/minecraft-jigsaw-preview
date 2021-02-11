@@ -55,7 +55,27 @@ const menuTemplate: Electron.MenuItemConstructorOptions[]  = [
         async click() {
           mainWindow.webContents.send('toggle-bounding-boxes')
         }
-      }
+      },
+      {
+        label: 'Rendering',
+        submenu: [
+          {
+            label: 'Release',
+            type: 'radio',
+            async click() {
+              mainWindow.webContents.send('set-version','release')
+            }
+          },
+          {
+            label: 'Snapshot',
+            type: 'radio',
+            async click() {
+              mainWindow.webContents.send('set-version','snapshot')
+            }
+          }
+        ]
+      },
+      {role: 'toggleDevTools'}
     ]
   }
 ]
@@ -75,7 +95,7 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, "../index.html"));
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 }
 
 async function generate(){

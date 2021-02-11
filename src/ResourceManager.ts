@@ -1,7 +1,7 @@
 import jszip from 'jszip'
-import { BlockAtlas, BlockDefinition, BlockModel, BlockModelProvider } from '@webmc/render'
+import { BlockAtlas, BlockDefinition, BlockModel, BlockModelProvider, BlockDefinitionProvider} from '@webmc/render'
 
-export class ResourceManager implements BlockModelProvider {
+export class ResourceManager implements BlockModelProvider, BlockDefinitionProvider {
   private blockDefinitions: { [id: string]: BlockDefinition }
   private blockModels: { [id: string]: BlockModel }
   private blockAtlas: BlockAtlas
@@ -28,11 +28,11 @@ export class ResourceManager implements BlockModelProvider {
     return this.blockAtlas
   }
 
-  public async loadFromMinecraftJar(): Promise<void> {
+  public async loadFromMinecraftJar(version: 'release'|'snapshot'): Promise<void> {
     const manifest = await (await fetch('https://launchermeta.mojang.com/mc/game/version_manifest.json')).json()
-    const latestReleaseUrl = manifest.versions.find((v: any) => v.id === manifest.latest.release).url
-    const version = await (await fetch(latestReleaseUrl)).json()
-    const clientJarUrl = version.downloads.client.url
+    const latestReleaseUrl = manifest.versions.find((v: any) => v.id === manifest.latest[version]).url
+    const versionJson = await (await fetch(latestReleaseUrl)).json()
+    const clientJarUrl = versionJson.downloads.client.url
     const client = await (await fetch(clientJarUrl)).arrayBuffer()
     const assets = await jszip.loadAsync(client)
   
