@@ -20,8 +20,17 @@ let cDist = 10
 main();
 
 async function main() {
-  const canvas = document.querySelector('#demo') as HTMLCanvasElement;
+  const canvas = document.querySelector('#render') as HTMLCanvasElement;
   const gl = canvas.getContext('webgl');
+
+  const buttons = {
+    first: document.querySelector('.ui .button#first'),
+    prev: document.querySelector('.ui .button#prev'),
+    next: document.querySelector('.ui .button#next'),
+    last: document.querySelector('.ui .button#last')
+  }
+
+  const stepDisplay = document.querySelector('.ui .text#step')
 
   if (!gl) {
     throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.')
@@ -48,9 +57,13 @@ async function main() {
   const renderer = new StructureRenderer(gl, resources, resources, resources.getBlockAtlas(), structure)
   const bbRenderer = new BBRenderer(gl)
 
+  let drawBB = true
+
   let ownBB: BoundingBox
   let insideBB: BoundingBox | undefined
   let checkBBs: BoundingBox[]
+
+  refreshStructure()
 
   electron.ipcRenderer.on('structure-update', (event, message) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,9 +73,16 @@ async function main() {
       element.structure = Object.assign(new Structure([0,0,0], [], []), element.structure)
 
     });
-//    console.log(message)
+
     structure = Object.assign(new CompoundStructure, message)
+
+    structure.lastStep()
     refreshStructure()
+    requestAnimationFrame(render)
+  })
+
+  electron.ipcRenderer.on('toggle-bounding-boxes', (event) => {
+    drawBB = !drawBB
     requestAnimationFrame(render)
   })
 
@@ -74,7 +94,15 @@ async function main() {
     insideBB = bbs[1]
     checkBBs = bbs[2]
 
-    console.log(structure)
+    const step = structure.getStep()
+    const maxSteps = structure.getStepCount()
+
+    buttons.first.classList.toggle("enabled", step > 1)
+    buttons.prev.classList.toggle("enabled", step > 1)
+    buttons.next.classList.toggle("enabled", step < maxSteps)
+    buttons.last.classList.toggle("enabled", step < maxSteps)
+
+    stepDisplay.innerHTML = step + " / " + maxSteps
   }
 
   function resize() {
@@ -105,29 +133,18 @@ async function main() {
   function render() {
     resize()
 
-    /*
-    yRotation = yRotation % (Math.PI * 2)
-    xRotation = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, xRotation))
-    viewDist = Math.max(1, Math.min(20, viewDist))
-
-    const size = structure.getSize()
-    const viewMatrix = mat4.create();
-    mat4.translate(viewMatrix, viewMatrix, [0, 0, -viewDist]);
-    mat4.rotate(viewMatrix, viewMatrix, xRotation, [1, 0, 0]);
-    mat4.rotate(viewMatrix, viewMatrix, yRotation, [0, 1, 0]);
-    mat4.translate(viewMatrix, viewMatrix, [-size[0] / 2, -size[1] / 2, -size[2] / 2]);*/
-
     const viewMatrix = getViewMatrix()
 
     //renderer.drawGrid(viewMatrix);
     renderer.drawStructure(viewMatrix);
 
+    if (drawBB){
+      checkBBs.forEach(bb => bbRenderer.drawBB(viewMatrix, bb, 2))
+      if (insideBB !== undefined)
+        bbRenderer.drawBB(viewMatrix, insideBB, 1)
 
-    bbRenderer.drawBB(viewMatrix, ownBB, 0)
-    if (insideBB !== undefined)
-      bbRenderer.drawBB(viewMatrix, insideBB, 1)
-    checkBBs.forEach(bb => bbRenderer.drawBB(viewMatrix, bb, 2))
-
+      bbRenderer.drawBB(viewMatrix, ownBB, 0)
+    }
   }
   requestAnimationFrame(render);
 
@@ -181,6 +198,31 @@ async function main() {
   canvas.addEventListener('contextmenu', evt => {
     evt.preventDefault()
   })
+
+  buttons.first.addEventListener("click", () => {
+    structure.firstStep()
+    refreshStructure()
+    requestAnimationFrame(render)
+  })
+
+  buttons.prev.addEventListener("click", () => {
+    structure.prevStep()
+    refreshStructure()
+    requestAnimationFrame(render)
+  })
+
+  buttons.next.addEventListener("click", () => {
+    structure.nextStep()
+    refreshStructure()
+    requestAnimationFrame(render)
+  })
+
+  buttons.last.addEventListener("click", () => {
+    structure.lastStep()
+    refreshStructure()
+    requestAnimationFrame(render)
+  })
+
 
   window.addEventListener('keyup', (evt:KeyboardEvent) => {
     if (evt.key === "ArrowLeft"){

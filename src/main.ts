@@ -5,26 +5,60 @@ import { StructureFeatureManger } from "./StructureFeatureManager";
 let sfm: StructureFeatureManger
 let mainWindow: BrowserWindow
 
-const menuTemplate: Electron.MenuItemConstructorOptions[]  = [{
-  label: 'File',
-  submenu: [
-    {label: 'Open',
-      async click() {
-        const response = await dialog.showOpenDialog(null, { properties: ['openFile'] })
-        if (!response.canceled){
+let lastFile: string
+
+const menuTemplate: Electron.MenuItemConstructorOptions[]  = [
+  {
+    label: 'File',
+    submenu: [
+      { 
+        label: 'Open',
+        accelerator: process.platform === 'darwin' ? 'Cmd+O' : 'Ctrl+O',
+        async click() {
+          const response = await dialog.showOpenDialog(null, { properties: ['openFile'] })
+          if (!response.canceled){
+            try{
+              sfm = await StructureFeatureManger.loadFromFile(response.filePaths[0])
+            } catch(err) {
+              dialog.showErrorBox("Cound not open file", err.toString())
+              return
+            }
+            lastFile = response.filePaths[0]
+            await generate()
+            mainWindow.webContents.send('structure-update', sfm.getWorld())
+          }
+        }
+      },
+      {
+        label: 'Reload',
+        accelerator: process.platform === 'darwin' ? 'Cmd+R' : 'Ctrl+R',
+        async click() {
           try{
-            sfm = await StructureFeatureManger.loadFromFile(response.filePaths[0])
+            sfm = await StructureFeatureManger.loadFromFile(lastFile)
           } catch(err) {
             dialog.showErrorBox("Cound not open file", err.toString())
+            return
           }
           await generate()
           mainWindow.webContents.send('structure-update', sfm.getWorld())
         }
+      },
+      {role: 'quit'}
+    ]
+  },
+  {
+    label: 'View',
+    submenu: [
+      {
+        label: 'Toggle Bounding Boxes',
+        accelerator: process.platform === 'darwin' ? 'Cmd+B' : 'Ctrl+B',
+        async click() {
+          mainWindow.webContents.send('toggle-bounding-boxes')
+        }
       }
-    },
-    {role: 'quit'}
-  ]
-}]
+    ]
+  }
+]
 
 function createWindow() {
   // Create the browser window.

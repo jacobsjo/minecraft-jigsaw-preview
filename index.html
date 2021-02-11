@@ -12,12 +12,12 @@
     body {
       background-color: black;
     }
-    #demo {
+    #render {
       display: block;
       width: 100vw;
       height: 100vh;
       border: none;
-      background-color: black;
+      background-color: #1e1e1e;
     }
     @media screen and (min-width: 1152px) {
       body {
@@ -25,10 +25,56 @@
         align-items: flex-start;
       }
     }
+
+    .ui{
+      position: absolute;
+      left: 0pt;
+      width: 100%;
+      bottom: 15pt;
+      font-size: 12pt;
+      font-weight: 1000;      
+      color: #d2ad48;
+      text-align: center;
+      cursor: default;
+      user-select: none;
+    }
+
+
+    .ui span {
+      display: inline-block;
+      text-align: center;
+      border: 0px;
+      background-color: #333333;
+      width: 30pt;
+    }
+
+    .ui span.button{
+      color: #776944;
+    }
+
+    .ui span.button.enabled:hover{
+      background-color: #535353;
+    }
+
+    .ui span.button.enabled {
+      color: #d2ad48;
+      cursor: pointer;
+    }
+
+    .ui .text {
+      width: 60pt;
+    }
   </style>
 </head>
 <body>
-  <canvas id="demo" width="640" height="480"></canvas>
+  <canvas id="render" width="640" height="480"></canvas>
+  <div class=ui>
+    <span class="button" id="first"> |&lt;&lt; </span>
+    <span class="button" id="prev"> &lt; </span>
+    <span class="text" id="step">4 / 10</span></span>
+    <span class="button" id="next"> &gt; </span>
+    <span class="button" id="last"> &gt;&gt;| </span>
+  </div>
   <script>
     require("./dist/renderer.js")
  </script>

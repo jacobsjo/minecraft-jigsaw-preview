@@ -87,6 +87,24 @@ export class CompoundStructure implements StructureProvider {
     this.cachedBlocks = undefined
   }
 
+  public firstStep(): void{
+    this.displayMaxStep = 1 
+    this.cachedBlocks = undefined
+  }
+
+  public lastStep(): void{
+    this.displayMaxStep = this.elements.length
+    this.cachedBlocks = undefined
+  }
+
+  public getStep(): number{
+    return this.displayMaxStep
+  }
+
+  public getStepCount(): number{
+    return this.elements.length
+  }
+
   public getSize(): BlockPos {
     const [minPos, maxPos] = this.getBounds()
     return [maxPos[0] - minPos[0] + 1, maxPos[1] - minPos[1] + 1, maxPos[2] - minPos[2] + 1]
@@ -255,6 +273,8 @@ export class CompoundStructure implements StructureProvider {
       this.maxPos[1] = Math.max(this.maxPos[1], pos[1] + newSize[1] - 1)
       this.maxPos[2] = Math.max(this.maxPos[2], pos[2] + newSize[2] - 1)
     }
+
+//    this.displayMaxStep = this.elements.length - 1
 
     return this.elements.push({
       structure: structure,
