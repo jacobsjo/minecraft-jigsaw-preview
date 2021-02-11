@@ -1,30 +1,68 @@
 {
   "name": "minecraft-jigsaw-preview",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Display Minecraft Jigsaw Structures",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
-    "start": "npm run build && electron ./dist/main.js"
+    "start": "npm run build && electron ./dist/main.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder -wl"
   },
-  "repository": "",
-  "keywords": [],
-  "author": "jacobsjo",
+  "build": {
+    "appId": "eu.jacobsjo.minecraft-jigsaw-preview",
+    "productName": "Minecraft Jigsaw Preview",
+    "directories": {
+      "output": "build"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  },
+  "repository": "https://github.com/jacobsjo/minecraft-jigsaw-preview/",
+  "keywords": [
+    "Minecraft",
+    "Jigsaw",
+    "Visualization",
+    "Preview",
+    "3D"
+  ],
+  "author": "Jochen Jacobs",
   "license": "MIT",
+  "main": "dist/main.js",
   "devDependencies": {
     "@types/node-fetch": "^2.5.8",
     "@typescript-eslint/eslint-plugin": "^3.4.0",
     "@typescript-eslint/parser": "^3.4.0",
     "electron": "^9.4.0",
     "eslint": "^7.3.1",
-    "typescript": "^3.9.5"
+    "typescript": "^3.9.5",
+    "electron-builder": "^22.9.1"
   },
   "dependencies": {
-    "@webmc/core": "^0.1.3",
+    "@webmc/core": "^0.2.0",
     "@webmc/nbt": "^0.1.1",
-    "@webmc/render": "^0.4.1",
+    "@webmc/render": "^0.4.2",
     "jszip": "^3.5.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "gl-matrix": "3.3.0"
   }
 }

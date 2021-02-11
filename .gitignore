@@ -1,4 +1,6 @@
 .vscode
 node_modules
 dist
+build
 JigsawPlacement.java
+package-lock.json
