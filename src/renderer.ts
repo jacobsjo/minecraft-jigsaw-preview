@@ -54,7 +54,12 @@ async function main() {
   const resources = new ResourceManager()
   await resources.loadFromMinecraftJar('release')
 
-  let renderer = new StructureRenderer(gl, resources, resources, resources.getBlockAtlas(), structure)
+  let renderer = new StructureRenderer(gl, structure, {
+    blockDefinitions: resources,
+    blockModels: resources,
+    blockAtlas: resources.getBlockAtlas(),
+    blockProperties: resources
+  })
   const bbRenderer = new BBRenderer(gl)
 
   let drawBB = true
@@ -85,7 +90,7 @@ async function main() {
     requestAnimationFrame(render)
   })
 
-  electron.ipcRenderer.on('toggle-bounding-boxes', (event) => {
+  electron.ipcRenderer.on('toggle-bounding-boxes', () => {
     drawBB = !drawBB
     requestAnimationFrame(render)
   })
@@ -94,7 +99,12 @@ async function main() {
     const resources = new ResourceManager()
     await resources.loadFromMinecraftJar(message)
   
-    renderer = new StructureRenderer(gl, resources, resources, resources.getBlockAtlas(), structure)
+    renderer = new StructureRenderer(gl, structure, {
+      blockDefinitions: resources,
+      blockModels: resources,
+      blockAtlas: resources.getBlockAtlas(),
+      blockProperties: resources
+    })
     refreshStructure()
     requestAnimationFrame(render)
 

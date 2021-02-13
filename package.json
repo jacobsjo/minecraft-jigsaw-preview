@@ -1,6 +1,6 @@
 {
   "name": "minecraft-jigsaw-preview",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Display Minecraft Jigsaw Structures",
   "scripts": {
     "build": "tsc",
@@ -8,7 +8,10 @@
     "lint": "eslint -c .eslintrc --ext .ts ./src",
     "start": "npm run build && electron ./dist/main.js",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder -wl"
+    "dist": "electron-builder -wlm",
+    "dist_linux": "electron-builder -w",
+    "dist_windows": "electron-builder -l",
+    "dist_mac": "electron-builder -m"
   },
   "build": {
     "appId": "eu.jacobsjo.minecraft-jigsaw-preview",
@@ -35,6 +38,10 @@
           ]
         }
       ]
+    },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": "tar.gz"
     }
   },
   "repository": "https://github.com/jacobsjo/minecraft-jigsaw-preview/",
@@ -58,9 +65,9 @@
     "electron-builder": "^22.9.1"
   },
   "dependencies": {
-    "@webmc/core": "^0.2.0",
+    "@webmc/core": "^0.2.1",
     "@webmc/nbt": "^0.1.1",
-    "@webmc/render": "^0.4.2",
+    "@webmc/render": "^0.5.0",
     "jszip": "^3.5.0",
     "node-fetch": "^2.6.1",
     "gl-matrix": "3.3.0"

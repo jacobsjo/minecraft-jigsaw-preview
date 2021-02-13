@@ -1,7 +1,8 @@
 import jszip from 'jszip'
-import { BlockAtlas, BlockDefinition, BlockModel, BlockModelProvider, BlockDefinitionProvider} from '@webmc/render'
+import { BlockAtlas, BlockDefinition, BlockModel, BlockModelProvider, BlockDefinitionProvider, BlockPropertiesProvider, BlockProperties} from '@webmc/render'
+import { isOpaque } from './OpaqueHelper'
 
-export class ResourceManager implements BlockModelProvider, BlockDefinitionProvider {
+export class ResourceManager implements BlockModelProvider, BlockDefinitionProvider, BlockPropertiesProvider {
   private blockDefinitions: { [id: string]: BlockDefinition }
   private blockModels: { [id: string]: BlockModel }
   private blockAtlas: BlockAtlas
@@ -10,6 +11,11 @@ export class ResourceManager implements BlockModelProvider, BlockDefinitionProvi
     this.blockDefinitions = {}
     this.blockModels = {}
     this.blockAtlas = BlockAtlas.empty()
+  }
+  getBlockProperties(id: string): BlockProperties {
+    return {
+      opaque: isOpaque(id)
+    }
   }
 
   public getBlockDefinition(id: string): BlockDefinition {
@@ -30,6 +36,7 @@ export class ResourceManager implements BlockModelProvider, BlockDefinitionProvi
 
   public async loadFromMinecraftJar(version: 'release'|'snapshot'): Promise<void> {
     const manifest = await (await fetch('https://launchermeta.mojang.com/mc/game/version_manifest.json')).json()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const latestReleaseUrl = manifest.versions.find((v: any) => v.id === manifest.latest[version]).url
     const versionJson = await (await fetch(latestReleaseUrl)).json()
     const clientJarUrl = versionJson.downloads.client.url
