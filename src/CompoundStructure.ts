@@ -164,7 +164,11 @@ export class CompoundStructure implements StructureProvider {
     return this.mapPos(invRot, newPos, [0, 0, 0], newSize)
   }
 
-  public getBB(nr: number) : BoundingBox{
+  public getBB(nr: number | undefined) : BoundingBox{
+    if (nr === undefined){
+      return new BoundingBox([-80,-80,-80], [162, 162, 162])
+    }
+
     const size =  this.elements[nr].structure.getSize()
     const newSize : BlockPos = [size[0], size[1], size[2]]
     if (this.elements[nr].rot === Rotation.Rotate90 || this.elements[nr].rot === Rotation.Rotate270){
@@ -190,10 +194,8 @@ export class CompoundStructure implements StructureProvider {
 
     const inside = this.elements[this.displayMaxStep-1].annotation.inside
     let newInsideBB = undefined
-    if (inside !== undefined){
-      const insideBB = inside !== undefined ? this.getBB(inside) : undefined
-      newInsideBB = new BoundingBox([insideBB.min[0] - this.minPos[0], insideBB.min[1] - this.minPos[1], insideBB.min[2] - this.minPos[2]], insideBB.size)
-    }
+    const insideBB = this.getBB(inside)
+    newInsideBB = new BoundingBox([insideBB.min[0] - this.minPos[0], insideBB.min[1] - this.minPos[1], insideBB.min[2] - this.minPos[2]], insideBB.size)
 
     const check = this.elements[this.displayMaxStep-1].annotation.check
     const checkBBs = check.map(c => {

@@ -161,7 +161,7 @@ export class StructureFeatureManger{
 
                         const placingBB = new BoundingBox(offset, newSize);
 
-                        if (inside !== undefined && !placingBB.containedIn(this.world.getBB(inside), this.doExpansionHack))
+                        if (!placingBB.containedIn(this.world.getBB(inside), this.doExpansionHack))
                             continue
 
                         for (let l=0 ; l < check.length ; l++){

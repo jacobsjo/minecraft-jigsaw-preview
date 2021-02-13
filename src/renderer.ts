@@ -164,9 +164,7 @@ async function main() {
 
     if (drawBB){
       checkBBs.forEach(bb => bbRenderer.drawBB(viewMatrix, bb, 2))
-      if (insideBB !== undefined)
-        bbRenderer.drawBB(viewMatrix, insideBB, 1)
-
+      bbRenderer.drawBB(viewMatrix, insideBB, 1)
       bbRenderer.drawBB(viewMatrix, ownBB, 0)
     }
   }

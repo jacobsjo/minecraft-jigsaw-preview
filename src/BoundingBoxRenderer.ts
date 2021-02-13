@@ -62,7 +62,7 @@ export class BBRenderer {
     const fieldOfView = 70 * Math.PI / 180;
     const aspect = (this.gl.canvas as HTMLCanvasElement).clientWidth / (this.gl.canvas as HTMLCanvasElement).clientHeight;
     const projMatrix = mat4.create();
-    mat4.perspective(projMatrix, fieldOfView, aspect, 0.1, 100.0);
+    mat4.perspective(projMatrix, fieldOfView, aspect, 0.1, 500.0);
     return projMatrix
   }
 
