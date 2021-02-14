@@ -1,6 +1,6 @@
 {
   "name": "minecraft-jigsaw-preview",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Display Minecraft Jigsaw Structures",
   "scripts": {
     "build": "tsc",
@@ -9,8 +9,8 @@
     "start": "npm run build && electron ./dist/main.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder -wlm",
-    "dist_linux": "electron-builder -w",
-    "dist_windows": "electron-builder -l",
+    "dist_linux": "electron-builder -l",
+    "dist_windows": "electron-builder -w",
     "dist_mac": "electron-builder -m"
   },
   "build": {
