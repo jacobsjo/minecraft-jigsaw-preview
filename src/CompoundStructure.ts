@@ -361,19 +361,12 @@ export class CompoundStructure implements StructureProvider {
     return new BlockState(state.getName(), properties)
   }
 
-  static StructureFromId(root: DirectoryEntry, id: string): Promise<Structure>{
+  public static async StructurefromName(reader: DatapackReader, id: string): Promise<Structure>{
     const [namespace, name] = id.split(":")
-
-    return new Promise<Structure>((resolve, reject) => {
-      root.getFile(path.join('/data', namespace, 'structures', name + ".nbt"), {},
-        (fileEntry) => {
-          fileEntry.file(async (file) => {
-            const data = await file.arrayBuffer()
-            const nbt = readNbt(new Uint8Array(data))
-            resolve(Structure.fromNbt(nbt.result))
-          }, () => reject("Could not read file"));
-        }, () => reject("id " + id + " not found")
-      );
-    })
+    const p = path.join('/data', namespace, 'worldgen', 'template_pool', name + ".json")
+    const blob = await reader.readFileAsBlob(p)
+    const nbt = readNbt(new Uint8Array(blob))
+    return Structure.fromNbt(nbt.result)
   }
+
 }

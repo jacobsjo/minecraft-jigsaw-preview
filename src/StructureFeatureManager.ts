@@ -1,18 +1,17 @@
 
 import { BlockPos } from '@webmc/core';
-import * as path from 'path';
 import { CompoundStructure, Rotation } from './CompoundStructure';
-import { ConfiguedStructureFeature } from './worldgen/ConfiguredStructureFeature';
 import { TemplatePool } from './worldgen/TemplatePool';
 import { shuffleArray, getRandomInt } from './util'
 import { BoundingBox } from './BoundingBox';
+import { ConfiguedStructureFeature } from './worldgen/ConfiguredStructureFeature';
 
 
 export class StructureFeatureManger{
     private world: CompoundStructure
 
     constructor(
-        private root: DirectoryEntry,
+        private reader: DatapackReader,
         private startingPool: string,
         private depth: number,
         private doExpansionHack: boolean
@@ -67,9 +66,9 @@ export class StructureFeatureManger{
     }
 
     public async generate(): Promise<void>{
-        const pool = await TemplatePool.fromName(this.root, this.startingPool)
+        const pool = await TemplatePool.fromName(this.reader, this.startingPool)
         const poolElement = pool.getShuffeledElements().pop()
-        const startingPiece = await CompoundStructure.StructureFromId(this.root, poolElement.location)
+        const startingPiece = await CompoundStructure.StructurefromName(this.reader, poolElement.location)
 
         const startingPieceNr = this.world.addStructure(startingPiece, [0,0,0], Rotation.Rotate0, {check: [], inside: undefined})
         const placing : {"piece": number, "check": number[], "inside": number|undefined, "depth": number}[] = [{"piece": startingPieceNr, "check": [startingPieceNr], "inside": undefined, "depth": this.depth}]
@@ -107,8 +106,8 @@ export class StructureFeatureManger{
                 const rollable: boolean = (block.nbt.joint !== undefined &&  typeof block.nbt.joint.value === "string") ? block.nbt.joint.value === "rollable" : true;
                 const target: string = (typeof block.nbt.target.value === "string") ? block.nbt.target.value : "minecraft:empty"
 
-                const pool: TemplatePool = await TemplatePool.fromName(this.root, block.nbt.pool.value);
-                const fallbackPool: TemplatePool = await TemplatePool.fromName(this.root, pool.fallback);
+                const pool: TemplatePool = await TemplatePool.fromName(this.reader, block.nbt.pool.value);
+                const fallbackPool: TemplatePool = await TemplatePool.fromName(this.reader, pool.fallback);
 
                 const poolElements = (piece.depth > 0 ? pool.getShuffeledElements() : [])
                     .concat(fallbackPool.getShuffeledElements());
@@ -128,7 +127,7 @@ export class StructureFeatureManger{
                     if (placingElement.location === "minecraft:empty")
                         break
 
-                    const placingStructure = await CompoundStructure.StructureFromId(this.root, placingElement.location);
+                    const placingStructure = await CompoundStructure.StructurefromName(this.reader, placingElement.location);
                     const placingJigsawBlocks = shuffleArray(placingStructure.getBlocks().filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
                     nextPlacingJigsawBlocks:
                     for (let k = 0 ; k < placingJigsawBlocks.length ; k++){
@@ -137,7 +136,6 @@ export class StructureFeatureManger{
                         const [placingForward, placingUp] = placingOrientation.split("_");
 
                         const name: string = (typeof placingBlock.nbt.name.value === "string") ? placingBlock.nbt.name.value : "minecraft:empty"
-
                         if (target !== name)
                             continue
 
@@ -181,6 +179,10 @@ export class StructureFeatureManger{
 
     public getWorld(): CompoundStructure{
         return this.world
+    }
+
+    public static fromConfiguredStructureFeature(reader: DatapackReader, feature: ConfiguedStructureFeature){
+        return new StructureFeatureManger(reader, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack())
     }
 
     /*
