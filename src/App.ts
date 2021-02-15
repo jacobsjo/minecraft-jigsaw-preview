@@ -4,11 +4,17 @@ import { ResourceManager } from './ResourceManager'
 import { mat4 , vec2, vec3 } from 'gl-matrix'
 import { CompoundStructure, Rotation } from "./CompoundStructure";
 import { BlockState, Structure } from '@webmc/core';
-import electron from 'electron';
 import { clamp, clampVec3, negVec3 } from './util'
 import { BBRenderer } from './BoundingBoxRenderer';
 import { BoundingBox } from './BoundingBox';
 import { read as readNbt } from '@webmc/nbt'
+import { ConfiguedStructureFeature } from './worldgen/ConfiguredStructureFeature';
+
+declare global {
+  interface Window {
+    showDirectoryPicker:any;
+  }
+}
 
 //let viewDist = 4;
 //let xRotation = 0.8;
@@ -30,6 +36,8 @@ async function main() {
     last: document.querySelector('.ui .button#last')
   }
 
+  let dropzone = document.getElementById("dropzone");
+
   const stepDisplay = document.querySelector('.ui .text#step')
 
   if (!gl) {
@@ -38,7 +46,7 @@ async function main() {
 
   let structure = new CompoundStructure()
 
-  const exampleRes1 = await fetch('public/example.nbt')
+  const exampleRes1 = await fetch('example.nbt')
   const exampleData1 = await exampleRes1.arrayBuffer()
   const exampleNbt1 = readNbt(new Uint8Array(exampleData1))
   const structure1 = Structure.fromNbt(exampleNbt1.result)
@@ -52,7 +60,7 @@ async function main() {
   structure.addStructure(structure2, [6,0,0], Rotation.Rotate90)*/
 
   const resources = new ResourceManager()
-  await resources.loadFromMinecraftJar('release')
+  await resources.loadFromZip('/assets.zip')
 
   let renderer = new StructureRenderer(gl, structure, {
     blockDefinitions: resources,
@@ -64,12 +72,30 @@ async function main() {
 
   let drawBB = true
 
+  let root: DirectoryEntry
+
   let ownBB: BoundingBox
   let insideBB: BoundingBox | undefined
   let checkBBs: BoundingBox[]
 
   refreshStructure()
 
+  console.log(dropzone)
+  dropzone.addEventListener("dragover", function(event) {
+    event.preventDefault();
+  }, false);
+
+  dropzone.addEventListener("drop", async function(event) {
+    event.preventDefault();
+
+    const items = event.dataTransfer.items;
+    root = items[0].webkitGetAsEntry()
+    
+
+    console.log(await ConfiguedStructureFeature.getAll(root, ["minecraft"]))
+  }, false);
+
+/*
   electron.ipcRenderer.on('structure-update', (event, message) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     message.elements.forEach((element: any) => {
@@ -108,7 +134,7 @@ async function main() {
     refreshStructure()
     requestAnimationFrame(render)
 
-  })
+  })*/
 
   function refreshStructure() {
     renderer.setStructure(structure)

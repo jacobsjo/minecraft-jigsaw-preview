@@ -1,5 +1,4 @@
 import * as path from 'path';
-import fs from 'fs';
 import { shuffleArray } from '../util'
 
 export class TemplatePool{
@@ -39,15 +38,18 @@ export class TemplatePool{
         return shuffleArray(list)
     }
 
-    public static async fromName(datapackRoot: string, id: string): Promise<TemplatePool>{
+    public static async fromName(root: DirectoryEntry, id: string): Promise<TemplatePool>{
         const [namespace, name] = id.split(":")
-        const file = path.join(datapackRoot, 'data', namespace, 'worldgen', 'template_pool', name + ".json")
-        return this.fromJsonFile(file)
-    }
 
-    public static async fromJsonFile(file: string): Promise<TemplatePool>{
-        const filecontent = fs.readFileSync(file);
-        const json = JSON.parse(filecontent.toString())
-        return new TemplatePool(json.fallback, json.elements)
+        return new Promise<TemplatePool>((resolve, reject) => {
+            root.getFile(path.join('/data', namespace, 'worldgen', 'template_pool', name + ".json"), {},
+                (fileEntry) => {
+                    fileEntry.file(async (file) => {
+                        const json = JSON.parse(await file.text())
+                        resolve(new TemplatePool(json.fallback, json.elements))
+                    }, () => reject("Could not read file"))
+                }, () => reject("id " + id + " not found")
+            )
+        })
     }
 }

@@ -12,7 +12,7 @@ export class StructureFeatureManger{
     private world: CompoundStructure
 
     constructor(
-        private datapackRoot: string,
+        private root: DirectoryEntry,
         private startingPool: string,
         private depth: number,
         private doExpansionHack: boolean
@@ -67,9 +67,9 @@ export class StructureFeatureManger{
     }
 
     public async generate(): Promise<void>{
-        const pool = await TemplatePool.fromName(this.datapackRoot, this.startingPool)
+        const pool = await TemplatePool.fromName(this.root, this.startingPool)
         const poolElement = pool.getShuffeledElements().pop()
-        const startingPiece = await CompoundStructure.StructureFromId(this.datapackRoot, poolElement.location)
+        const startingPiece = await CompoundStructure.StructureFromId(this.root, poolElement.location)
 
         const startingPieceNr = this.world.addStructure(startingPiece, [0,0,0], Rotation.Rotate0, {check: [], inside: undefined})
         const placing : {"piece": number, "check": number[], "inside": number|undefined, "depth": number}[] = [{"piece": startingPieceNr, "check": [startingPieceNr], "inside": undefined, "depth": this.depth}]
@@ -107,8 +107,8 @@ export class StructureFeatureManger{
                 const rollable: boolean = (block.nbt.joint !== undefined &&  typeof block.nbt.joint.value === "string") ? block.nbt.joint.value === "rollable" : true;
                 const target: string = (typeof block.nbt.target.value === "string") ? block.nbt.target.value : "minecraft:empty"
 
-                const pool: TemplatePool = await TemplatePool.fromName(this.datapackRoot, block.nbt.pool.value);
-                const fallbackPool: TemplatePool = await TemplatePool.fromName(this.datapackRoot, pool.fallback);
+                const pool: TemplatePool = await TemplatePool.fromName(this.root, block.nbt.pool.value);
+                const fallbackPool: TemplatePool = await TemplatePool.fromName(this.root, pool.fallback);
 
                 const poolElements = (piece.depth > 0 ? pool.getShuffeledElements() : [])
                     .concat(fallbackPool.getShuffeledElements());
@@ -128,7 +128,7 @@ export class StructureFeatureManger{
                     if (placingElement.location === "minecraft:empty")
                         break
 
-                    const placingStructure = await CompoundStructure.StructureFromId(this.datapackRoot, placingElement.location);
+                    const placingStructure = await CompoundStructure.StructureFromId(this.root, placingElement.location);
                     const placingJigsawBlocks = shuffleArray(placingStructure.getBlocks().filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
                     nextPlacingJigsawBlocks:
                     for (let k = 0 ; k < placingJigsawBlocks.length ; k++){
@@ -183,7 +183,8 @@ export class StructureFeatureManger{
         return this.world
     }
 
-    public static async loadFromFile(file: string): Promise<StructureFeatureManger>{
+    /*
+    public static async loadFromFile(filesystem: FileSystem, configured): Promise<StructureFeatureManger>{
         if (file.slice(-5) !== ".json")
             throw "Not a JSON file"
 
@@ -213,11 +214,11 @@ export class StructureFeatureManger{
 
         const datapackRoot = path.join("/", ...splitFile)
 
-        const csf = await ConfiguedStructureFeature.fromName(datapackRoot, namespace + ":" + name)
+        const csf = await ConfiguedStructureFeature.fromName(, namespace + ":" + name)
 
         return new StructureFeatureManger(datapackRoot, csf.getStartPool(), csf.getDepth(), csf.doExpansionHack())
 //        return new StructureFeatureManger(datapackRoot, csf.getStartPool(), 2)
-    }
+    }*/
 
 
 }

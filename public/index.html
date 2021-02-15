@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebMC Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: black;
+    }
+
+    .sidebar{
+      width: 200pt;
+      height: 100vh;
+      background-color: #404040;
+      padding: 15pt;
+    }
+
+    #dropzone {
+      text-align: center;
+      width: 90%;
+      height: 100px;
+      margin: 10px;
+      padding: 10px;
+      border: 2px dashed #d2ad48;
+      border-radius: 10px;
+    }
+
+    #boxtitle {
+      display: table-cell;
+      vertical-align: middle;
+      text-align: center;
+      color: #d2ad48;
+      font: bold 2em "Arial", sans-serif;
+      width: 300px;
+      height: 100px;
+    }    
+
+    .main{
+      width: calc(100vw - 200pt);
+      height: 100vh;
+    }
+
+    #render {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background-color: #1e1e1e;
+    }
+    @media screen and (min-width: 1152px) {
+      body {
+        display: flex;
+        align-items: flex-start;
+      }
+    }
+
+    .ui{
+      position: absolute;
+      left: 200pt;
+      width: calc(100vw - 200pt);
+      bottom: 15pt;
+      font-size: 12pt;
+      font-weight: 1000;      
+      color: #d2ad48;
+      text-align: center;
+      cursor: default;
+      user-select: none;
+    }
+
+
+    span {
+      display: inline-block;
+      text-align: center;
+      border: 0px;
+      background-color: #333333;
+    }
+
+    .ui span{
+      width: 30pt;
+    }
+
+    span.button{
+      color: #776944;
+    }
+
+    span.button.enabled:hover{
+      background-color: #535353;
+    }
+
+    span.button.enabled {
+      color: #d2ad48;
+      cursor: pointer;
+    }
+
+    .text {
+      width: 60pt;
+    }
+
+    .sidebar .button{
+      padding: 10pt;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <!--<span class="button enabled" id="open"> Open Datapack </span>-->
+    <!--<input type="file" id="datapack" webkitdirectory directory/>-->
+    <div id="dropzone">
+      <div id="boxtitle">
+        Drop Datapack Here
+      </div>
+    </div>
+  </div>
+  <div class="main">
+    <canvas id="render" width="640" height="480"></canvas>
+    <div class=ui>
+      <span class="button" id="first"> |&lt;&lt; </span>
+      <span class="button" id="prev"> &lt; </span>
+      <span class="text" id="step">&nbsp;</span></span>
+      <span class="button" id="next"> &gt; </span>
+      <span class="button" id="last"> &gt;&gt;| </span>
+    </div>
+  </div>
+  <script src = "js/bundle.js"></script>
+</body>
+</html>
