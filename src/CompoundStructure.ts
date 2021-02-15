@@ -363,7 +363,7 @@ export class CompoundStructure implements StructureProvider {
 
   public static async StructurefromName(reader: DatapackReader, id: string): Promise<Structure>{
     const [namespace, name] = id.split(":")
-    const p = path.join('/data', namespace, 'worldgen', 'template_pool', name + ".json")
+    const p = path.join('data', namespace, 'structures', name + ".nbt")
     const blob = await reader.readFileAsBlob(p)
     const nbt = readNbt(new Uint8Array(blob))
     return Structure.fromNbt(nbt.result)

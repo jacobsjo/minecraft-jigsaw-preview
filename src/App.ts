@@ -7,8 +7,11 @@ import { BlockState, Structure } from '@webmc/core';
 import { clamp, clampVec3, negVec3 } from './util'
 import { BBRenderer } from './BoundingBoxRenderer';
 import { BoundingBox } from './BoundingBox';
+import { DatapackReaderZip } from './DatapackReader/DatapackReaderZip'
 import { read as readNbt } from '@webmc/nbt'
 import { ConfiguedStructureFeature } from './worldgen/ConfiguredStructureFeature';
+import { DatapackReaderComposite } from './DatapackReader/DatapackReaderComposite';
+import { StructureFeatureManger } from './StructureFeatureManager';
 
 declare global {
   interface Window {
@@ -26,6 +29,9 @@ let cDist = 10
 main();
 
 async function main() {
+  const reader = new DatapackReaderComposite()
+  reader.readers.push(await DatapackReaderZip.fromUrl("vanilla_jigsaw_1_16.zip"))
+
   const canvas = document.querySelector('#render') as HTMLCanvasElement;
   const gl = canvas.getContext('webgl');
 
@@ -36,9 +42,10 @@ async function main() {
     last: document.querySelector('.ui .button#last')
   }
 
-  let dropzone = document.getElementById("dropzone");
-
   const stepDisplay = document.querySelector('.ui .text#step')
+
+  const featuresList = document.querySelector('.sidebar .list#features')
+
 
   if (!gl) {
     throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.')
@@ -72,69 +79,31 @@ async function main() {
 
   let drawBB = true
 
-  let root: DirectoryEntry
-
   let ownBB: BoundingBox
   let insideBB: BoundingBox | undefined
   let checkBBs: BoundingBox[]
 
+  refreshDatapacks()
   refreshStructure()
 
-  console.log(dropzone)
-  dropzone.addEventListener("dragover", function(event) {
-    event.preventDefault();
-  }, false);
+  async function refreshDatapacks() {
+    const features = await ConfiguedStructureFeature.getAll(reader)
+    console.log(features)
+    features.forEach(feature => {
+      const node = document.createElement("LI");
+      const textnode = document.createTextNode(feature.toString());
+      node.appendChild(textnode);
 
-  dropzone.addEventListener("drop", async function(event) {
-    event.preventDefault();
+      node.onclick = async () => {
+        const sfm = StructureFeatureManger.fromConfiguredStructureFeature(reader, feature)
+        await sfm.generate()
+        structure = sfm.getWorld()
+        refreshStructure()
+      }
 
-    const items = event.dataTransfer.items;
-    root = items[0].webkitGetAsEntry()
-    
-
-    console.log(await ConfiguedStructureFeature.getAll(root, ["minecraft"]))
-  }, false);
-
-/*
-  electron.ipcRenderer.on('structure-update', (event, message) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    message.elements.forEach((element: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      element.structure.palette = element.structure.palette.map((element: any) => {return Object.assign(new BlockState(""), element)})
-      element.structure = Object.assign(new Structure([0,0,0], [], []), element.structure)
-
-    });
-
-    structure = Object.assign(new CompoundStructure, message)
-
-    structure.lastStep()
-
-    cPos[0] = structure.getBounds()[0][0]
-    cPos[1] = structure.getBounds()[0][1]
-    cPos[2] = structure.getBounds()[0][2]
-    refreshStructure()
-    requestAnimationFrame(render)
-  })
-
-  electron.ipcRenderer.on('toggle-bounding-boxes', () => {
-    drawBB = !drawBB
-    requestAnimationFrame(render)
-  })
-
-  electron.ipcRenderer.on('set-version', async (event, message) => {
-    const resources = new ResourceManager()
-    await resources.loadFromMinecraftJar(message)
-  
-    renderer = new StructureRenderer(gl, structure, {
-      blockDefinitions: resources,
-      blockModels: resources,
-      blockAtlas: resources.getBlockAtlas(),
-      blockProperties: resources
+      featuresList.appendChild(node);
     })
-    refreshStructure()
-    requestAnimationFrame(render)
-
-  })*/
+  }
 
   function refreshStructure() {
     renderer.setStructure(structure)
@@ -169,7 +138,6 @@ async function main() {
     }
   }
 
-
   function getViewMatrix() {
     const viewMatrix = mat4.create();
     mat4.translate(viewMatrix, viewMatrix, [0, 0, -cDist])
@@ -178,7 +146,6 @@ async function main() {
     mat4.translate(viewMatrix, viewMatrix, cPos);
     return viewMatrix
   }
-
 
   function render() {
     resize()
@@ -196,6 +163,9 @@ async function main() {
   }
   requestAnimationFrame(render);
 
+  /**
+   * Camera controlls
+   */
 
   //let dragTime: number
   let dragPos: [number, number] | null = null
@@ -246,6 +216,10 @@ async function main() {
   canvas.addEventListener('contextmenu', evt => {
     evt.preventDefault()
   })
+
+  /**
+   * Timeline buttons and keypresses
+   */
 
   buttons.first.addEventListener("click", () => {
     structure.firstStep()

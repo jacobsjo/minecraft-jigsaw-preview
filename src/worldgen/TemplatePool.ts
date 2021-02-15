@@ -40,7 +40,7 @@ export class TemplatePool{
 
     public static async fromName(reader: DatapackReader, id: string): Promise<TemplatePool>{
         const [namespace, name] = id.split(":")
-        const p = path.join('/data', namespace, 'worldgen', 'template_pool', name + ".json")
+        const p = path.join('data', namespace, 'worldgen', 'template_pool', name + ".json")
         const json = await reader.readFileAsJson(p)
         return new TemplatePool(json.fallback, json.elements)
     }
