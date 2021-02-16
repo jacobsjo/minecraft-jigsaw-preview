@@ -61,18 +61,28 @@ export namespace Rotation {
   }  
 }
 
+type CompoundStructureElement = {
+  structure: StructureProvider,
+  pos: BlockPos,
+  rot: Rotation,
+  annotation: {check: number[], inside: number | undefined}
+}
+
+
 export class CompoundStructure implements StructureProvider {
-  private elements: { structure: StructureProvider, pos: BlockPos, rot: Rotation, annotation: {check: number[], inside: number | undefined}} [] = []
+
+  private elements: CompoundStructureElement[] = []
   private minPos: BlockPos = [0,0,0]
   private maxPos: BlockPos = [0,0,0]
 
   private displayMaxStep = 1
 
-  private cachedBlocks: {
+  private bakedBlocks: {
     pos: BlockPos;
     state: BlockState;
     nbt: BlockNbt;
-  }[] | undefined = undefined
+    maxStep: number;
+  }[][] | undefined = undefined
 
   public getBounds(): [BlockPos, BlockPos]{
     return [this.minPos, this.maxPos]
@@ -80,22 +90,22 @@ export class CompoundStructure implements StructureProvider {
 
   public nextStep(): void{
     this.displayMaxStep = Math.min(this.displayMaxStep+1, this.elements.length)
-    this.cachedBlocks = undefined
+//    this.cachedBlocks = undefined
   }
 
   public prevStep(): void{
     this.displayMaxStep = Math.max(this.displayMaxStep-1, 1)
-    this.cachedBlocks = undefined
+//    this.cachedBlocks = undefined
   }
 
   public firstStep(): void{
     this.displayMaxStep = 1 
-    this.cachedBlocks = undefined
+//    this.cachedBlocks = undefined
   }
 
   public lastStep(): void{
     this.displayMaxStep = this.elements.length
-    this.cachedBlocks = undefined
+//    this.cachedBlocks = undefined
   }
 
   public getStep(): number{
@@ -111,10 +121,11 @@ export class CompoundStructure implements StructureProvider {
     return [maxPos[0] - minPos[0] + 1, maxPos[1] - minPos[1] + 1, maxPos[2] - minPos[2] + 1]
   }
 
-  public static mapElementBlocks(element: { structure: StructureProvider; rot: Rotation; pos: number[]; }) : {
+  public static mapElementBlocks(element: { structure: StructureProvider; rot: Rotation; pos: number[]; }, index: number) : {
     pos: BlockPos;
     state: BlockState;
     nbt: BlockNbt;
+    maxStep: number;
 }[]  {
     const size = element.structure.getSize()
     const blocks = element.structure.getBlocks()
@@ -122,7 +133,8 @@ export class CompoundStructure implements StructureProvider {
       return {
         "pos": CompoundStructure.mapPos(element.rot, block.pos, element.pos, size),
         "state": CompoundStructure.getRotatedBlockState(block.state, element.rot),
-        "nbt": block.nbt
+        "nbt": block.nbt,
+        "maxStep": index
       }
     });
   }
@@ -170,15 +182,37 @@ export class CompoundStructure implements StructureProvider {
       return new BoundingBox([-80,-80,-80], [162, 162, 162])
     }
 
-    const size =  this.elements[nr].structure.getSize()
+    return CompoundStructure.getBBFromElement(this.elements[nr])
+  }
+
+  public static getBBFromElement(element: CompoundStructureElement) : BoundingBox {
+    const size =  element.structure.getSize()
     const newSize : BlockPos = [size[0], size[1], size[2]]
-    if (this.elements[nr].rot === Rotation.Rotate90 || this.elements[nr].rot === Rotation.Rotate270){
+    if (element.rot === Rotation.Rotate90 || element.rot === Rotation.Rotate270){
       newSize[0] = size[2]
       newSize[2] = size[0]
     }
 
-    const min: BlockPos = [this.elements[nr].pos[0], this.elements[nr].pos[1], this.elements[nr].pos[2]]
+    const min: BlockPos = [element.pos[0], element.pos[1], element.pos[2]]
     return new BoundingBox(min, newSize)
+  }
+
+  /**
+   * more efficient than getBBFromElemenent.isInside
+   * @param element
+   */
+  public static isInsideBBFromElement(element: CompoundStructureElement, pos: BlockPos) : boolean {
+    const size =  element.structure.getSize()
+
+    if (element.rot === Rotation.Rotate0 || element.rot === Rotation.Rotate180){
+      return pos[0] >= element.pos[0] && pos[0] < element.pos[0] + size[0] &&
+             pos[1] >= element.pos[1] && pos[1] < element.pos[1] + size[1]  &&
+             pos[2] >= element.pos[2] && pos[2] < element.pos[2] + size[2] 
+    } else {
+      return pos[0] >= element.pos[0] && pos[0] < element.pos[0] + size[2] &&
+             pos[1] >= element.pos[1] && pos[1] < element.pos[1] + size[1]  &&
+             pos[2] >= element.pos[2] && pos[2] < element.pos[2] + size[0] 
+    }
   }
 
   public getElementBlocks(nr: number) : {
@@ -186,45 +220,45 @@ export class CompoundStructure implements StructureProvider {
     state: BlockState;
     nbt: BlockNbt;
   }[]{
-    return CompoundStructure.mapElementBlocks(this.elements[nr])
+    return CompoundStructure.mapElementBlocks(this.elements[nr], nr)
   }
 
   public getDisplayBoundingBoxes(): [BoundingBox, BoundingBox | undefined, BoundingBox[]]{
     const ownBB = this.getBB(this.displayMaxStep-1)
-    const newOwnBB = new BoundingBox([ownBB.min[0] - this.minPos[0], ownBB.min[1] - this.minPos[1],ownBB.min[2] - this.minPos[2]], ownBB.size)
 
     const inside = this.elements[this.displayMaxStep-1].annotation.inside
-    let newInsideBB = undefined
     const insideBB = this.getBB(inside)
-    newInsideBB = new BoundingBox([insideBB.min[0] - this.minPos[0], insideBB.min[1] - this.minPos[1], insideBB.min[2] - this.minPos[2]], insideBB.size)
 
     const check = this.elements[this.displayMaxStep-1].annotation.check
-    const checkBBs = check.map(c => {
-      const BB = this.getBB(c)
-      const newBB = new BoundingBox([BB.min[0] - this.minPos[0], BB.min[1] - this.minPos[1], BB.min[2] - this.minPos[2]], BB.size)
-      return newBB
-    })
+    const checkBBs = check.map(c => this.getBB(c))
 
-    return [newOwnBB, newInsideBB, checkBBs]
+    return [ownBB, insideBB, checkBBs]
   }
 
+  public bakeBlocks() : void{
+    const blocks = this.elements.flatMap(CompoundStructure.mapElementBlocks)
+
+    this.bakedBlocks = []
+    blocks.forEach(block => {
+      const posIndex = (block.pos[0] + 80) * 162 * 162 + (block.pos[1] + 80) * 162 + (block.pos[2] + 80)
+      if (this.bakedBlocks[posIndex] === undefined)
+        this.bakedBlocks[posIndex] = [block]
+      else
+        this.bakedBlocks[posIndex].push(block)
+    });
+
+  }
 
   public getBlocks() : {
     pos: BlockPos;
     state: BlockState;
     nbt: BlockNbt;
   }[] {
-    if (!this.cachedBlocks)
-      this.cachedBlocks = this.elements.slice(0, this.displayMaxStep).flatMap(CompoundStructure.mapElementBlocks).map(block => {
-        const newPos : BlockPos = [
-          block.pos[0] - this.minPos[0],
-          block.pos[1] - this.minPos[1],
-          block.pos[2] - this.minPos[2]
-        ]
-        return {"pos": newPos, "state": block.state, "nbt": block.nbt}
-      })
+    if (!this.bakedBlocks)
+      this.bakeBlocks()
 
-    return this.cachedBlocks
+//      return this.bakedBlocks.map(blocks => blocks[blocks.length-1]).filter(block => block != undefined)
+      return this.bakedBlocks.map(blocks => blocks.slice().reverse().find(block => block.maxStep<this.displayMaxStep)).filter(block => block != undefined)
   }
 
   public getBlock(pos: BlockPos) : {
@@ -232,13 +266,22 @@ export class CompoundStructure implements StructureProvider {
     state: BlockState;
     nbt: BlockNbt;
   } {
-    const newPos : BlockPos = [
-      pos[0] + this.minPos[0],
-      pos[1] + this.minPos[1],
-      pos[2] + this.minPos[2]
-    ]
-
     //search reverse to find inner blocks first
+    if (!this.bakedBlocks)
+      this.bakeBlocks()
+
+    if (pos[0] < -80 || pos[1] < -80 || pos[2] < -80 || pos[0] > 81 || pos[1] > 81 || pos[2] > 81)
+      return null
+  
+    const posIndex = (pos[0] + 80) * 162 * 162 + (pos[1] + 80) * 162 + (pos[2] + 80)
+    return this.bakedBlocks[posIndex]?.slice().reverse().find(block => block.maxStep<this.displayMaxStep)
+    /*
+    const element = this.elements.slice(0, this.displayMaxStep).reverse()
+      .find(element => CompoundStructure.isInsideBBFromElement(element,pos))
+    return element?.structure.getBlock(CompoundStructure.inverseMapPos(element.rot, pos, element.pos, element.structure.getSize()))
+    */
+
+    /*
     for (let i=this.displayMaxStep-1 ; i>=0 ; i--){
       if (this.getBB(i).isInside(newPos)){
         const b = this.elements[i].structure.getBlock(CompoundStructure.inverseMapPos(this.elements[i].rot, newPos, this.elements[i].pos, this.elements[i].structure.getSize()))
@@ -246,7 +289,7 @@ export class CompoundStructure implements StructureProvider {
       }
     }
     
-    return undefined
+    return undefined*/
 
 //    return this.getBlocks().find(b => b.pos[0] === pos[0] && b.pos[1] === pos[1] && b.pos[2] === pos[2])
   }

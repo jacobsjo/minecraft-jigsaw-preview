@@ -1,4 +1,5 @@
 import { BlockPos } from "@webmc/core";
+import { vec3 } from "gl-matrix";
 
 
 export class BoundingBox{
@@ -34,9 +35,21 @@ export class BoundingBox{
         const z = this.max[2] < other.min[2] || this.min[2] > other.max[2]
 
         return !(x || y || z)
+    }
 
-//        return Math.abs(this.min[0] + this.size[0]/2 - other.min[0] + other.size[0]/2) * 2 < (this.size[0] + other.size[0]) &&
-//               Math.abs(this.min[1] + this.size[1]/2 - other.min[1] + other.size[1]/2) * 2 < (this.size[1] + other.size[1]) &&
-//               Math.abs(this.min[2] + this.size[2]/2 - other.min[2] + other.size[2]/2) * 2 < (this.size[2] + other.size[2])
+    public getAffectedChunks(): vec3[]{
+        const chunkMin = [Math.floor((this.min[0]-1)/16), Math.floor((this.min[1]-1)/16), Math.floor((this.min[2]-1)/16)]
+        const chunkMax = [Math.floor((this.max[0]+1)/16), Math.floor((this.max[1]+1)/16), Math.floor((this.max[2]+1)/16)]
+
+        const affected: vec3[] = []
+        for (let x = chunkMin[0] ; x<= chunkMax[0] ; x++){
+            for (let y = chunkMin[1] ; y<= chunkMax[1] ; y++){
+                for (let z = chunkMin[2] ; z<= chunkMax[2] ; z++){
+                    affected.push([x,y,z])
+                }
+            }
+        }
+
+        return affected
     }
 }

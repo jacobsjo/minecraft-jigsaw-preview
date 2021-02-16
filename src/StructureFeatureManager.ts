@@ -147,9 +147,11 @@ export class StructureFeatureManger{
                         const placingJigsasPos: BlockPos = placingBlock.pos;
                         const rotatedPlacingJigsawPos: BlockPos = CompoundStructure.mapPos(rotation, placingJigsasPos, [0, 0, 0], size);
 
-                        const offset: BlockPos = [parentJigsawFacingPos[0] - rotatedPlacingJigsawPos[0],
-                        parentJigsawFacingPos[1] - rotatedPlacingJigsawPos[1],
-                        parentJigsawFacingPos[2] - rotatedPlacingJigsawPos[2]];
+                        const offset: BlockPos = [
+                            parentJigsawFacingPos[0] - rotatedPlacingJigsawPos[0],
+                            parentJigsawFacingPos[1] - rotatedPlacingJigsawPos[1],
+                            parentJigsawFacingPos[2] - rotatedPlacingJigsawPos[2]
+                        ];
 
                         const newSize: BlockPos = [size[0], size[1], size[2]]
                         if (rotation === Rotation.Rotate90 || rotation === Rotation.Rotate270) {

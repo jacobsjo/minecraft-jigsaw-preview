@@ -69,7 +69,7 @@ async function main() {
   const resources = new ResourceManager()
   await resources.loadFromZip('/assets.zip')
 
-  let renderer = new StructureRenderer(gl, structure, {
+  const renderer = new StructureRenderer(gl, structure, {
     blockDefinitions: resources,
     blockModels: resources,
     blockAtlas: resources.getBlockAtlas(),
@@ -98,15 +98,17 @@ async function main() {
         const sfm = StructureFeatureManger.fromConfiguredStructureFeature(reader, feature)
         await sfm.generate()
         structure = sfm.getWorld()
+        renderer.setStructure(structure)
         refreshStructure()
+        requestAnimationFrame(render);
       }
 
       featuresList.appendChild(node);
     })
   }
 
-  function refreshStructure() {
-    renderer.setStructure(structure)
+  function refreshStructure(bb?: BoundingBox) {
+    renderer.updateRendering(bb?.getAffectedChunks())
 
     const bbs = structure.getDisplayBoundingBoxes()
     ownBB = bbs[0]
@@ -184,6 +186,7 @@ async function main() {
         cRot[0] = cRot[0] % (Math.PI * 2)
         cRot[1] = clamp(cRot[1], -Math.PI / 2, Math.PI / 2)
       } else if (dragButton === 2) {
+        const [min, max] = structure.getBounds()
         vec3.rotateY(cPos, cPos, [0, 0, 0], cRot[0])
         vec3.rotateX(cPos, cPos, [0, 0, 0], cRot[1])
         const d = vec3.fromValues(dx, -dy, 0)
@@ -191,7 +194,7 @@ async function main() {
         vec3.add(cPos, cPos, d)
         vec3.rotateX(cPos, cPos, [0, 0, 0], -cRot[1])
         vec3.rotateY(cPos, cPos, [0, 0, 0], -cRot[0])
-        clampVec3(cPos, negVec3(structure.getSize()), [0, 0, 0])
+        clampVec3(cPos, negVec3(max), negVec3(min))
       } else {
         return
       }
@@ -221,41 +224,47 @@ async function main() {
    * Timeline buttons and keypresses
    */
 
-  buttons.first.addEventListener("click", () => {
+  function next() {
+    structure.nextStep()
+    refreshStructure(structure.getDisplayBoundingBoxes()[0])
+    requestAnimationFrame(render)
+  }
+
+  function prev() {
+    const bb = structure.getDisplayBoundingBoxes()[0]
+    structure.prevStep()
+    refreshStructure(bb)
+    requestAnimationFrame(render)
+  }
+
+
+  buttons.first.addEventListener("click", async () => {
     structure.firstStep()
     refreshStructure()
     requestAnimationFrame(render)
   })
 
-  buttons.prev.addEventListener("click", () => {
-    structure.prevStep()
-    refreshStructure()
-    requestAnimationFrame(render)
+  buttons.prev.addEventListener("click", async () => {
+    prev()
   })
 
-  buttons.next.addEventListener("click", () => {
-    structure.nextStep()
-    refreshStructure()
-    requestAnimationFrame(render)
+  buttons.next.addEventListener("click", async () => {
+    next()
   })
 
-  buttons.last.addEventListener("click", () => {
+  buttons.last.addEventListener("click", async () => {
     structure.lastStep()
     refreshStructure()
     requestAnimationFrame(render)
   })
 
 
-  window.addEventListener('keyup', (evt:KeyboardEvent) => {
+  window.addEventListener('keyup', async (evt:KeyboardEvent) => {
     if (evt.key === "ArrowLeft"){
-      structure.prevStep()
-      refreshStructure()
-      requestAnimationFrame(render)
-      } else if (evt.key === "ArrowRight"){
-      structure.nextStep()
-      refreshStructure()
-      requestAnimationFrame(render)
-      }
+      prev()
+    } else if (evt.key === "ArrowRight"){
+      next()
+    }
   } , true)
 
 
