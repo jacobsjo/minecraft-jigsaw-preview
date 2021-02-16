@@ -12,6 +12,7 @@ import { read as readNbt } from '@webmc/nbt'
 import { ConfiguedStructureFeature } from './worldgen/ConfiguredStructureFeature';
 import { DatapackReaderComposite } from './DatapackReader/DatapackReaderComposite';
 import { StructureFeatureManger } from './StructureFeatureManager';
+import { DatapackReaderDirectory } from './DatapackReader/DatapackReaderDirectory';
 
 declare global {
   interface Window {
@@ -30,19 +31,26 @@ main();
 
 async function main() {
   const reader = new DatapackReaderComposite()
-  reader.readers.push(await DatapackReaderZip.fromUrl("vanilla_jigsaw_1_16.zip"))
+  const vanillaReader = await DatapackReaderZip.fromUrl("vanilla_jigsaw_1_16.zip")
+  reader.readers = [vanillaReader]
 
   const canvas = document.querySelector('#render') as HTMLCanvasElement;
   const gl = canvas.getContext('webgl');
+
+  const loader = document.querySelector('.loader')
 
   const buttons = {
     first: document.querySelector('.ui .button#first'),
     prev: document.querySelector('.ui .button#prev'),
     next: document.querySelector('.ui .button#next'),
-    last: document.querySelector('.ui .button#last')
+    last: document.querySelector('.ui .button#last'),
+    bb: document.querySelector('.ui .button#bb')
   }
 
   const stepDisplay = document.querySelector('.ui .text#step')
+
+  const openZipButton = document.querySelector('.sidebar .button#openzip')
+  const openFolderButton = document.querySelector('.sidebar .button#openfolder')
 
   const featuresList = document.querySelector('.sidebar .list#features')
 
@@ -85,8 +93,19 @@ async function main() {
 
   refreshDatapacks()
   refreshStructure()
+  hideLoader()
+
+  function showLoader(){
+    loader.classList.remove("hidden")
+  }
+
+  function hideLoader(){
+    loader.classList.add("hidden")
+  }
+
 
   async function refreshDatapacks() {
+    featuresList.innerHTML = ""
     const features = await ConfiguedStructureFeature.getAll(reader)
     console.log(features)
     features.forEach(feature => {
@@ -95,12 +114,14 @@ async function main() {
       node.appendChild(textnode);
 
       node.onclick = async () => {
+        showLoader()
         const sfm = StructureFeatureManger.fromConfiguredStructureFeature(reader, feature)
         await sfm.generate()
         structure = sfm.getWorld()
         renderer.setStructure(structure)
         refreshStructure()
         requestAnimationFrame(render);
+        hideLoader()
       }
 
       featuresList.appendChild(node);
@@ -221,6 +242,42 @@ async function main() {
   })
 
   /**
+   * Open buttons
+   */
+
+  openZipButton.addEventListener('click', async () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.zip'
+
+    input.onchange = async () => {
+      if (input.files.length===0){
+        alert("No file selected")
+      }
+      if (!input.files[0].name.toLowerCase().endsWith('.zip')){
+        alert("Please select a .zip file")
+      }
+
+      reader.readers = [vanillaReader, await DatapackReaderZip.fromFile(input.files[0])]
+      refreshDatapacks()
+    }
+    input.click()
+  })
+
+  openFolderButton.addEventListener('click', async () => {
+    const input:any = document.createElement('input')
+    input.type = 'file'
+    input.webkitdirectory = true
+
+    input.onchange = async () => {
+      reader.readers = [vanillaReader, await DatapackReaderDirectory.fromFileList(Array.from(input.files))]
+      console.log(reader.readers)
+      refreshDatapacks()
+    }
+    input.click()
+  })
+
+  /**
    * Timeline buttons and keypresses
    */
 
@@ -255,6 +312,11 @@ async function main() {
   buttons.last.addEventListener("click", async () => {
     structure.lastStep()
     refreshStructure()
+    requestAnimationFrame(render)
+  })
+
+  buttons.bb.addEventListener("click", async () => {
+    drawBB = !drawBB
     requestAnimationFrame(render)
   })
 

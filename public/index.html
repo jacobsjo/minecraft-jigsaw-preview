@@ -76,7 +76,7 @@
       cursor: pointer;
     }
 
-    .text {
+    .ui span.text {
       width: 60pt;
     }
 
@@ -87,6 +87,8 @@
     .sidebar .button{
       padding: 10pt;
       margin: 10pt;
+      margin-right: 0;
+      width: 63pt;
     }
 
     .sidebar li{
@@ -106,14 +108,44 @@
       background-color: #535353;
     }
 
+    .loader{
+      position: absolute;
+      top: 0pt;
+      left: 0pt;
+      width: 100%;
+      height: 100%;
+      background-color: #b0b0b0b0;
+    }
+
+    .loader.hidden{
+      display: none;
+    }
+
+    .loader .spinner{
+      position: absolute;
+      left: calc(50vw - 60px);
+      top: calc(50vh - 60px);
+      opacity: 1;
+      border: 16px solid #5c5b5b;
+      border-radius: 50%;
+      border-top: 16px solid #e2932d;
+      width: 120px;
+      height: 120px;
+      -webkit-animation: spin 2s linear infinite; /* Safari */
+      animation: spin 2s linear infinite;  
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
   <div class="sidebar">
-    <span class="button enabled" id="open"> Open Datapack </span>
-    <!--<input type="file" id="datapack" webkitdirectory directory/>-->
-    <ul class="list" id="features">
-    </ul>
+    <span class="button enabled" id="openzip"> Open Datapack .zip</span>
+    <span class="button enabled" id="openfolder"> Open Datapack Folder</span>
+    <ul class="list" id="features"></ul>
   </div>
   <div class="main">
     <canvas id="render" width="640" height="480"></canvas>
@@ -123,7 +155,12 @@
       <span class="text" id="step">&nbsp;</span></span>
       <span class="button" id="next"> &gt; </span>
       <span class="button" id="last"> &gt;&gt;| </span>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <span class="button enabled" id="bb"> BB </span>
     </div>
+  </div>
+  <div class="loader">
+    <div class="spinner"></div>
   </div>
   <script src = "js/bundle.js"></script>
 </body>

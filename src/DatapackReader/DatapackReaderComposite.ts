@@ -4,7 +4,7 @@ export class DatapackReaderComposite implements DatapackReader{
     ){}
     
     public getFilesInPath(path: string): string[] {
-        return this.readers.flatMap(reader => reader.getFilesInPath(path))
+        return [... new Set(this.readers.flatMap(reader => reader.getFilesInPath(path)))]
     }
 
     public hasFile(path: string): boolean {
@@ -14,7 +14,7 @@ export class DatapackReaderComposite implements DatapackReader{
 
     public async readFileAsJson(path: string): Promise<any> {
         const has = await Promise.all(this.readers.map(reader => reader.hasFile(path)))
-        const hasIndex = has.findIndex(b => b)
+        const hasIndex = has.lastIndexOf(true)
         if (hasIndex < 0){
             throw "Path " + path + " in no reader"
         }
@@ -23,7 +23,7 @@ export class DatapackReaderComposite implements DatapackReader{
 
     public async readFileAsBlob(path: string): Promise<ArrayBuffer> {
         const has = await Promise.all(this.readers.map(reader => reader.hasFile(path)))
-        const hasIndex = has.findIndex(b => b)
+        const hasIndex = has.lastIndexOf(true)
         if (hasIndex < 0){
             throw "Path " + path + " in no reader"
         }
