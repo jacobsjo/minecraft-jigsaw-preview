@@ -25,6 +25,13 @@ export class DatapackReaderDirectory implements DatapackReader{
             .map(file => file.webkitRelativePath.substr(path.length).split('/')[0]))].filter(e => e != "")
     }
 
+    public getPathsInPath(path: string): string[] {
+        path = this.directoryName + "/" + path + "/"
+        return this.files.filter(file => file.webkitRelativePath.startsWith(path))
+            .map(file => file.webkitRelativePath.substr(path.length))
+    }
+
+
     public async readFileAsJson(path: string): Promise<any> {
         const data = await this.files.find(file => file.webkitRelativePath === this.directoryName + "/" + path).text()
         return JSON.parse(data)

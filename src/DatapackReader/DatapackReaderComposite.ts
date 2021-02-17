@@ -7,6 +7,11 @@ export class DatapackReaderComposite implements DatapackReader{
         return [... new Set(this.readers.flatMap(reader => reader.getFilesInPath(path)))]
     }
 
+    public getPathsInPath(path: string): string[] {
+        return [... new Set(this.readers.flatMap(reader => reader.getPathsInPath(path)))]
+    }
+
+
     public hasFile(path: string): boolean {
         const has = this.readers.map(reader => reader.hasFile(path))
         return has.includes(true)

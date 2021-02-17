@@ -34,6 +34,13 @@ export class DatapackReaderZip implements DatapackReader{
             .map(key => key.substr(path.length+1).split('/')[0]))].filter(e => e != "")
     }
 
+    public getPathsInPath(path: string): string[] {
+        path = this.datapackName + path
+        return Object.keys(this.zip.folder(path).files).filter(key => key.startsWith(path + "/"))
+            .map(key => key.substr(path.length+1))
+    }
+
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async readFileAsJson(path: string): Promise<any> {
         const data = await this.zip.file(this.datapackName + path).async("string")
