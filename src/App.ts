@@ -230,8 +230,8 @@ async function main() {
 //    }
   })
   canvas.addEventListener('wheel', (evt:WheelEvent ) => {
-    cDist += evt.deltaY / 100
-    cDist = Math.max(1, Math.min(100, cDist))
+    cDist += evt.deltaY > 0 ? 1 : -1
+    cDist = Math.max(5, Math.min(100, cDist))
     render();
   })
 
