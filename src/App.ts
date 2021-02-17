@@ -111,15 +111,21 @@ async function main() {
       node.appendChild(textnode);
 
       node.onclick = async () => {
-        showLoader()
-        const sfm = StructureFeatureManger.fromConfiguredStructureFeature(reader, feature)
-        await sfm.generate()
-        structure = sfm.getWorld()
-        structure.lastStep()
-        renderer.setStructure(structure)
-        refreshStructure()
-        requestAnimationFrame(render);
-        hideLoader()
+        try{
+          showLoader()
+          const sfm = StructureFeatureManger.fromConfiguredStructureFeature(reader, feature)
+          await sfm.generate()
+          structure = sfm.getWorld()
+          structure.lastStep()
+          renderer.setStructure(structure)
+          refreshStructure()
+          requestAnimationFrame(render);
+        } catch (e) {
+          console.error(e)
+          alert("Failed to generate Structure: " + e)
+        } finally {
+          hideLoader()
+        }
       }
 
       featuresList.appendChild(node);

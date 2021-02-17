@@ -87,7 +87,7 @@ export class StructureFeatureManger{
                 if (typeof block.nbt.pool.value !== "string")
                     throw "pool element nbt of wrong type";
 
-                const orientation: string = block.state.getProperties()['orientation'];
+                const orientation: string = block.state.getProperties()['orientation'] ?? 'north_up';
                 const [forward, up] = orientation.split("_");
                 const parentJigsasPos: BlockPos = block.pos;
                 const parentJigsawFacingPos: BlockPos = this.directionRelative(parentJigsasPos, forward);
@@ -132,7 +132,7 @@ export class StructureFeatureManger{
                     nextPlacingJigsawBlocks:
                     for (let k = 0 ; k < placingJigsawBlocks.length ; k++){
                         const placingBlock = placingJigsawBlocks[k]
-                        const placingOrientation: string = placingBlock.state.getProperties()['orientation'];
+                        const placingOrientation: string = placingBlock.state.getProperties()['orientation'] ?? 'north_up';
                         const [placingForward, placingUp] = placingOrientation.split("_");
 
                         const name: string = (typeof placingBlock.nbt.name.value === "string") ? placingBlock.nbt.name.value : "minecraft:empty"
