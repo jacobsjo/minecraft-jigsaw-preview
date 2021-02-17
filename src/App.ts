@@ -30,9 +30,16 @@ let cDist = 10
 main();
 
 async function main() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const version = "release"
+  //const version = urlParams.get('version') === "snapshot" ? "snapshot" : "release"
+
   const reader = new DatapackReaderComposite()
-  const vanillaReader = await DatapackReaderZip.fromUrl("vanilla_jigsaw_1_16.zip")
+  const vanillaReader = await DatapackReaderZip.fromUrl("vanilla_jigsaw_" + version + ".zip")
   reader.readers = [vanillaReader]
+
+  const resources = new ResourceManager()
+  await resources.loadFromZip("/assets_" + version + ".zip")
 
   const canvas = document.querySelector('#render') as HTMLCanvasElement;
   const gl = canvas.getContext('webgl');
@@ -66,16 +73,6 @@ async function main() {
   const exampleNbt1 = readNbt(new Uint8Array(exampleData1))
   const structure1 = Structure.fromNbt(exampleNbt1.result)
   structure.addStructure(structure1, [0,0,0], Rotation.Rotate0, { check: [], inside: undefined})
-
-  /*
-  const exampleRes2 = await fetch('public/blueprint.nbt')
-  const exampleData2 = await exampleRes2.arrayBuffer()
-  const exampleNbt2 = readNbt(new Uint8Array(exampleData2))
-  const structure2 = Structure.fromNbt(exampleNbt2.result)
-  structure.addStructure(structure2, [6,0,0], Rotation.Rotate90)*/
-
-  const resources = new ResourceManager()
-  await resources.loadFromZip('/assets.zip')
 
   const renderer = new StructureRenderer(gl, structure, {
     blockDefinitions: resources,
@@ -118,6 +115,7 @@ async function main() {
         const sfm = StructureFeatureManger.fromConfiguredStructureFeature(reader, feature)
         await sfm.generate()
         structure = sfm.getWorld()
+        structure.lastStep()
         renderer.setStructure(structure)
         refreshStructure()
         requestAnimationFrame(render);
