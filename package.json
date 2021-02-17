@@ -6,7 +6,8 @@
     "build": "webpack-cli -p",
     "watch": "webpack-cli -p -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
-    "start": "webpack-dev-server -d --content-base ./public"
+    "start": "webpack-dev-server -d --content-base ./public",
+    "deploy": "gh-pages -d dist"
   },
   "repository": "https://github.com/jacobsjo/minecraft-jigsaw-preview/",
   "keywords": [
@@ -33,7 +34,8 @@
     "typescript": "^3.9.5",
     "webpack": "^4.44.2",
     "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.11.0"
+    "webpack-dev-server": "^3.11.0",
+    "gh-pages": "^3.1.0"
   },
   "dependencies": {
     "@webmc/core": "^0.2.1",
