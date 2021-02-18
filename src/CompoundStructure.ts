@@ -77,12 +77,18 @@ export class CompoundStructure implements StructureProvider {
 
   private displayMaxStep = 1
 
+  private bakedBlocksPerStructure: {
+    pos: BlockPos;
+    state: BlockState;
+    nbt: BlockNbt;
+  }[][] | undefined = undefined // first array: structure, second array: blocks in structure
+
   private bakedBlocks: {
     pos: BlockPos;
     state: BlockState;
     nbt: BlockNbt;
     maxStep: number;
-  }[][] | undefined = undefined
+  }[][] | undefined = undefined // first array: block pos, second array: blocks at block pos
 
   public getBounds(): [BlockPos, BlockPos]{
     return [this.minPos, this.maxPos]
@@ -121,11 +127,10 @@ export class CompoundStructure implements StructureProvider {
     return [maxPos[0] - minPos[0] + 1, maxPos[1] - minPos[1] + 1, maxPos[2] - minPos[2] + 1]
   }
 
-  public static mapElementBlocks(element: { structure: StructureProvider; rot: Rotation; pos: number[]; }, index: number) : {
+  public static mapElementBlocks(element: { structure: StructureProvider; rot: Rotation; pos: number[]; }) : {
     pos: BlockPos;
     state: BlockState;
     nbt: BlockNbt;
-    maxStep: number;
 }[]  {
     const size = element.structure.getSize()
     const blocks = element.structure.getBlocks()
@@ -133,8 +138,7 @@ export class CompoundStructure implements StructureProvider {
       return {
         "pos": CompoundStructure.mapPos(element.rot, block.pos, element.pos, size),
         "state": CompoundStructure.getRotatedBlockState(block.state, element.rot),
-        "nbt": block.nbt,
-        "maxStep": index
+        "nbt": block.nbt
       }
     });
   }
@@ -220,7 +224,7 @@ export class CompoundStructure implements StructureProvider {
     state: BlockState;
     nbt: BlockNbt;
   }[]{
-    return CompoundStructure.mapElementBlocks(this.elements[nr], nr)
+    return CompoundStructure.mapElementBlocks(this.elements[nr])
   }
 
   public getDisplayBoundingBoxes(): [BoundingBox, BoundingBox | undefined, BoundingBox[]]{
@@ -236,15 +240,23 @@ export class CompoundStructure implements StructureProvider {
   }
 
   public bakeBlocks() : void{
-    const blocks = this.elements.flatMap(CompoundStructure.mapElementBlocks)
+    this.bakedBlocksPerStructure = this.elements.map(CompoundStructure.mapElementBlocks)
 
     this.bakedBlocks = []
-    blocks.forEach(block => {
-      const posIndex = (block.pos[0] + 80) * 162 * 162 + (block.pos[1] + 80) * 162 + (block.pos[2] + 80)
-      if (this.bakedBlocks[posIndex] === undefined)
-        this.bakedBlocks[posIndex] = [block]
-      else
-        this.bakedBlocks[posIndex].push(block)
+    this.bakedBlocksPerStructure.forEach((blocks, id) => {
+      blocks.forEach(b => {
+        const block = {
+          pos: b.pos,
+          state: b.state,
+          nbt: b.nbt,
+          maxStep: id
+        }
+        const posIndex = (block.pos[0] + 80) * 162 * 162 + (block.pos[1] + 80) * 162 + (block.pos[2] + 80)
+        if (this.bakedBlocks[posIndex] === undefined)
+          this.bakedBlocks[posIndex] = [block]
+        else
+          this.bakedBlocks[posIndex].push(block)
+      });
     });
 
   }
@@ -257,8 +269,9 @@ export class CompoundStructure implements StructureProvider {
     if (!this.bakedBlocks)
       this.bakeBlocks()
 
-//      return this.bakedBlocks.map(blocks => blocks[blocks.length-1]).filter(block => block != undefined)
-      return this.bakedBlocks.map(blocks => blocks.slice().reverse().find(block => block.maxStep<this.displayMaxStep)).filter(block => block != undefined)
+    return this.bakedBlocksPerStructure.slice(0, this.displayMaxStep).flat()
+//    return this.bakedBlocks.map(blocks => blocks[0]).filter(block => block != undefined)
+//    return this.bakedBlocks.map(blocks => findLast(blocks, block => block.maxStep<this.displayMaxStep)).filter(block => block != undefined)
   }
 
   public getBlock(pos: BlockPos) : {
