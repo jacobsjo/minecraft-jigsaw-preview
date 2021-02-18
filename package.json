@@ -1,6 +1,6 @@
 {
   "name": "minecraft-jigsaw-preview",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Display Minecraft Jigsaw Structures",
   "scripts": {
     "build": "webpack-cli -p",

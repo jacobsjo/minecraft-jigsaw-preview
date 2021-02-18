@@ -109,6 +109,7 @@ async function main() {
       const node = document.createElement("LI");
       const textnode = document.createTextNode(feature.toString());
       node.appendChild(textnode);
+      node.setAttribute("title", feature.toString())
 
       node.onclick = async () => {
         try{
