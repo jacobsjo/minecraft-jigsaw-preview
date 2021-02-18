@@ -86,7 +86,8 @@
   .sidebar li{
     padding-top: 5pt;
     padding-bottom: 5pt;
-    padding-left: 10pt;
+    padding-left: 5pt;
+    padding-right: 5pt;
     list-style-type: none;
     color: #d2ad48;
     background-color: #333333;
@@ -94,6 +95,8 @@
     margin-left: 10pt;
     margin-right: 10pt;
     cursor: pointer;
+    text-overflow: ellipsis;
+    overflow: clip;    
   }
 
   .sidebar li:hover{
