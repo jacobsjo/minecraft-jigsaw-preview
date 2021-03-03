@@ -82,7 +82,8 @@ async function main() {
     blockAtlas: resources.getBlockAtlas(),
     blockProperties: resources
   }, {
-    chunkSize: chunkSize
+    chunkSize: chunkSize,
+    useInvisibleBlockBuffer: false
   })
   const bbRenderer = new BBRenderer(gl)
 
@@ -123,7 +124,7 @@ async function main() {
           structure = sfm.getWorld()
           structure.lastStep()
           renderer.setStructure(structure)
-          refreshStructure()
+          refreshStructure(null)
           requestAnimationFrame(render);
         } catch (e) {
           console.error(e)
@@ -138,7 +139,8 @@ async function main() {
   }
 
   function refreshStructure(bb?: BoundingBox) {
-    renderer.updateStructureBuffers(bb?.getAffectedChunks(chunkSize))
+    if (bb !== null) 
+      renderer.updateStructureBuffers(bb?.getAffectedChunks(chunkSize))
 
     const bbs = structure.getDisplayBoundingBoxes()
     ownBB = bbs[0]
