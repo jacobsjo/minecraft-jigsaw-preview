@@ -13,6 +13,7 @@ import { ConfiguedStructureFeature } from './worldgen/ConfiguredStructureFeature
 import { DatapackReaderComposite } from './DatapackReader/DatapackReaderComposite';
 import { StructureFeatureManger } from './StructureFeatureManager';
 import { DatapackReaderDirectory } from './DatapackReader/DatapackReaderDirectory';
+import { TemplatePool } from './worldgen/TemplatePool';
 
 declare global {
   interface Window {
@@ -107,6 +108,7 @@ async function main() {
 
 
   async function refreshDatapacks() {
+    TemplatePool.reload()
     featuresList.innerHTML = ""
     const features = await ConfiguedStructureFeature.getAll(reader)
     console.log(features)
@@ -128,7 +130,7 @@ async function main() {
           requestAnimationFrame(render);
         } catch (e) {
           console.error(e)
-          alert("Failed to generate Structure: " + e)
+          alert(e)
         } finally {
           hideLoader()
         }
@@ -282,7 +284,6 @@ async function main() {
 
     input.onchange = async () => {
       reader.readers = [vanillaReader, await DatapackReaderDirectory.fromFileList(Array.from(input.files))]
-      console.log(reader.readers)
       refreshDatapacks()
     }
     input.click()

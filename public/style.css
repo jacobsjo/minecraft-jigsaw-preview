@@ -76,11 +76,29 @@
     width: 60pt;
   }
 
+
+
   .sidebar .button{
     padding: 10pt;
     margin: 10pt;
     margin-right: 0;
+    margin-bottom: 0;
+    margin-top: 10pt;
     width: 63pt;
+  }
+
+  .sidebar .button.fullwidth{
+    width: 160pt;
+    margin-left: 10pt;
+    margin-right: 10pt;
+  }
+
+  .hidden{
+    display: none;
+  }
+
+  .sidebar ul{
+    padding-top: 20pt;
   }
 
   .sidebar li{

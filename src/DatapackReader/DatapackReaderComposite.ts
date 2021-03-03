@@ -21,7 +21,7 @@ export class DatapackReaderComposite implements DatapackReader{
         const has = await Promise.all(this.readers.map(reader => reader.hasFile(path)))
         const hasIndex = has.lastIndexOf(true)
         if (hasIndex < 0){
-            throw "Path " + path + " in no reader"
+            throw new URIError("File " + path + " not found")
         }
         return this.readers[hasIndex].readFileAsJson(path)
     }
@@ -30,7 +30,7 @@ export class DatapackReaderComposite implements DatapackReader{
         const has = await Promise.all(this.readers.map(reader => reader.hasFile(path)))
         const hasIndex = has.lastIndexOf(true)
         if (hasIndex < 0){
-            throw "Path " + path + " in no reader"
+            throw new URIError("File " + path + " not found")
         }
         return this.readers[hasIndex].readFileAsBlob(path)
     }

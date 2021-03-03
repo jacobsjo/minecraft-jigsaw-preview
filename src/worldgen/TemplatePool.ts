@@ -31,18 +31,29 @@ export class TemplatePool{
             return this.templatePoolMap.get(id)
         }
 
-        const promise: Promise<TemplatePool> = new Promise(async (resolve) => {
-            const [namespace, name] = id.split(":")
-            const p = path.join('data', namespace, 'worldgen', 'template_pool', name + ".json")
-            const json = await reader.readFileAsJson(p)
-            resolve(new TemplatePool(json.fallback, json.elements.map((e: any) => {
-                return {weight: e.weight, element: PoolElement.fromElement(reader, e.element)}
-            })))
+        const promise: Promise<TemplatePool> = new Promise(async (resolve, reject) => {
+            try {
+                const [namespace, name] = id.split(":")
+                const p = path.join('data', namespace, 'worldgen', 'template_pool', name + ".json")
+                const json = await reader.readFileAsJson(p)
+                resolve(new TemplatePool(json.fallback, json.elements.map((e: any) => {
+                    return {weight: e.weight, element: PoolElement.fromElement(reader, e.element)}
+                })))
+            } catch (e){
+                if (e instanceof URIError)
+                    reject("Cound not load Template Pool " + id)
+                else if (e instanceof DOMException)
+                    reject("Permission error while loading Template Pool " + id + "\nTry reloading the datapack using the Open Datapack buttons")
+            }
         })
 
         this.templatePoolMap.set(id, promise)
         return promise
     }
 
-    private static templatePoolMap:  Map<string, Promise<TemplatePool>> = new Map()
+    public static reload(){
+        this.templatePoolMap.clear()
+    }
+
+    private static templatePoolMap: Map<string, Promise<TemplatePool>> = new Map()
 }
