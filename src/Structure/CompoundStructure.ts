@@ -4,7 +4,7 @@ import { read as readNbt } from '@webmc/nbt'
 import { files } from "jszip";
 import * as path from 'path';
 //import fs from 'fs';
-import {BoundingBox} from "./BoundingBox"
+import {BoundingBox} from "../BoundingBox"
 
 export enum Rotation {
   Rotate0 = 0,
@@ -307,7 +307,7 @@ export class CompoundStructure implements StructureProvider {
 //    return this.getBlocks().find(b => b.pos[0] === pos[0] && b.pos[1] === pos[1] && b.pos[2] === pos[2])
   }
 
-  public addStructure(structure: StructureProvider, pos: BlockPos, rot: Rotation, annotation: {check: number[], inside: number | undefined}): number{
+  public addStructure(structure: StructureProvider, pos: BlockPos, rot: Rotation, annotation: {check: number[], inside: number | undefined} | undefined): number{
 
     const size = structure.getSize()
     const newSize : BlockPos = [size[0], size[1], size[2]]

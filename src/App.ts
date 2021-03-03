@@ -2,7 +2,7 @@
 import { StructureRenderer } from '@webmc/render';
 import { ResourceManager } from './ResourceManager'
 import { mat4 , vec2, vec3 } from 'gl-matrix'
-import { CompoundStructure, Rotation } from "./CompoundStructure";
+import { CompoundStructure, Rotation } from "./Structure/CompoundStructure";
 import { BlockState, Structure } from '@webmc/core';
 import { clamp, clampVec3, negVec3 } from './util'
 import { BBRenderer } from './BoundingBoxRenderer';
@@ -19,6 +19,8 @@ declare global {
     showDirectoryPicker:any;
   }
 }
+
+const chunkSize = 8
 
 //let viewDist = 4;
 //let xRotation = 0.8;
@@ -79,6 +81,8 @@ async function main() {
     blockModels: resources,
     blockAtlas: resources.getBlockAtlas(),
     blockProperties: resources
+  }, {
+    chunkSize: chunkSize
   })
   const bbRenderer = new BBRenderer(gl)
 
@@ -134,7 +138,7 @@ async function main() {
   }
 
   function refreshStructure(bb?: BoundingBox) {
-    renderer.updateRendering(bb?.getAffectedChunks())
+    renderer.updateStructureBuffers(bb?.getAffectedChunks(chunkSize))
 
     const bbs = structure.getDisplayBoundingBoxes()
     ownBB = bbs[0]

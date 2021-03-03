@@ -37,9 +37,9 @@ export class BoundingBox{
         return !(x || y || z)
     }
 
-    public getAffectedChunks(): vec3[]{
-        const chunkMin = [Math.floor((this.min[0]-1)/16), Math.floor((this.min[1]-1)/16), Math.floor((this.min[2]-1)/16)]
-        const chunkMax = [Math.floor((this.max[0]+1)/16), Math.floor((this.max[1]+1)/16), Math.floor((this.max[2]+1)/16)]
+    public getAffectedChunks(chunkSize: number): vec3[]{
+        const chunkMin = [Math.floor((this.min[0]-1)/chunkSize), Math.floor((this.min[1]-1)/chunkSize), Math.floor((this.min[2]-1)/chunkSize)]
+        const chunkMax = [Math.floor((this.max[0]+1)/chunkSize), Math.floor((this.max[1]+1)/chunkSize), Math.floor((this.max[2]+1)/chunkSize)]
 
         const affected: vec3[] = []
         for (let x = chunkMin[0] ; x<= chunkMax[0] ; x++){
