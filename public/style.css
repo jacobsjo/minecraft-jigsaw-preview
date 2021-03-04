@@ -104,11 +104,25 @@
     cursor: pointer;
   }
 
-  .ui span.text {
-    width: 60pt;
+  div.iconbar{
+    position: absolute;
+    bottom: 10pt;
   }
 
+  span.button.icon {
+    width:15pt;
+    height:15pt;
+    padding: 5pt;
+    margin-right: -5pt;
+  }
 
+  span.button.icon img{
+    width:15pt;
+  }
+
+  .ui span.text {
+    width: 90pt;
+  }
 
   .sidebar .button{
     padding: 10pt;

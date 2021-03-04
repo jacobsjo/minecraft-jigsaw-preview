@@ -49,12 +49,16 @@ async function main() {
 
   const loader = document.querySelector('.loader')
 
-  const buttons = {
+  const nav_buttons = {
     first: document.querySelector('.ui .button#first'),
     prev: document.querySelector('.ui .button#prev'),
     next: document.querySelector('.ui .button#next'),
     last: document.querySelector('.ui .button#last'),
-    bb: document.querySelector('.ui .button#bb')
+  }
+
+  const setting_buttons = {
+    bb: document.querySelector('.button#bb'),
+    info: document.querySelector('.button#info'),
   }
 
   const stepDisplay = document.querySelector('.ui .text#step')
@@ -64,6 +68,7 @@ async function main() {
 
   const featuresList = document.querySelector('.sidebar .list#features')
 
+  const infoPanel = document.querySelector('.info')
   const infoTempletePool = document.querySelector('.info #templete-pool')
   const infoFallbackFrom = document.querySelector('.info #fallback_from')
   const infoElement = document.querySelector('.info #element')
@@ -170,10 +175,10 @@ async function main() {
 
     const maxSteps = structure.getStepCount()
 
-    buttons.first.classList.toggle("enabled", step > 1)
-    buttons.prev.classList.toggle("enabled", step > 1)
-    buttons.next.classList.toggle("enabled", step < maxSteps)
-    buttons.last.classList.toggle("enabled", step < maxSteps)
+    nav_buttons.first.classList.toggle("enabled", step > 1)
+    nav_buttons.prev.classList.toggle("enabled", step > 1)
+    nav_buttons.next.classList.toggle("enabled", step < maxSteps)
+    nav_buttons.last.classList.toggle("enabled", step < maxSteps)
 
     stepDisplay.innerHTML = step + " / " + maxSteps
 
@@ -339,29 +344,33 @@ async function main() {
   }
 
 
-  buttons.first.addEventListener("click", async () => {
+  nav_buttons.first.addEventListener("click", async () => {
     structure.firstStep()
     refreshStructure()
     requestAnimationFrame(render)
   })
 
-  buttons.prev.addEventListener("click", async () => {
+  nav_buttons.prev.addEventListener("click", async () => {
     prev()
   })
 
-  buttons.next.addEventListener("click", async () => {
+  nav_buttons.next.addEventListener("click", async () => {
     next()
   })
 
-  buttons.last.addEventListener("click", async () => {
+  nav_buttons.last.addEventListener("click", async () => {
     structure.lastStep()
     refreshStructure()
     requestAnimationFrame(render)
   })
 
-  buttons.bb.addEventListener("click", async () => {
+  setting_buttons.bb.addEventListener("click", async () => {
     drawBB = !drawBB
     requestAnimationFrame(render)
+  })
+
+  setting_buttons.info.addEventListener("click", async () => {
+    infoPanel.classList.toggle("hidden")
   })
 
 
