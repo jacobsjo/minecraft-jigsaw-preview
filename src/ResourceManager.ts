@@ -1,5 +1,5 @@
 import jszip from 'jszip'
-import { BlockAtlas, BlockDefinition, BlockDefinitionProvider, BlockModel, BlockModelProvider, BlockProperties, BlockPropertiesProvider } from '@webmc/render'
+import { BlockAtlas, BlockDefinition, BlockDefinitionProvider, BlockModel, BlockModelProvider, BlockProperties, BlockPropertiesProvider, ChestResourceManagerHelper } from '@webmc/render'
 import { isOpaque } from './OpaqueHelper'
 
 export class ResourceManager implements BlockModelProvider, BlockDefinitionProvider, BlockPropertiesProvider {
@@ -50,6 +50,14 @@ export class ResourceManager implements BlockModelProvider, BlockDefinitionProvi
     await this.loadFromFolderPng(assets.folder('minecraft/textures/block')!, async (id, data) => {
       textures['minecraft:block/' + id] = data
     })
+
+    await this.loadFromFolderPng(assets.folder('minecraft/textures/entity/chest')!, async (id, data) => {
+      Object.assign(textures, ChestResourceManagerHelper.convertTextures(id, data))      
+    })
+
+    Object.assign(this.blockDefinitions, ChestResourceManagerHelper.getBlockDefinitions())
+    Object.assign(this.blockModels, ChestResourceManagerHelper.getBlockModels())
+
     this.blockAtlas = await BlockAtlas.fromBlobs(textures)
     Object.values(this.blockModels).forEach(m => m.flatten(this))
   }
