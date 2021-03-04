@@ -1,6 +1,6 @@
 
 import { BlockPos } from '@webmc/core';
-import { CompoundStructure, Rotation } from './Structure/CompoundStructure';
+import { Annotation, CompoundStructure, Rotation } from './Structure/CompoundStructure';
 import { TemplatePool } from './worldgen/TemplatePool';
 import { shuffleArray, getRandomInt } from './util'
 import { BoundingBox } from './BoundingBox';
@@ -70,7 +70,18 @@ export class StructureFeatureManger{
         const poolElement = pool.getShuffeledElements().pop()
         const startingPiece = await poolElement.getStructure()
 
-        const startingPieceNr = this.world.addStructure(startingPiece, [0,0,0], Rotation.Rotate0, {check: [], inside: undefined})
+        const annotation: Annotation = {
+            check: [],
+            inside: undefined,
+
+            pool: this.startingPool,
+            fallback_from: undefined,
+            element: poolElement.toString(),
+            joint: undefined,
+            joint_type: undefined,
+            depth: 0
+        }
+        const startingPieceNr = this.world.addStructure(startingPiece, [0,0,0], Rotation.Rotate0, annotation)
         const placing : {"piece": number, "check": number[], "inside": number|undefined, "depth": number}[] = [{"piece": startingPieceNr, "check": [startingPieceNr], "inside": undefined, "depth": this.depth}]
         
         while (placing.length > 0){
@@ -110,11 +121,17 @@ export class StructureFeatureManger{
                 const fallbackPool: TemplatePool = await TemplatePool.fromName(this.reader, pool.fallback);
 
                 const poolElements = (piece.depth > 0 ? pool.getShuffeledElements() : [])
+                    .concat([undefined])
                     .concat(fallbackPool.getShuffeledElements());
 
+                var using_fallback = false
+
                 try_all_pool_element:
-                for (let j = 0 ; j < poolElements.length ; j++){
-                    const placingElement = poolElements[j]
+                for (const placingElement of poolElements){
+                    if (placingElement === undefined){
+                        using_fallback = true;
+                        continue
+                    }
 
                     const placingStructure = await placingElement.getStructure();
                     const placingJigsawBlocks = shuffleArray(placingStructure.getBlocks().filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
@@ -158,7 +175,19 @@ export class StructureFeatureManger{
                                 continue nextPlacingJigsawBlocks
                         }
 
-                        const placingNr = this.world.addStructure(placingStructure, offset, rotation, {"check": Object.assign([], check), "inside": inside});
+                        const annotation: Annotation = {
+                            "check": Object.assign([], check),
+                            "inside": inside,
+
+                            "pool": using_fallback ? pool.fallback : block.nbt.pool.value,
+                            "fallback_from": using_fallback ? block.nbt.pool.value : undefined,
+                            "element": placingElement.toString(),
+                            "joint": target,
+                            "joint_type": (placingForward == "up" || placingForward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
+                            "depth": this.depth - piece.depth + 1
+                        }
+
+                        const placingNr = this.world.addStructure(placingStructure, offset, rotation, annotation);
                         check.push(placingNr);
                         placing.push({ "piece": placingNr, "check": check, "inside": inside, "depth": piece.depth - 1 });
                         break try_all_pool_element // successfully placed structure, don't try more

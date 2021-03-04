@@ -2,7 +2,7 @@
 import { StructureRenderer } from '@webmc/render';
 import { ResourceManager } from './ResourceManager'
 import { mat4 , vec2, vec3 } from 'gl-matrix'
-import { CompoundStructure, Rotation } from "./Structure/CompoundStructure";
+import { Annotation, CompoundStructure, Rotation } from "./Structure/CompoundStructure";
 import { BlockState, Structure } from '@webmc/core';
 import { clamp, clampVec3, negVec3 } from './util'
 import { BBRenderer } from './BoundingBoxRenderer';
@@ -64,6 +64,13 @@ async function main() {
 
   const featuresList = document.querySelector('.sidebar .list#features')
 
+  const infoTempletePool = document.querySelector('.info #templete-pool')
+  const infoFallbackFrom = document.querySelector('.info #fallback_from')
+  const infoElement = document.querySelector('.info #element')
+  const infoJointDiv = document.querySelector('.info #joint-div')
+  const infoJoint = document.querySelector('.info #joint')
+  const infoJointType = document.querySelector('.info #joint_type')
+  const infoDepth = document.querySelector('.info #depth')
 
   if (!gl) {
     throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.')
@@ -75,7 +82,17 @@ async function main() {
   const exampleData1 = await exampleRes1.arrayBuffer()
   const exampleNbt1 = readNbt(new Uint8Array(exampleData1))
   const structure1 = Structure.fromNbt(exampleNbt1.result)
-  structure.addStructure(structure1, [0,0,0], Rotation.Rotate0, { check: [], inside: undefined})
+  const annotation : Annotation = {
+    check: [],
+    inside: undefined,
+    element: "{}",
+    joint: undefined,
+    joint_type: undefined,
+    pool: "Welcome",
+    fallback_from: undefined,
+    depth: 0
+  }
+  structure.addStructure(structure1, [0,0,0], Rotation.Rotate0, annotation)
 
   const renderer = new StructureRenderer(gl, structure, {
     blockDefinitions: resources,
@@ -144,12 +161,13 @@ async function main() {
     if (bb !== null) 
       renderer.updateStructureBuffers(bb?.getAffectedChunks(chunkSize))
 
-    const bbs = structure.getDisplayBoundingBoxes()
+    const step = structure.getStep()
+
+    const bbs = structure.getBoundingBoxes(step - 1)
     ownBB = bbs[0]
     insideBB = bbs[1]
     checkBBs = bbs[2]
 
-    const step = structure.getStep()
     const maxSteps = structure.getStepCount()
 
     buttons.first.classList.toggle("enabled", step > 1)
@@ -158,6 +176,20 @@ async function main() {
     buttons.last.classList.toggle("enabled", step < maxSteps)
 
     stepDisplay.innerHTML = step + " / " + maxSteps
+
+    const annotation = structure.getAnnotation(step - 1)
+
+    infoTempletePool.innerHTML = annotation.pool
+    infoFallbackFrom.innerHTML = annotation.fallback_from ? "Fallback from " + annotation.fallback_from : ""
+    infoElement.innerHTML = annotation.element
+    if (annotation.joint){
+      infoJoint.innerHTML = annotation.joint
+      infoJointType.innerHTML = annotation.joint_type ? "(" + annotation.joint_type + ")" : ""
+      infoJointDiv.classList.remove('hidden')
+    } else {
+      infoJointDiv.classList.add('hidden')
+    }
+    infoDepth.innerHTML = annotation.depth.toString()
   }
 
   function resize() {
@@ -295,12 +327,12 @@ async function main() {
 
   function next() {
     structure.nextStep()
-    refreshStructure(structure.getDisplayBoundingBoxes()[0])
+    refreshStructure(structure.getBoundingBoxes(structure.getStep()-1)[0])
     requestAnimationFrame(render)
   }
 
   function prev() {
-    const bb = structure.getDisplayBoundingBoxes()[0]
+    const bb = structure.getBoundingBoxes(structure.getStep()-1)[0]
     structure.prevStep()
     refreshStructure(bb)
     requestAnimationFrame(render)

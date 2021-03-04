@@ -61,11 +61,23 @@ export namespace Rotation {
   }  
 }
 
+export type Annotation = {
+  check: number[],
+  inside: number | undefined,
+
+  pool: string | undefined,
+  fallback_from: string | undefined,
+  element: string | undefined,
+  joint: string | undefined,
+  joint_type: "alligned" | "rollable" | undefined,
+  depth: number
+}
+
 type CompoundStructureElement = {
   structure: StructureProvider,
   pos: BlockPos,
   rot: Rotation,
-  annotation: {check: number[], inside: number | undefined}
+  annotation: Annotation
 }
 
 
@@ -227,16 +239,20 @@ export class CompoundStructure implements StructureProvider {
     return CompoundStructure.mapElementBlocks(this.elements[nr])
   }
 
-  public getDisplayBoundingBoxes(): [BoundingBox, BoundingBox | undefined, BoundingBox[]]{
-    const ownBB = this.getBB(this.displayMaxStep-1)
+  public getBoundingBoxes(i: number): [BoundingBox, BoundingBox | undefined, BoundingBox[]]{
+    const ownBB = this.getBB(i)
 
-    const inside = this.elements[this.displayMaxStep-1].annotation.inside
+    const inside = this.elements[i].annotation.inside
     const insideBB = this.getBB(inside)
 
-    const check = this.elements[this.displayMaxStep-1].annotation.check
+    const check = this.elements[i].annotation.check
     const checkBBs = check.map(c => this.getBB(c))
 
     return [ownBB, insideBB, checkBBs]
+  }
+
+  public getAnnotation(i: number){
+    return this.elements[i].annotation
   }
 
   public bakeBlocks() : void{
@@ -307,7 +323,7 @@ export class CompoundStructure implements StructureProvider {
 //    return this.getBlocks().find(b => b.pos[0] === pos[0] && b.pos[1] === pos[1] && b.pos[2] === pos[2])
   }
 
-  public addStructure(structure: StructureProvider, pos: BlockPos, rot: Rotation, annotation: {check: number[], inside: number | undefined} | undefined): number{
+  public addStructure(structure: StructureProvider, pos: BlockPos, rot: Rotation, annotation: Annotation | undefined): number{
 
     const size = structure.getSize()
     const newSize : BlockPos = [size[0], size[1], size[2]]

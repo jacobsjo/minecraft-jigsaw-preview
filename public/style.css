@@ -34,6 +34,38 @@
     }
   }
 
+  .info{
+    position: absolute;
+    left: 210pt;
+    top: 10pt;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 10pt;
+  }
+
+  .info #fallback_from{
+    font-size: smaller;
+  }
+
+  .info pre{
+    padding-top: 0.3cm;
+    padding-bottom: 0.3cm;
+  }
+
+  .info .title{
+    color: #d2ad48;
+    font-size: 18pt;
+    font-style: bold;
+  }
+
+  .info .label{
+    color: #d2ad48;
+  }
+
+  .info .name{
+    font-style: italic;
+  }
+
   .ui{
     position: absolute;
     left: 200pt;
@@ -48,7 +80,7 @@
   }
 
 
-  span {
+  .sidebar span, .ui span {
     display: inline-block;
     text-align: center;
     border: 0px;

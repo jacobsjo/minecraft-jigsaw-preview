@@ -22,13 +22,13 @@ export abstract class PoolElement{
 
             case "minecraft:single_pool_element":
             case "minecraft:legacy_single_pool_element":
-                return new SinglePoolElement(reader, element.location)
+                return new SinglePoolElement(reader, element.location, element.processors, element.projection)
 
             case "minecraft:feature_pool_element" :
-                return new FeaturePoolElement(reader, element.feature)
+                return new FeaturePoolElement(reader, element.feature, element.projection)
             
             case "minecraft:list_pool_element" :
-                return new ListPoolElement(reader, element.elements)
+                return new ListPoolElement(reader, element.elements, element.projection)
 
             default:
                 console.warn("Pool element not readable: " + element?.element_type)
@@ -40,12 +40,19 @@ export class EmptyPoolElement extends PoolElement{
     public async getStructure(): Promise<StructureProvider> {
         return new EmptyStructure()
     }
+
+    public toString(){
+        return `{
+  "element_type": "minecraft:empty_pool_element"
+}`
+    }
 }
 
 export class FeaturePoolElement extends PoolElement{
     constructor(
         reader: DatapackReader,
-        private feature: string
+        private feature: string,
+        private projection: string
     ){
         super(reader)
     }
@@ -54,13 +61,23 @@ export class FeaturePoolElement extends PoolElement{
         console.warn("Feature Pool element not yet implemented")
         return new EmptyStructure()
     }
+
+    public toString(){
+        return `{
+  "element_type": "minecraft:feature_pool_element",
+  "feature": "`+this.feature+`",
+  "projection": "`+this.projection+`"
+}`
+    }
 }
 
 export class SinglePoolElement extends PoolElement{
     private structure : Promise<StructureProvider>
     constructor(
         reader: DatapackReader,
-        private location: string
+        private location: string,
+        private processors: string,
+        private projection: string
     ){
         super(reader)
         this.structure = CompoundStructure.StructurefromName(this.reader, this.location);
@@ -68,6 +85,15 @@ export class SinglePoolElement extends PoolElement{
 
     public getStructure(): Promise<StructureProvider>{
         return this.structure
+    }
+
+    public toString(){
+        return `{
+  "element_type": "minecraft:single_pool_element",
+  "location": "`+this.location+`",
+  "processors": "`+this.processors+`",
+  "projection": "`+this.projection+`"
+}`
     }
 }
 
@@ -80,7 +106,8 @@ export class ListPoolElement extends PoolElement{
         elements: {
             element_type: string;
             [key: string]: string;
-        }[]
+        }[],
+        private projection: string
     ){
         super(reader)
         this.pool_elements = elements.map(element => PoolElement.fromElement(reader, element))
@@ -96,5 +123,17 @@ export class ListPoolElement extends PoolElement{
 
     public getStructure(): Promise<StructureProvider>{
         return this.structure
+    }
+
+    public toString(){
+        return `{
+  "element_type": "minecraft:list_pool_element",
+  "elements": [
+`+this.pool_elements.map(e => {
+    return "    " + e.toString().split("\n").join("\n    ")
+}).join(",\n")+`
+  ],
+  "projection": "`+this.projection+`"
+}`
     }
 }
