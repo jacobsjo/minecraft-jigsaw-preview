@@ -1,14 +1,9 @@
 import { Structure, StructureProvider } from "@webmc/core"
+import { FeatureStructure } from "../Structure/FeatureStructure";
 import { CompoundStructure, Rotation } from "../Structure/CompoundStructure";
 import { EmptyStructure} from "../Structure/EmptyStructure"
 
 export abstract class PoolElement{
-    constructor(
-        protected reader: DatapackReader
-    ){
-
-    }
-
     public abstract getStructure(): Promise<StructureProvider>
 
 
@@ -18,7 +13,7 @@ export abstract class PoolElement{
     }): PoolElement {
         switch (element?.element_type) {
             case "minecraft:empty_pool_element":
-                return new EmptyPoolElement(reader)
+                return new EmptyPoolElement()
 
             case "minecraft:single_pool_element":
             case "minecraft:legacy_single_pool_element":
@@ -54,12 +49,12 @@ export class FeaturePoolElement extends PoolElement{
         private feature: string,
         private projection: string
     ){
-        super(reader)
+        super()
     }
 
     public async getStructure(): Promise<StructureProvider> {
         console.warn("Feature Pool element not yet implemented")
-        return new EmptyStructure()
+        return new FeatureStructure()
     }
 
     public toString(){
@@ -79,8 +74,8 @@ export class SinglePoolElement extends PoolElement{
         private processors: string,
         private projection: string
     ){
-        super(reader)
-        this.structure = CompoundStructure.StructurefromName(this.reader, this.location);
+        super()
+        this.structure = CompoundStructure.StructurefromName(reader, this.location);
     }
 
     public getStructure(): Promise<StructureProvider>{
@@ -109,7 +104,7 @@ export class ListPoolElement extends PoolElement{
         }[],
         private projection: string
     ){
-        super(reader)
+        super()
         this.pool_elements = elements.map(element => PoolElement.fromElement(reader, element))
 
         this.structure = new Promise(async (resolve) => {

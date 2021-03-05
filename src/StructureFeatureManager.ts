@@ -5,6 +5,7 @@ import { TemplatePool } from './worldgen/TemplatePool';
 import { shuffleArray, getRandomInt } from './util'
 import { BoundingBox } from './BoundingBox';
 import { ConfiguedStructureFeature } from './worldgen/ConfiguredStructureFeature';
+import { EmptyPoolElement } from './worldgen/PoolElement';
 
 
 export class StructureFeatureManger{
@@ -122,7 +123,8 @@ export class StructureFeatureManger{
 
                 const poolElements = (piece.depth > 0 ? pool.getShuffeledElements() : [])
                     .concat([undefined])
-                    .concat(fallbackPool.getShuffeledElements());
+                    .concat(fallbackPool.getShuffeledElements())
+                    .concat([new EmptyPoolElement()])
 
                 var using_fallback = false
 
@@ -133,7 +135,25 @@ export class StructureFeatureManger{
                         continue
                     }
 
+                    const annotation: Annotation = {
+                        "check": Object.assign([], check),
+                        "inside": inside,
+
+                        "pool": using_fallback ? pool.fallback : block.nbt.pool.value,
+                        "fallback_from": using_fallback ? block.nbt.pool.value : undefined,
+                        "element": placingElement.toString(),
+                        "joint": target,
+                        "joint_type": (forward == "up" || forward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
+                        "depth": this.depth - piece.depth + 1
+                    }
+
                     const placingStructure = await placingElement.getStructure();
+
+                    if (placingElement instanceof EmptyPoolElement){
+                        this.world.addStructure(placingStructure, parentJigsawFacingPos, Rotation.Rotate0, annotation);
+                        break;
+                    }
+
                     const placingJigsawBlocks = shuffleArray(placingStructure.getBlocks().filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
                     nextPlacingJigsawBlocks:
                     for (let k = 0 ; k < placingJigsawBlocks.length ; k++){
@@ -175,17 +195,6 @@ export class StructureFeatureManger{
                                 continue nextPlacingJigsawBlocks
                         }
 
-                        const annotation: Annotation = {
-                            "check": Object.assign([], check),
-                            "inside": inside,
-
-                            "pool": using_fallback ? pool.fallback : block.nbt.pool.value,
-                            "fallback_from": using_fallback ? block.nbt.pool.value : undefined,
-                            "element": placingElement.toString(),
-                            "joint": target,
-                            "joint_type": (placingForward == "up" || placingForward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
-                            "depth": this.depth - piece.depth + 1
-                        }
 
                         const placingNr = this.world.addStructure(placingStructure, offset, rotation, annotation);
                         check.push(placingNr);
