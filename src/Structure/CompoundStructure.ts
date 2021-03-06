@@ -79,7 +79,7 @@ type CompoundStructureElement = {
   rot: Rotation,
   annotation: Annotation
 }
-
+ 
 
 export class CompoundStructure implements StructureProvider {
 
@@ -447,5 +447,18 @@ export class CompoundStructure implements StructureProvider {
         throw "Permission error while loading Structure " + id + "\nTry reloading the datapack using the Open Datapack buttons"
     }
   }
+
+  getAnnotations(): {pos: BlockPos, annotation: string; data: any; }[] {
+    return this.elements.slice(0, this.displayMaxStep).flatMap(element => element.structure.getAnnotations().map(a => {
+      const offsetPos = [a.pos[0]-0.5, a.pos[1], a.pos[2]-0.5] as BlockPos
+      const mappedPos = CompoundStructure.mapPos(element.rot, offsetPos, element.pos, element.structure.getSize())
+      return {
+        pos: [mappedPos[0]+0.5, mappedPos[1], mappedPos[2]+0.5],
+        annotation: a.annotation,
+        data: a.data
+      }
+    }))
+  }
+
 
 }

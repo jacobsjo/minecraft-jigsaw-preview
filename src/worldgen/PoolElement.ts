@@ -1,11 +1,17 @@
-import { Structure, StructureProvider } from "@webmc/core"
-import { FeatureStructure } from "../Structure/FeatureStructure";
+import { BlockNbt, BlockPos, BlockState, Structure, StructureProvider } from "@webmc/core"
+import { FeatureStructure } from "../Structure/FeatrueStructure";
 import { CompoundStructure, Rotation } from "../Structure/CompoundStructure";
 import { EmptyStructure} from "../Structure/EmptyStructure"
+import { shuffleArray } from "../util";
 
 export abstract class PoolElement{
     public abstract getStructure(): Promise<StructureProvider>
 
+    public abstract getShuffledJigsawBlocks(): Promise<{
+        pos: BlockPos;
+        state: BlockState;
+        nbt: BlockNbt;
+    }[]>
 
     public static fromElement(reader: DatapackReader, element: {
         element_type: string;
@@ -36,6 +42,10 @@ export class EmptyPoolElement extends PoolElement{
         return new EmptyStructure()
     }
 
+    public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {
+        return []
+    }
+
     public toString(){
         return `{
   "element_type": "minecraft:empty_pool_element"
@@ -44,6 +54,33 @@ export class EmptyPoolElement extends PoolElement{
 }
 
 export class FeaturePoolElement extends PoolElement{
+    private static JIGSAW = {
+        pos: [0, 0, 0] as BlockPos,
+        state: new BlockState("minecraft:jigsaw", {"orientation": "down_south"}),
+        nbt: {
+            "name": {
+                "type": "string",
+                "value": "minecraft:bottom"
+            },
+            "final_state": {
+                "type": "string",
+                "value": "minecraft:air"
+            },
+            "pool": {
+                "type": "string",
+                "value": "minecraft:empty"
+            },
+            "target": {
+                "type": "string",
+                "value": "minecraft:empty"
+            },
+            "joint": {
+                "type": "string",
+                "value": "rollable"
+            },
+        } as BlockNbt
+    }
+
     constructor(
         reader: DatapackReader,
         private feature: string,
@@ -54,8 +91,13 @@ export class FeaturePoolElement extends PoolElement{
 
     public async getStructure(): Promise<StructureProvider> {
         console.warn("Feature Pool element not yet implemented")
-        return new FeatureStructure()
+        return new FeatureStructure(this.feature)
     }
+
+    public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {
+        return [FeaturePoolElement.JIGSAW]
+    }
+
 
     public toString(){
         return `{
@@ -80,6 +122,10 @@ export class SinglePoolElement extends PoolElement{
 
     public getStructure(): Promise<StructureProvider>{
         return this.structure
+    }
+
+    public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {
+        return shuffleArray((await this.structure).getBlocks().filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
     }
 
     public toString(){
@@ -118,6 +164,10 @@ export class ListPoolElement extends PoolElement{
 
     public getStructure(): Promise<StructureProvider>{
         return this.structure
+    }
+
+    public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {
+        return this.pool_elements[0].getShuffledJigsawBlocks()
     }
 
     public toString(){

@@ -154,7 +154,7 @@ export class StructureFeatureManger{
                         break;
                     }
 
-                    const placingJigsawBlocks = shuffleArray(placingStructure.getBlocks().filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
+                    const placingJigsawBlocks = await placingElement.getShuffledJigsawBlocks()
                     nextPlacingJigsawBlocks:
                     for (let k = 0 ; k < placingJigsawBlocks.length ; k++){
                         const placingBlock = placingJigsawBlocks[k]

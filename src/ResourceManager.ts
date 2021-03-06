@@ -4,7 +4,7 @@ import { isOpaque } from './OpaqueHelper'
 
 export class ResourceManager implements BlockModelProvider, BlockDefinitionProvider, BlockPropertiesProvider {
   private blockDefinitions: { [id: string]: BlockDefinition }
-  private blockModels: { [id: string]: BlockModel }
+  private blockModels: { [id: string]: BlockModel } 
   private blockAtlas: BlockAtlas
 
   constructor() {
@@ -57,6 +57,10 @@ export class ResourceManager implements BlockModelProvider, BlockDefinitionProvi
 
     Object.assign(this.blockDefinitions, ChestResourceManagerHelper.getBlockDefinitions())
     Object.assign(this.blockModels, ChestResourceManagerHelper.getBlockModels())
+
+    textures['webmc:annotation/entity'] = await (await fetch("/annotation_icons/entity.png")).blob()
+    textures['webmc:annotation/feature'] = await (await fetch("/annotation_icons/feature.png")).blob()
+    textures['webmc:annotation/empty'] = await (await fetch("/annotation_icons/empty.png")).blob()
 
     this.blockAtlas = await BlockAtlas.fromBlobs(textures)
     Object.values(this.blockModels).forEach(m => m.flatten(this))

@@ -1,9 +1,9 @@
 
-import { StructureRenderer } from '@webmc/render';
+import { AnnotationRenderer, BlocksRenderer, Resources, StructureRenderer } from '@webmc/render';
 import { ResourceManager } from './ResourceManager'
 import { mat4 , vec2, vec3 } from 'gl-matrix'
 import { Annotation, CompoundStructure, Rotation } from "./Structure/CompoundStructure";
-import { BlockState, Structure } from '@webmc/core';
+import { Structure } from '@webmc/core';
 import { clamp, clampVec3, negVec3 } from './util'
 import { BBRenderer } from './BoundingBoxRenderer';
 import { BoundingBox } from './BoundingBox';
@@ -99,15 +99,18 @@ async function main() {
   }
   structure.addStructure(structure1, [0,0,0], Rotation.Rotate0, annotation)
 
-  const renderer = new StructureRenderer(gl, structure, {
+  const renderer = new StructureRenderer(gl)
+
+  const resourcesObject : Resources = {
+    blockAtlas: resources.getBlockAtlas(), 
     blockDefinitions: resources,
     blockModels: resources,
-    blockAtlas: resources.getBlockAtlas(),
     blockProperties: resources
-  }, {
-    chunkSize: chunkSize,
-    useInvisibleBlockBuffer: false
-  })
+  }
+
+  renderer.addRenderer(new BlocksRenderer(gl, structure, resourcesObject, chunkSize))
+  renderer.addRenderer(new AnnotationRenderer(gl, structure, resourcesObject))
+
   const bbRenderer = new BBRenderer(gl)
 
   let drawBB = true
@@ -164,7 +167,7 @@ async function main() {
 
   function refreshStructure(bb?: BoundingBox) {
     if (bb !== null) 
-      renderer.updateStructureBuffers(bb?.getAffectedChunks(chunkSize))
+      renderer.updateAll(bb?.getAffectedChunks(chunkSize))
 
     const step = structure.getStep()
 
@@ -226,7 +229,7 @@ async function main() {
     const viewMatrix = getViewMatrix()
 
     //renderer.drawGrid(viewMatrix);
-    renderer.drawStructure(viewMatrix);
+    renderer.drawAll(viewMatrix);
 
     if (drawBB){
       checkBBs.forEach(bb => bbRenderer.drawBB(viewMatrix, bb, 2))
