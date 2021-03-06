@@ -118,7 +118,6 @@ export class CompoundStructure implements StructureProvider {
   public nextStep(): void{
     do{
       this.displayMaxStep = Math.min(this.displayMaxStep+1, this.elements.length)
-      console.log(this.displayMaxStep + "/" + this.elements.length)
     } while (!this.stepElementTypes.has(this.elements[this.displayMaxStep-1].annotation.element_type) && this.displayMaxStep < this.elements.length)
   }
 

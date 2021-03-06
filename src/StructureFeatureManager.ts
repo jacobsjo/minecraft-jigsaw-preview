@@ -46,16 +46,16 @@ export class StructureFeatureManger{
     }
 
     private getRotation(forward1: string, up1: string, forward2: string, up2: string, rollable: boolean): Rotation | undefined{
-        if (forward1 === "up"){
-            if (forward2 !== "down") return undefined
+        if (forward1 === "up" || forward1 === "down"){
+            if (forward2 !== "up" && forward2 !== "down") return undefined
+            if (forward2 === forward1) return undefined
             if (rollable) return getRandomInt(4)
-            if (up1 === up2) return Rotation.Rotate0
-            return undefined
-        } else if (forward1 === "down"){
-            if (forward2 !== "up") return undefined
-            if (rollable) return getRandomInt(4)
-            if (up1 === up2) return Rotation.Rotate0
-            return undefined
+
+            for (let i = 0 ; i<4 ; i++){
+                if (Rotation.getFacingMapping(i)[up2] === up1)
+                    return i
+            }
+            throw "Error finding Rotation"
         } else {
             if (forward2 === "up" || forward2 === "down") return undefined
             for (let i = 0 ; i<4 ; i++){
