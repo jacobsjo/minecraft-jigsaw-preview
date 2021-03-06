@@ -94,6 +94,7 @@ async function main() {
     check: [],
     inside: undefined,
     element: "{}",
+    element_type: "",
     joint: undefined,
     joint_type: undefined,
     pool: "Welcome",
@@ -377,32 +378,41 @@ async function main() {
   setting_buttons.bb.addEventListener("click", async () => {
     drawBB = !drawBB
     requestAnimationFrame(render)
+    setting_buttons.bb.classList.toggle("selected", drawBB)
   })
 
   setting_buttons.info.addEventListener("click", async () => {
-    infoPanel.classList.toggle("hidden")
+    const shown = !infoPanel.classList.toggle("hidden")
+    setting_buttons.info.classList.toggle("selected", shown)
   })
 
   setting_buttons.icon_empty.addEventListener("click", async () => {
-    toggleRenderedType("empty")
+    const shown = toggleRenderedType("empty")
+    structure.setStepElementType("minecraft:empty_pool_element", shown)
+    setting_buttons.icon_empty.classList.toggle("selected", shown)
   })
 
   setting_buttons.icon_feature.addEventListener("click", async () => {
-    toggleRenderedType("feature")
+    const shown = toggleRenderedType("feature")
+    structure.setStepElementType("minecraft:feature_pool_element", shown)
+    setting_buttons.icon_feature.classList.toggle("selected", shown)
   })
 
   setting_buttons.icon_entity.addEventListener("click", async () => {
-    toggleRenderedType("entity")
+    const shown = toggleRenderedType("entity")
+    setting_buttons.icon_entity.classList.toggle("selected", shown)
   })
 
-  function toggleRenderedType(type: string){
-    if (renderedTypes.has(type)){
+  function toggleRenderedType(type: string): boolean{
+    const has = renderedTypes.has(type)
+    if (has){
       renderedTypes.delete(type)
     } else {
       renderedTypes.add(type)
     }
     annotationRenderer.setRenderedTypes(Array.from(renderedTypes))
     requestAnimationFrame(render)
+    return !has
   }
 
 

@@ -99,6 +99,10 @@
     background-color: #535353;
   }
 
+  span.button.enabled:active{
+    background-color: #858585;
+  }
+
   span.button.enabled {
     color: #d2ad48;
     cursor: pointer;
@@ -114,6 +118,18 @@
     height:15pt;
     padding: 5pt;
     margin-right: -5pt;
+  }
+
+  span.button.selected {
+    background-color: #535353;
+  }
+
+  span.button.selected:hover{
+    background-color: #333333;
+  }
+
+  span.button.selected:active{
+    background-color: #1d1d1d;
   }
 
   span.button.icon img{

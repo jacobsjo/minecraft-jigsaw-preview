@@ -68,6 +68,7 @@ export type Annotation = {
   pool: string | undefined,
   fallback_from: string | undefined,
   element: string | undefined,
+  element_type: string | undefined,
   joint: string | undefined,
   joint_type: "alligned" | "rollable" | undefined,
   depth: number
@@ -88,6 +89,7 @@ export class CompoundStructure implements StructureProvider {
   private maxPos: BlockPos = [0,0,0]
 
   private displayMaxStep = 1
+  private stepElementTypes = new Set(['minecraft:single_pool_element', 'minecraft:list_pool_element', 'minecraft:feature_pool_element'])
 
   private bakedBlocksPerStructure: {
     pos: BlockPos;
@@ -102,18 +104,28 @@ export class CompoundStructure implements StructureProvider {
     maxStep: number;
   }[][] | undefined = undefined // first array: block pos, second array: blocks at block pos
 
+  public setStepElementType(type: string, enabled: boolean){
+    if (enabled)
+      this.stepElementTypes.add(type)
+    else
+      this.stepElementTypes.delete(type)
+  }
+
   public getBounds(): [BlockPos, BlockPos]{
     return [this.minPos, this.maxPos]
   }
 
   public nextStep(): void{
-    this.displayMaxStep = Math.min(this.displayMaxStep+1, this.elements.length)
-//    this.cachedBlocks = undefined
+    do{
+      this.displayMaxStep = Math.min(this.displayMaxStep+1, this.elements.length)
+      console.log(this.displayMaxStep + "/" + this.elements.length)
+    } while (!this.stepElementTypes.has(this.elements[this.displayMaxStep-1].annotation.element_type) && this.displayMaxStep < this.elements.length)
   }
 
   public prevStep(): void{
-    this.displayMaxStep = Math.max(this.displayMaxStep-1, 1)
-//    this.cachedBlocks = undefined
+    do{
+      this.displayMaxStep = Math.max(this.displayMaxStep-1, 1)
+    } while (!this.stepElementTypes.has(this.elements[this.displayMaxStep-1].annotation.element_type) && this.displayMaxStep > 1)
   }
 
   public firstStep(): void{

@@ -78,6 +78,7 @@ export class StructureFeatureManger{
             pool: this.startingPool,
             fallback_from: undefined,
             element: poolElement.toString(),
+            element_type: poolElement.getType(),
             joint: undefined,
             joint_type: undefined,
             depth: 0
@@ -142,6 +143,7 @@ export class StructureFeatureManger{
                         "pool": using_fallback ? pool.fallback : block.nbt.pool.value,
                         "fallback_from": using_fallback ? block.nbt.pool.value : undefined,
                         "element": placingElement.toString(),
+                        "element_type": placingElement.getType(),
                         "joint": target,
                         "joint_type": (forward == "up" || forward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
                         "depth": this.depth - piece.depth + 1

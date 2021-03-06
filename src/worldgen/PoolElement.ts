@@ -13,6 +13,8 @@ export abstract class PoolElement{
         nbt: BlockNbt;
     }[]>
 
+    public abstract getType(): string
+
     public static fromElement(reader: DatapackReader, element: {
         element_type: string;
         [key: string]: any;
@@ -40,6 +42,10 @@ export abstract class PoolElement{
 export class EmptyPoolElement extends PoolElement{
     public async getStructure(): Promise<StructureProvider> {
         return new EmptyStructure()
+    }
+
+    public getType(): string{
+        return "minecraft:empty_pool_element"
     }
 
     public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {
@@ -89,6 +95,10 @@ export class FeaturePoolElement extends PoolElement{
         super()
     }
 
+    public getType(): string{
+        return "minecraft:feature_pool_element"
+    }
+
     public async getStructure(): Promise<StructureProvider> {
         console.warn("Feature Pool element not yet implemented")
         return new FeatureStructure(this.feature)
@@ -118,6 +128,10 @@ export class SinglePoolElement extends PoolElement{
     ){
         super()
         this.structure = CompoundStructure.StructurefromName(reader, this.location);
+    }
+
+    public getType(): string{
+        return "minecraft:single_pool_element"
     }
 
     public getStructure(): Promise<StructureProvider>{
@@ -160,6 +174,10 @@ export class ListPoolElement extends PoolElement{
             }
             resolve(s)
         })
+    }
+
+    public getType(): string{
+        return "minecraft:list_pool_element"
     }
 
     public getStructure(): Promise<StructureProvider>{
