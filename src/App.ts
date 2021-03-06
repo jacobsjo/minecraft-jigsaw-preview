@@ -59,6 +59,9 @@ async function main() {
   const setting_buttons = {
     bb: document.querySelector('.button#bb'),
     info: document.querySelector('.button#info'),
+    icon_empty: document.querySelector('.button#icon-empty'),
+    icon_feature: document.querySelector('.button#icon-feature'),
+    icon_entity: document.querySelector('.button#icon-entity'),
   }
 
   const stepDisplay = document.querySelector('.ui .text#step')
@@ -108,8 +111,12 @@ async function main() {
     blockProperties: resources
   }
 
+  const renderedTypes = new Set(['entity', 'feature'])
+
   renderer.addRenderer(new BlocksRenderer(gl, structure, resourcesObject, chunkSize))
-  renderer.addRenderer(new AnnotationRenderer(gl, structure, resourcesObject))
+  const annotationRenderer = new AnnotationRenderer(gl, structure, resourcesObject)
+  annotationRenderer.setRenderedTypes(Array.from(renderedTypes))
+  renderer.addRenderer(annotationRenderer)
 
   const bbRenderer = new BBRenderer(gl)
 
@@ -375,6 +382,28 @@ async function main() {
   setting_buttons.info.addEventListener("click", async () => {
     infoPanel.classList.toggle("hidden")
   })
+
+  setting_buttons.icon_empty.addEventListener("click", async () => {
+    toggleRenderedType("empty")
+  })
+
+  setting_buttons.icon_feature.addEventListener("click", async () => {
+    toggleRenderedType("feature")
+  })
+
+  setting_buttons.icon_entity.addEventListener("click", async () => {
+    toggleRenderedType("entity")
+  })
+
+  function toggleRenderedType(type: string){
+    if (renderedTypes.has(type)){
+      renderedTypes.delete(type)
+    } else {
+      renderedTypes.add(type)
+    }
+    annotationRenderer.setRenderedTypes(Array.from(renderedTypes))
+    requestAnimationFrame(render)
+  }
 
 
   window.addEventListener('keyup', async (evt:KeyboardEvent) => {
