@@ -34,15 +34,18 @@ main();
 
 async function main() {
   const urlParams = new URLSearchParams(window.location.search);
-  const version = "release"
-  //const version = urlParams.get('version') === "snapshot" ? "snapshot" : "release"
+  //const version = "release"
+  const version = urlParams.get('version') === "snapshot" ? "snapshot" : "release"
+
+  document.querySelector('.sidebar .button#release').classList.toggle("selected", version === "release")
+  document.querySelector('.sidebar .button#snapshot').classList.toggle("selected", version === "snapshot")
 
   const reader = new DatapackReaderComposite()
-  const vanillaReader = await DatapackReaderZip.fromUrl("vanilla_jigsaw_" + version + ".zip")
+  const vanillaReader = await DatapackReaderZip.fromUrl("zips/data_" + version + ".zip")
   reader.readers = [vanillaReader]
 
   const resources = new ResourceManager()
-  await resources.loadFromZip("/assets_" + version + ".zip")
+  await resources.loadFromZip("/zips/assets_" + version + ".zip")
 
   const canvas = document.querySelector('#render') as HTMLCanvasElement;
   const gl = canvas.getContext('webgl');

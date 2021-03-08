@@ -124,11 +124,11 @@
     background-color: #535353;
   }
 
-  span.button.selected:hover{
+  span.button.toggle.selected:hover{
     background-color: #333333;
   }
 
-  span.button.selected:active{
+  span.button.toggle.selected:active{
     background-color: #1d1d1d;
   }
 
