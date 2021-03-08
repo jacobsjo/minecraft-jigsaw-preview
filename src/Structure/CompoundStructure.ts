@@ -1,8 +1,5 @@
 //import { NamedNbtTag, NbtTag, getTag, getListTag, getOptional } from "@webmc/nbt";
 import { BlockNbt, BlockPos, BlockState, StructureProvider, Structure} from "@webmc/core";
-import { read as readNbt } from '@webmc/nbt'
-import { files } from "jszip";
-import * as path from 'path';
 //import fs from 'fs';
 import {BoundingBox} from "../BoundingBox"
 
@@ -442,21 +439,6 @@ export class CompoundStructure implements StructureProvider {
     }
 
     return new BlockState(state.getName(), properties)
-  }
-
-  public static async StructurefromName(reader: DatapackReader, id: string): Promise<Structure>{
-    try{
-      const [namespace, name] = id.split(":")
-      const p = path.join('data', namespace, 'structures', name + ".nbt")
-      const blob = await reader.readFileAsBlob(p)
-      const nbt = readNbt(new Uint8Array(blob))
-      return Structure.fromNbt(nbt.result)
-    } catch (e) {
-      if (e instanceof URIError)
-        throw "Cound not load Structure " + id
-      else if (e instanceof DOMException)
-        throw "Permission error while loading Structure " + id + "\nTry reloading the datapack using the Open Datapack buttons"
-    }
   }
 
   getAnnotations(): {pos: BlockPos, annotation: string; data: any; }[] {

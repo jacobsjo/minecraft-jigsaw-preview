@@ -13,7 +13,7 @@ export class TemplatePool{
     ){
     }
 
-    public getShuffeledElements():PoolElement[]{
+    public getShuffeledElements(): PoolElement[]{
 
         const list : PoolElement[] = []
 
@@ -26,9 +26,18 @@ export class TemplatePool{
         return shuffleArray(list)
     }
 
-    public static fromName(reader: DatapackReader, id: string): Promise<TemplatePool>{
-        if (this.templatePoolMap.has(id)){
-            return this.templatePoolMap.get(id)
+    public async getMaxHeight(): Promise<number>{
+        var maxHeight = -1;
+        for (const element of this.elements){
+            const structure = await element.element.getStructure()
+            maxHeight = Math.max(maxHeight, structure.getSize()[1])
+        }
+        return maxHeight
+    }
+
+    public static fromName(reader: DatapackReader, id: string, doExpansionHack: boolean): Promise<TemplatePool>{
+        if (this.templatePoolMap.has(id + "|" + doExpansionHack)){
+            return this.templatePoolMap.get(id + "|" + doExpansionHack)
         }
 
         const promise: Promise<TemplatePool> = new Promise(async (resolve, reject) => {
@@ -36,9 +45,12 @@ export class TemplatePool{
                 const [namespace, name] = id.split(":")
                 const p = path.join('data', namespace, 'worldgen', 'template_pool', name + ".json")
                 const json = await reader.readFileAsJson(p)
-                resolve(new TemplatePool(json.fallback, json.elements.map((e: any) => {
-                    return {weight: e.weight, element: PoolElement.fromElement(reader, e.element)}
-                })))
+                resolve(new TemplatePool(json.fallback, await Promise.all(json.elements.map(async (e: any) => {
+                    const element = PoolElement.fromElement(reader, e.element)
+                    if (doExpansionHack)
+                        await element.doExpansionHack()
+                    return {weight: e.weight, element: element}
+                }))))
             } catch (e){
                 if (e instanceof URIError)
                     reject("Cound not load Template Pool " + id)
@@ -47,7 +59,7 @@ export class TemplatePool{
             }
         })
 
-        this.templatePoolMap.set(id, promise)
+        this.templatePoolMap.set(id + "|" + doExpansionHack, promise)
         return promise
     }
 

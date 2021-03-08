@@ -2,7 +2,7 @@
 import { BlockPos } from '@webmc/core';
 import { Annotation, CompoundStructure, Rotation } from './Structure/CompoundStructure';
 import { TemplatePool } from './worldgen/TemplatePool';
-import { shuffleArray, getRandomInt } from './util'
+import { shuffleArray, getRandomInt, directionRelative } from './util'
 import { BoundingBox } from './BoundingBox';
 import { ConfiguedStructureFeature } from './worldgen/ConfiguredStructureFeature';
 import { EmptyPoolElement } from './worldgen/PoolElement';
@@ -20,30 +20,6 @@ export class StructureFeatureManger{
         this.world = new CompoundStructure()
     }
 
-
-    private directionRelative(pos: BlockPos, dir: string): BlockPos {
-        const newPos : BlockPos = [pos[0], pos[1], pos[2]]
-        switch (dir) {
-            case "north":
-                newPos[2] --
-                break;
-            case "west":
-                newPos[0] --
-                break;
-            case "south":
-                newPos[2] ++
-                break;
-            case "east":
-                newPos[0] ++
-                break;
-            case "up":
-                newPos[1] ++
-                break;
-            case "down":
-                newPos[1] --
-        }
-        return newPos
-    }
 
     private getRotation(forward1: string, up1: string, forward2: string, up2: string, rollable: boolean): Rotation | undefined{
         if (forward1 === "up" || forward1 === "down"){
@@ -67,7 +43,7 @@ export class StructureFeatureManger{
     }
 
     public async generate(): Promise<void>{
-        const pool = await TemplatePool.fromName(this.reader, this.startingPool)
+        const pool = await TemplatePool.fromName(this.reader, this.startingPool, false) // starting pool has no expansion hack (TODO: check this ingame)
         const poolElement = pool.getShuffeledElements().pop()
         const startingPiece = await poolElement.getStructure()
 
@@ -77,7 +53,7 @@ export class StructureFeatureManger{
 
             pool: this.startingPool,
             fallback_from: undefined,
-            element: poolElement.toString(),
+            element: await poolElement.getDescription(),
             element_type: poolElement.getType(),
             joint: undefined,
             joint_type: undefined,
@@ -95,15 +71,14 @@ export class StructureFeatureManger{
             const checkInsideList: number[] = []
 
             const jigsawBlocks = shuffleArray(this.world.getElementBlocks(piece.piece).filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
-            for (let i = 0 ; i < jigsawBlocks.length ; i++){
-                const block = jigsawBlocks[i]
+            for (const block of jigsawBlocks){
                 if (typeof block.nbt.pool.value !== "string")
                     throw "pool element nbt of wrong type";
 
                 const orientation: string = block.state.getProperties()['orientation'] ?? 'north_up';
                 const [forward, up] = orientation.split("_");
                 const parentJigsasPos: BlockPos = block.pos;
-                const parentJigsawFacingPos: BlockPos = this.directionRelative(parentJigsasPos, forward);
+                const parentJigsawFacingPos: BlockPos = directionRelative(parentJigsasPos, forward);
 
                 const isInside: boolean = bb.isInside(parentJigsawFacingPos);
 
@@ -119,8 +94,8 @@ export class StructureFeatureManger{
                 const rollable: boolean = (block.nbt.joint !== undefined &&  typeof block.nbt.joint.value === "string") ? block.nbt.joint.value === "rollable" : true;
                 const target: string = (typeof block.nbt.target.value === "string") ? block.nbt.target.value : "minecraft:empty"
 
-                const pool: TemplatePool = await TemplatePool.fromName(this.reader, block.nbt.pool.value);
-                const fallbackPool: TemplatePool = await TemplatePool.fromName(this.reader, pool.fallback);
+                const pool: TemplatePool = await TemplatePool.fromName(this.reader, block.nbt.pool.value, this.doExpansionHack);
+                const fallbackPool: TemplatePool = await TemplatePool.fromName(this.reader, pool.fallback, this.doExpansionHack);
 
                 const poolElements = (piece.depth > 0 ? pool.getShuffeledElements() : [])
                     .concat([undefined])
@@ -142,7 +117,7 @@ export class StructureFeatureManger{
 
                         "pool": using_fallback ? pool.fallback : block.nbt.pool.value,
                         "fallback_from": using_fallback ? block.nbt.pool.value : undefined,
-                        "element": placingElement.toString(),
+                        "element": await placingElement.getDescription(),
                         "element_type": placingElement.getType(),
                         "joint": target,
                         "joint_type": (forward == "up" || forward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
@@ -157,9 +132,9 @@ export class StructureFeatureManger{
                     }
 
                     const placingJigsawBlocks = await placingElement.getShuffledJigsawBlocks()
+                    
                     nextPlacingJigsawBlocks:
-                    for (let k = 0 ; k < placingJigsawBlocks.length ; k++){
-                        const placingBlock = placingJigsawBlocks[k]
+                    for (const placingBlock of placingJigsawBlocks){
                         const placingOrientation: string = placingBlock.state.getProperties()['orientation'] ?? 'north_up';
                         const [placingForward, placingUp] = placingOrientation.split("_");
 
@@ -189,7 +164,7 @@ export class StructureFeatureManger{
 
                         const placingBB = new BoundingBox(offset, newSize);
 
-                        if (!placingBB.containedIn(this.world.getBB(inside), this.doExpansionHack))
+                        if (!placingBB.containedIn(this.world.getBB(inside), false))
                             continue
 
                         for (let l=0 ; l < check.length ; l++){
