@@ -9,15 +9,17 @@
 </head>
 <body>
   <div class="sidebar">
+    <a href="/?version=release"><span class="button enabled" id="release">Release</span></a>
+    <a href="/?version=snapshot"><span class="button enabled" id="snapshot">Snapshot</span></a>
     <span class="button enabled" id="openzip"> Open Datapack .zip</span>
     <span class="button enabled" id="openfolder"> Open Datapack Folder</span>
     <ul class="list" id="features"></ul>
     <div class="iconbar">
-      <span class="button icon enabled selected" id="bb"><img src="buttons/bb.png" /></span>
-      <span class="button icon enabled" id="info"><img src="buttons/info.png" /></span>
-      <span class="button icon enabled" id="icon-empty"><img src="annotation_icons/empty.png" /></span>
-      <span class="button icon enabled selected" id="icon-entity"><img src="annotation_icons/entity.png" /></span>
-      <span class="button icon enabled selected" id="icon-feature"><img src="annotation_icons/feature.png" /></span>
+      <span class="button icon enabled toggle selected" id="bb"><img src="buttons/bb.png" /></span>
+      <span class="button icon enabled toggle" id="info"><img src="buttons/info.png" /></span>
+      <span class="button icon enabled toggle" id="icon-empty"><img src="annotation_icons/empty.png" /></span>
+      <span class="button icon enabled toggle selected" id="icon-entity"><img src="annotation_icons/entity.png" /></span>
+      <span class="button icon enabled toggle selected" id="icon-feature"><img src="annotation_icons/feature.png" /></span>
     </div>
   </div>
   <div class="main">
