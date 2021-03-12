@@ -13,10 +13,12 @@
     <a href="/?version=snapshot"><span class="button enabled" id="snapshot">Snapshot</span></a>
     <span class="button enabled" id="openzip"> Open Datapack .zip</span>
     <span class="button enabled" id="openfolder"> Open Datapack Folder</span>
+    <span class="button fullwidth enabled" id="select-heightmap">Select Heightmap</span>
     <ul class="list" id="features"></ul>
     <div class="iconbar">
       <span class="button icon enabled toggle selected" id="bb"><img src="buttons/bb.png" /></span>
       <span class="button icon enabled toggle" id="info"><img src="buttons/info.png" /></span>
+      <span class="button icon enabled toggle" id="heightmap"><img src="buttons/heightmap.png" /></span><br />
       <span class="button icon enabled toggle" id="icon-empty"><img src="annotation_icons/empty.png" /></span>
       <span class="button icon enabled toggle selected" id="icon-entity"><img src="annotation_icons/entity.png" /></span>
       <span class="button icon enabled toggle selected" id="icon-feature"><img src="annotation_icons/feature.png" /></span>
@@ -37,6 +39,22 @@
       <div class="text"><pre><code id="element"></code></pre></div>
       <div class="text"><span class="label">Depth: </span> <span id="depth"></span></div>
       <div class="text hidden" id="joint-div"><span class="label">Joint: </span> <span class="name" id="joint"></span> <span id="joint_type"></span></div>
+    </div>
+    <div class="heightmap-selector hidden">
+      <div class="title">Select a heightmap to use</div>
+      <ul class="list" id="heightmaps">
+        <li class="item" id="upload">Upload Custom Heightmap Image</li>
+        <li class="gap"></li>
+        <li class="item selected" id="flat">Flat</li>
+        <li class="item" id="plains">Plains</li>
+        <li class="item" id="hills">Hills</li>
+        <li class="item" id="mountains">Mountains</li>
+        <li class="item" id="cliff_up">Cliff (Up)</li>
+        <li class="item" id="cliff_down">Cliff (Down)</li>
+        <li class="item" id="river_ns">River (North-South)</li>
+        <li class="item" id="river_we">River (East-West)</li>
+        <li class="item" id="river_offset">River (Offset)</li>
+      </ul>
     </div>
   </div>
   <div class="loader">

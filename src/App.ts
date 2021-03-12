@@ -5,7 +5,7 @@ import { mat4 , vec2, vec3 } from 'gl-matrix'
 import { Annotation, CompoundStructure, Rotation } from "./Structure/CompoundStructure";
 import { Structure } from '@webmc/core';
 import { clamp, clampVec3, negVec3 } from './util'
-import { BBRenderer } from './BoundingBoxRenderer';
+import { BBRenderer } from './Renderer/BoundingBoxRenderer';
 import { BoundingBox } from './BoundingBox';
 import { DatapackReaderZip } from './DatapackReader/DatapackReaderZip'
 import { read as readNbt } from '@webmc/nbt'
@@ -14,6 +14,8 @@ import { DatapackReaderComposite } from './DatapackReader/DatapackReaderComposit
 import { StructureFeatureManger } from './StructureFeatureManager';
 import { DatapackReaderDirectory } from './DatapackReader/DatapackReaderDirectory';
 import { TemplatePool } from './worldgen/TemplatePool';
+import { Heightmap } from './Heightmap';
+import { HeightmapRenderer } from './Renderer/HeightmapRenderer';
 
 declare global {
   interface Window {
@@ -26,7 +28,7 @@ const chunkSize = 8
 //let viewDist = 4;
 //let xRotation = 0.8;
 //let yRotation = 0.5;
-const cPos = vec3.create()
+const cPos = vec3.fromValues(-1.5, -65, -1.5)
 const cRot = vec2.fromValues(0.4, 0.6)
 let cDist = 10
 
@@ -62,15 +64,20 @@ async function main() {
   const setting_buttons = {
     bb: document.querySelector('.button#bb'),
     info: document.querySelector('.button#info'),
+    heightmap: document.querySelector('.button#heightmap'),
     icon_empty: document.querySelector('.button#icon-empty'),
     icon_feature: document.querySelector('.button#icon-feature'),
     icon_entity: document.querySelector('.button#icon-entity'),
   }
 
+  const heightmap_entries = document.querySelectorAll('.heightmap-selector li.item')
+
   const stepDisplay = document.querySelector('.ui .text#step')
 
   const openZipButton = document.querySelector('.sidebar .button#openzip')
   const openFolderButton = document.querySelector('.sidebar .button#openfolder')
+
+  const selectHeightmapButton = document.querySelector('.sidebar .button#select-heightmap')
 
   const featuresList = document.querySelector('.sidebar .list#features')
 
@@ -83,8 +90,15 @@ async function main() {
   const infoJointType = document.querySelector('.info #joint_type')
   const infoDepth = document.querySelector('.info #depth')
 
+  const heightmapPanel = document.querySelector('.heightmap-selector')
+
   if (!gl) {
     throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.')
+  }
+
+  var ext = gl.getExtension('OES_element_index_uint')
+  if (!ext){
+    throw new Error('Unable to load OES_element_index_uint wegbl extension. Your browser or machine may not support it.')
   }
 
   let structure = new CompoundStructure()
@@ -104,7 +118,10 @@ async function main() {
     fallback_from: undefined,
     depth: 0
   }
-  structure.addStructure(structure1, [0,0,0], Rotation.Rotate0, annotation)
+  structure.addStructure(structure1, [0,65,0], Rotation.Rotate0, annotation)
+  structure.setStartingY(64)
+
+  var heightmap = await Heightmap.fromImage("heightmaps/flat.png")
 
   const renderer = new StructureRenderer(gl)
 
@@ -118,9 +135,14 @@ async function main() {
   const renderedTypes = new Set(['entity', 'feature'])
 
   renderer.addRenderer(new BlocksRenderer(gl, structure, resourcesObject, chunkSize))
+
   const annotationRenderer = new AnnotationRenderer(gl, structure, resourcesObject)
   annotationRenderer.setRenderedTypes(Array.from(renderedTypes))
   renderer.addRenderer(annotationRenderer)
+
+  const heightmapRenderer = new HeightmapRenderer(gl, structure, resourcesObject, heightmap)
+
+  renderer.addRenderer(heightmapRenderer)
 
   const bbRenderer = new BBRenderer(gl)
 
@@ -152,12 +174,13 @@ async function main() {
       const node = document.createElement("LI");
       const textnode = document.createTextNode(feature.toString());
       node.appendChild(textnode);
+      node.classList.add("item")
       node.setAttribute("title", feature.toString())
 
       node.onclick = async () => {
         try{
           showLoader()
-          const sfm = StructureFeatureManger.fromConfiguredStructureFeature(reader, feature)
+          const sfm = StructureFeatureManger.fromConfiguredStructureFeature(reader, feature, heightmap)
           await sfm.generate()
           structure = sfm.getWorld()
           structure.lastStep()
@@ -385,8 +408,27 @@ async function main() {
   })
 
   setting_buttons.info.addEventListener("click", async () => {
-    const shown = !infoPanel.classList.toggle("hidden")
-    setting_buttons.info.classList.toggle("selected", shown)
+    const shown = setting_buttons.info.classList.toggle("selected")
+    if (!selectHeightmapButton.classList.contains("selected"))
+      infoPanel.classList.toggle("hidden", !shown)
+  })
+
+  setting_buttons.heightmap.addEventListener("click", async () => {
+    const shown = heightmapRenderer.toggleRendering()
+    requestAnimationFrame(render)
+    setting_buttons.heightmap.classList.toggle("selected", shown)
+  })
+
+  selectHeightmapButton.addEventListener('click', () => {
+
+    const enabled = selectHeightmapButton.classList.toggle("selected")
+    heightmapPanel.classList.toggle("hidden", !enabled)
+
+    if (enabled){
+      infoPanel.classList.add("hidden")
+    } else {
+      infoPanel.classList.toggle("hidden", !setting_buttons.info.classList.contains("selected"))
+    }
   })
 
   setting_buttons.icon_empty.addEventListener("click", async () => {
@@ -418,6 +460,24 @@ async function main() {
     return !has
   }
 
+  heightmap_entries.forEach(entry => entry.addEventListener("click", async () => {
+    if (entry.id  === "upload"){
+      console.warn("Upload not yet implemented")
+    } else {
+      console.debug("Loading Heightmap " + entry.id)
+      heightmap = await Heightmap.fromImage("heightmaps/" + entry.id + ".png")
+      heightmapRenderer.setHeightmap(heightmap)
+      heightmapRenderer.toggleRendering(true)
+      setting_buttons.heightmap.classList.toggle("selected", true)
+      heightmap_entries.forEach(e => e.classList.toggle("selected", e.id === entry.id))
+      heightmapPanel.classList.add("hidden")
+
+      infoPanel.classList.toggle("hidden", !setting_buttons.info.classList.contains("selected"))
+      selectHeightmapButton.classList.remove("selected")
+
+      requestAnimationFrame(render)
+    }
+  }))
 
   window.addEventListener('keyup', async (evt:KeyboardEvent) => {
     if (evt.key === "ArrowLeft"){

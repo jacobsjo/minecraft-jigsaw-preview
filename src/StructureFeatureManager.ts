@@ -6,6 +6,7 @@ import { shuffleArray, getRandomInt, directionRelative } from './util'
 import { BoundingBox } from './BoundingBox';
 import { ConfiguedStructureFeature } from './worldgen/ConfiguredStructureFeature';
 import { EmptyPoolElement } from './worldgen/PoolElement';
+import { Heightmap } from './Heightmap';
 
 
 export class StructureFeatureManger{
@@ -15,7 +16,9 @@ export class StructureFeatureManger{
         private reader: DatapackReader,
         private startingPool: string,
         private depth: number,
-        private doExpansionHack: boolean
+        private doExpansionHack: boolean,
+        private startingY: number | "heightmap",
+        private heightmap: Heightmap
     ){
         this.world = new CompoundStructure()
     }
@@ -59,18 +62,24 @@ export class StructureFeatureManger{
             joint_type: undefined,
             depth: 0
         }
-        const startingPieceNr = this.world.addStructure(startingPiece, [0,0,0], Rotation.Rotate0, annotation)
-        const placing : {"piece": number, "check": number[], "inside": number|undefined, "depth": number}[] = [{"piece": startingPieceNr, "check": [startingPieceNr], "inside": undefined, "depth": this.depth}]
+
+        const startingPieceY = this.startingY === "heightmap" ? this.heightmap.getHeight(0,0) - 1 : this.startingY
+
+        console.debug("Starting at Y = " + startingPieceY)
+
+        this.world.setStartingY(startingPieceY)
+        const startingPieceNr = this.world.addStructure(startingPiece, [0, startingPieceY,0], Rotation.Rotate0, annotation)
+        const placing : {"piece": number, "check": number[], "inside": number|undefined, "rigid": boolean, "depth": number}[]
+            = [{"piece": startingPieceNr, "check": [startingPieceNr], "inside": undefined, "rigid": poolElement.getProjection() === "rigid", "depth": this.depth}]
         
         while (placing.length > 0){
-            const piece = placing.shift()
+            const parent = placing.shift()
 
-            const bb = this.world.getBB(piece.piece)
+            const bb = this.world.getBB(parent.piece)
             //getElementBlocks returns blocks rotated and moved correctly
 
             const checkInsideList: number[] = []
-
-            const jigsawBlocks = shuffleArray(this.world.getElementBlocks(piece.piece).filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
+            const jigsawBlocks = shuffleArray(this.world.getElementBlocks(parent.piece).filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
             for (const block of jigsawBlocks){
                 if (typeof block.nbt.pool.value !== "string")
                     throw "pool element nbt of wrong type";
@@ -85,10 +94,10 @@ export class StructureFeatureManger{
                 let check: number[], inside: number;
                 if (isInside) {
                     check = checkInsideList;
-                    inside = piece.piece;
+                    inside = parent.piece;
                 } else {
-                    check = piece.check;
-                    inside = piece.inside;
+                    check = parent.check;
+                    inside = parent.inside;
                 }
 
                 const rollable: boolean = (block.nbt.joint !== undefined &&  typeof block.nbt.joint.value === "string") ? block.nbt.joint.value === "rollable" : true;
@@ -97,7 +106,7 @@ export class StructureFeatureManger{
                 const pool: TemplatePool = await TemplatePool.fromName(this.reader, block.nbt.pool.value, this.doExpansionHack);
                 const fallbackPool: TemplatePool = await TemplatePool.fromName(this.reader, pool.fallback, this.doExpansionHack);
 
-                const poolElements = (piece.depth > 0 ? pool.getShuffeledElements() : [])
+                const poolElements = (parent.depth > 0 ? pool.getShuffeledElements() : [])
                     .concat([undefined])
                     .concat(fallbackPool.getShuffeledElements())
                     .concat([new EmptyPoolElement()])
@@ -121,9 +130,10 @@ export class StructureFeatureManger{
                         "element_type": placingElement.getType(),
                         "joint": target,
                         "joint_type": (forward == "up" || forward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
-                        "depth": this.depth - piece.depth + 1
+                        "depth": this.depth - parent.depth + 1
                     }
 
+                    const placingRigid = placingElement.getProjection() === "rigid"
                     const placingStructure = await placingElement.getStructure();
 
                     if (placingElement instanceof EmptyPoolElement){
@@ -156,6 +166,10 @@ export class StructureFeatureManger{
                             parentJigsawFacingPos[2] - rotatedPlacingJigsawPos[2]
                         ];
 
+                        if (!parent.rigid || !placingRigid){
+                            offset[1] = this.heightmap.getHeight(parentJigsasPos[0], parentJigsasPos[2]) - rotatedPlacingJigsawPos[1]
+                        }
+
                         const newSize: BlockPos = [size[0], size[1], size[2]]
                         if (rotation === Rotation.Rotate90 || rotation === Rotation.Rotate270) {
                             newSize[0] = size[2];
@@ -175,7 +189,7 @@ export class StructureFeatureManger{
 
                         const placingNr = this.world.addStructure(placingStructure, offset, rotation, annotation);
                         check.push(placingNr);
-                        placing.push({ "piece": placingNr, "check": check, "inside": inside, "depth": piece.depth - 1 });
+                        placing.push({ "piece": placingNr, "check": check, "inside": inside, "rigid": placingRigid, "depth": parent.depth - 1 });
                         break try_all_pool_element // successfully placed structure, don't try more
                     }
                 }
@@ -187,7 +201,7 @@ export class StructureFeatureManger{
         return this.world
     }
 
-    public static fromConfiguredStructureFeature(reader: DatapackReader, feature: ConfiguedStructureFeature){
-        return new StructureFeatureManger(reader, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack())
+    public static fromConfiguredStructureFeature(reader: DatapackReader, feature: ConfiguedStructureFeature, heightmap: Heightmap){
+        return new StructureFeatureManger(reader, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), heightmap)
     }
 }

@@ -52,7 +52,7 @@
     padding-bottom: 0.3cm;
   }
 
-  .info .title{
+  .title{
     color: #d2ad48;
     font-size: 18pt;
     font-style: bold;
@@ -65,6 +65,16 @@
   .info .name{
     font-style: italic;
   }
+
+  .heightmap-selector{
+    position: absolute;
+    left: 210pt;
+    top: 10pt;
+    width: 300pt;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 10pt;
+  }  
 
   .ui{
     position: absolute;
@@ -159,11 +169,11 @@
     display: none;
   }
 
-  .sidebar ul{
+  ul{
     padding-top: 20pt;
   }
 
-  .sidebar li{
+  li.item{
     padding-top: 5pt;
     padding-bottom: 5pt;
     padding-left: 5pt;
@@ -179,8 +189,13 @@
     overflow: clip;    
   }
 
-  .sidebar li:hover{
+  li.item.selected, li.item:hover{
     background-color: #535353;
+  }
+
+  li.gap{
+    list-style-type: none;
+    height: 0.5cm;
   }
 
   .loader{

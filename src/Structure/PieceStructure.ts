@@ -2,7 +2,6 @@ import { NamedNbtTag, getTag, getListTag, getOptional } from "@webmc/nbt";
 import { BlockState } from "@webmc/core";
 import { StructureProvider, BlockPos, BlockNbt } from "@webmc/core";
 import { read as readNbt } from '@webmc/nbt'
-import { files } from "jszip";
 import * as path from 'path';
 
 export class PieceStructure implements StructureProvider {

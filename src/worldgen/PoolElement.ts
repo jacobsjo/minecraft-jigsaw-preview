@@ -14,6 +14,7 @@ export abstract class PoolElement{
     }
 
     public abstract getStructure(): Promise<StructureProvider>
+    public abstract getProjection(): "rigid" | "terrain_matching"
 
     public abstract getShuffledJigsawBlocks(): Promise<{
         pos: BlockPos;
@@ -50,9 +51,12 @@ export abstract class PoolElement{
 }
 
 export class EmptyPoolElement extends PoolElement{
-
     public async getStructure(): Promise<StructureProvider> {
         return new EmptyStructure()
+    }
+
+    public getProjection(): "rigid" | "terrain_matching" {
+        return "rigid";
     }
 
     public getType(): string{
@@ -101,7 +105,7 @@ export class FeaturePoolElement extends PoolElement{
     constructor(
         reader: DatapackReader,
         private feature: string,
-        private projection: string
+        private projection: "rigid" | "terrain_matching"
     ){
         super()
     }
@@ -112,6 +116,10 @@ export class FeaturePoolElement extends PoolElement{
 
     public async getStructure(): Promise<StructureProvider> {
         return new FeatureStructure(this.feature)
+    }
+
+    public getProjection(): "rigid" | "terrain_matching" {
+        return this.projection
     }
 
     public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {
@@ -135,7 +143,7 @@ export class SinglePoolElement extends PoolElement{
         private reader: DatapackReader,
         private location: string,
         private processors: string,
-        private projection: string,
+        private projection: "rigid" | "terrain_matching",
     ){
         super()
         this.structure = PieceStructure.fromName(reader, this.location);
@@ -182,6 +190,10 @@ export class SinglePoolElement extends PoolElement{
         return this.structure
     }
 
+    public getProjection(): "rigid" | "terrain_matching" {
+        return this.projection
+    }
+
     public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {
         return shuffleArray((await this.structure).getBlocks().filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
     }
@@ -206,7 +218,7 @@ export class ListPoolElement extends PoolElement{
             element_type: string;
             [key: string]: string;
         }[],
-        private projection: string,
+        private projection: "rigid" | "terrain_matching",
     ){
         super()
         this.pool_elements = elements.map(element => PoolElement.fromElement(reader, element))
@@ -227,6 +239,10 @@ export class ListPoolElement extends PoolElement{
 
     public getStructure(): Promise<StructureProvider>{
         return this.structure
+    }
+
+    public getProjection(): "rigid" | "terrain_matching" {
+        return this.projection
     }
 
     public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {

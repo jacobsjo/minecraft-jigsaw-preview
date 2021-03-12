@@ -88,6 +88,8 @@ export class CompoundStructure implements StructureProvider {
   private displayMaxStep = 1
   private stepElementTypes = new Set(['minecraft:single_pool_element', 'minecraft:list_pool_element', 'minecraft:feature_pool_element'])
 
+  private startingY = 0
+
   private bakedBlocksPerStructure: {
     pos: BlockPos;
     state: BlockState;
@@ -100,6 +102,10 @@ export class CompoundStructure implements StructureProvider {
     nbt: BlockNbt;
     maxStep: number;
   }[][] | undefined = undefined // first array: block pos, second array: blocks at block pos
+
+  public setStartingY(y: number){
+    this.startingY = y
+  }
 
   public setStepElementType(type: string, enabled: boolean){
     if (enabled)
@@ -203,7 +209,7 @@ export class CompoundStructure implements StructureProvider {
 
   public getBB(nr: number | undefined) : BoundingBox{
     if (nr === undefined){
-      return new BoundingBox([-80,-80,-80], [162, 162, 162])
+      return new BoundingBox([-80,-80 + this.startingY ,-80], [162, 162, 162])
     }
 
     return CompoundStructure.getBBFromElement(this.elements[nr])

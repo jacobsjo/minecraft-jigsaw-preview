@@ -3,11 +3,11 @@ import fs from 'fs';
 
 export class ConfiguedStructureFeature{
     constructor(
+        private type: string,
         private namespace: string,
         private id: string,
         private start_pool: string,
         private depth: number,
-        private exp_hack: boolean
     ){}
 
     public toString(): string{
@@ -22,8 +22,12 @@ export class ConfiguedStructureFeature{
         return this.depth
     }
 
+    public getStaringY(): number | "heightmap"{
+        return (this.type === "minecraft:village" || this.type === "minecraft:pillager_outpost") ? "heightmap" : 30
+    }
+
     public doExpansionHack(): boolean{
-        return this.exp_hack
+        return this.type === 'minecraft:village'
     }
 
     public static async getAll(reader: DatapackReader): Promise<ConfiguedStructureFeature[]>{
@@ -51,7 +55,7 @@ export class ConfiguedStructureFeature{
                         continue;
                     }
             
-                    features.push(new ConfiguedStructureFeature(namespace, id, json.config.start_pool, json.config.size, json.type === 'minecraft:village'))
+                    features.push(new ConfiguedStructureFeature(json.type, namespace, id, json.config.start_pool, json.config.size))
                 } catch (e){
                     console.warn("Cound not Parse JSON File " + p + " - ignoring")
                 }
