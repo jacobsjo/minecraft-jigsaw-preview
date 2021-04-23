@@ -174,7 +174,7 @@ export class SinglePoolElement extends PoolElement{
             const maxHeight = await pool.getMaxHeight()
             const maxHeightFallback = await fallbackPool.getMaxHeight()
 
-            minHeight = Math.max(minHeight, Math.max(maxHeight, maxHeightFallback))
+            minHeight = Math.max(minHeight, Math.max(maxHeight, maxHeightFallback) + 2)
         }
         ;(await this.structure).expandY(minHeight)
         if (minHeight > oldHeight)
