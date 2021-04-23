@@ -70,6 +70,8 @@ async function main() {
     icon_entity: document.querySelector('.button#icon-entity'),
   }
 
+  const about_link = document.querySelector('.link#about')
+
   const heightmap_entries = document.querySelectorAll('.heightmap-selector li.item')
 
   const stepDisplay = document.querySelector('.ui .text#step')
@@ -91,6 +93,9 @@ async function main() {
   const infoDepth = document.querySelector('.info #depth')
 
   const heightmapPanel = document.querySelector('.heightmap-selector')
+
+  const popupPanel = document.querySelector('.popup')
+  const popupClosingX = document.querySelector('.popup .closing_x')
 
   if (!gl) {
     throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.')
@@ -281,28 +286,19 @@ async function main() {
   let dragPos: [number, number] | null = null
   let dragButton: number
   canvas.addEventListener('mousedown', (evt:MouseEvent ) => {
-    //dragTime = Date.now()
     dragPos = [evt.clientX, evt.clientY]
     dragButton = evt.button
+    console.log("mousedown")
   })
+
   canvas.addEventListener('mousemove', (evt:MouseEvent ) => {
     if (dragPos) {
       const dx = (evt.clientX - dragPos[0]) / 100
       const dy = (evt.clientY - dragPos[1]) / 100
       if (dragButton === 0) {
-        vec2.add(cRot, cRot, [dx, dy])
-        cRot[0] = cRot[0] % (Math.PI * 2)
-        cRot[1] = clamp(cRot[1], -Math.PI / 2, Math.PI / 2)
+        rotateCamera(dx, dy)
       } else if (dragButton === 2) {
-        const [min, max] = structure.getBounds()
-        vec3.rotateY(cPos, cPos, [0, 0, 0], cRot[0])
-        vec3.rotateX(cPos, cPos, [0, 0, 0], cRot[1])
-        const d = vec3.fromValues(dx, -dy, 0)
-        vec3.scale(d, d, 0.25 * cDist)
-        vec3.add(cPos, cPos, d)
-        vec3.rotateX(cPos, cPos, [0, 0, 0], -cRot[1])
-        vec3.rotateY(cPos, cPos, [0, 0, 0], -cRot[0])
-        clampVec3(cPos, negVec3(max), negVec3(min))
+        moveCamera(dx, dy)
       } else {
         return
       }
@@ -310,14 +306,70 @@ async function main() {
       render();
     }
   })
+
   canvas.addEventListener('mouseup', () => {
     dragPos = null
-//    if (Date.now() - dragTime < 200) {
-//      if (dragButton === 0) {
-//        selectBlock(evt.clientX, evt.clientY)
-//      }
-//    }
   })
+
+  let touchPos: [number, number] | null = null
+  let touchStartDistance: number | null = null
+  let touchStartCDist: number | null = null
+
+  canvas.addEventListener('touchstart', (evt:TouchEvent) => {
+    touchPos = [evt.touches[0].clientX, evt.touches[0].clientY]
+    if (evt.touches.length > 1){
+      touchStartDistance = Math.sqrt(Math.pow(evt.touches[0].clientX - evt.touches[1].clientX, 2) + Math.pow(evt.touches[0].clientY - evt.touches[1].clientY, 2))
+      touchStartCDist = cDist
+    }
+  })
+
+  canvas.addEventListener('touchmove', (evt:TouchEvent) => {
+    if (touchPos){
+      const dx = (evt.touches[0].clientX - touchPos[0]) / 100
+      const dy = (evt.touches[0].clientY - touchPos[1]) / 100
+
+      if (evt.touches.length === 1){
+        rotateCamera(dx, dy)
+      } else if (evt.touches.length > 1){
+        moveCamera(dx, dy)
+        const d = Math.sqrt(Math.pow(evt.touches[0].clientX - evt.touches[1].clientX, 2) + Math.pow(evt.touches[0].clientY - evt.touches[1].clientY, 2))
+        cDist = touchStartCDist * touchStartDistance / d
+        cDist = Math.max(5, Math.min(100, cDist))
+        evt.preventDefault()
+      }
+
+      touchPos = [evt.touches[0].clientX, evt.touches[0].clientY]
+      render();
+    }
+  })
+
+  canvas.addEventListener('touchend', (evt:TouchEvent) => {
+    touchPos = null
+  })
+
+  canvas.addEventListener('touchcancel', (evt:TouchEvent) => {
+    touchPos = null
+  })
+
+
+  function rotateCamera(dx: number, dy: number){
+    vec2.add(cRot, cRot, [dx, dy])
+    cRot[0] = cRot[0] % (Math.PI * 2)
+    cRot[1] = clamp(cRot[1], -Math.PI / 2, Math.PI / 2)
+  }
+
+  function moveCamera(dx: number, dy: number){
+    const [min, max] = structure.getBounds()
+    vec3.rotateY(cPos, cPos, [0, 0, 0], cRot[0])
+    vec3.rotateX(cPos, cPos, [0, 0, 0], cRot[1])
+    const d = vec3.fromValues(dx, -dy, 0)
+    vec3.scale(d, d, 0.25 * cDist)
+    vec3.add(cPos, cPos, d)
+    vec3.rotateX(cPos, cPos, [0, 0, 0], -cRot[1])
+    vec3.rotateY(cPos, cPos, [0, 0, 0], -cRot[0])
+    clampVec3(cPos, negVec3(max), negVec3(min))
+  }
+
   canvas.addEventListener('wheel', (evt:WheelEvent ) => {
     cDist += evt.deltaY > 0 ? 1 : -1
     cDist = Math.max(5, Math.min(100, cDist))
@@ -446,6 +498,14 @@ async function main() {
   setting_buttons.icon_entity.addEventListener("click", async () => {
     const shown = toggleRenderedType("entity")
     setting_buttons.icon_entity.classList.toggle("selected", shown)
+  })
+
+  about_link.addEventListener("click", () => {
+    popupPanel.classList.remove("hidden")
+  })
+
+  popupClosingX.addEventListener("click", () => {
+    popupPanel.classList.add("hidden")
   })
 
   function toggleRenderedType(type: string): boolean{

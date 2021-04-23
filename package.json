@@ -6,7 +6,7 @@
     "build": "webpack-cli -p",
     "watch": "webpack-cli -p -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
-    "start": "webpack-dev-server -d --content-base ./public",
+    "start": "webpack-dev-server -d --content-base ./public --host 0.0.0.0",
     "deploy": "gh-pages -d dist"
   },
   "repository": "https://github.com/jacobsjo/minecraft-jigsaw-preview/",
