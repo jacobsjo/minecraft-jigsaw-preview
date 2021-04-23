@@ -4,20 +4,31 @@
   }
   body {
     background-color: black;
+    overflow: hidden;
   }
 
   .sidebar{
+    position: absolute;
+    top: 0pt;
+    left: 0pt;
     width: 200pt;
     height: 100vh;
     background-color: #404040;
     user-select: none;
-    float: left;
+  }
+
+  .sidebar .wrapper{
+    height: calc(100vh - 80pt);
+    overflow: auto;
+    width: 200pt;
   }
 
   .main{
-    width: calc(100% - 200pt);
-    height: 100vh;
-    float: right;
+    position: absolute;
+    left: 200pt;
+    right: 0pt;
+    top: 0pt;
+    bottom: 0pt;
   }
 
   #render {
@@ -34,9 +45,9 @@
     }
   }
 
-  .info{
+  .infopanel{
     position: absolute;
-    left: 210pt;
+    left: 10pt;
     top: 10pt;
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
@@ -67,19 +78,78 @@
   }
 
   .heightmap-selector{
-    position: absolute;
-    left: 210pt;
-    top: 10pt;
     width: 300pt;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    padding: 10pt;
   }  
+
+  .popup{
+    position: absolute;
+    top: 0pt;
+    left: 0pt;
+    width: 100%;
+    height: 100%;
+    background-color: #b0b0b0b0;
+  }
+
+  .about{
+    max-width: 500pt;
+    background-color: rgb(51, 51, 51);
+    max-height: calc(100vh - 40pt);
+    margin: auto;
+    padding: 10pt;
+    color: white;
+    margin-top: 10pt;
+    position: relative;
+  }
+
+  .about .text{
+    overflow: auto;
+    max-height: calc(100vh - 40pt);
+  }
+
+  .about .text p{
+    margin-top: 10pt;
+    margin-bottom: 10pt;
+  }
+
+  .about .text p a{
+    text-decoration: underline;
+    color: #d1b358;
+  }
+
+  .popup .closing_x{
+    position: absolute;
+    right: 5pt;
+    top: 5pt;
+  }
+
+  .sidebar .closing_x{
+    position: absolute;
+    right: -22pt;
+    top: 5pt;
+  }
+
+  .closing_x{
+    width: 30pt;
+    height: 30pt;
+    border-radius: 50%;
+    background-color: #d2ad48;
+    color: white;
+    text-align: center;
+    font-size: 30pt;
+    cursor: pointer;
+    z-index:10;
+  }
+
+  .closing_x p{
+    position:absolute;
+    top: -4pt;
+    left: 2pt;
+  }
 
   .ui{
     position: absolute;
-    left: 200pt;
-    width: calc(100vw - 200pt);
+    left: 0pt;
+    width: 100%;
     bottom: 15pt;
     font-size: 12pt;
     font-weight: 1000;      
@@ -87,6 +157,7 @@
     text-align: center;
     cursor: default;
     user-select: none;
+    min-width: 250pt;
   }
 
 
@@ -120,7 +191,11 @@
 
   div.iconbar{
     position: absolute;
-    bottom: 10pt;
+    bottom: 0pt;
+    left: 0pt;
+    right: 0pt;
+    height: 80pt;
+    background-color: #494949;
   }
 
   span.button.icon {
@@ -196,6 +271,17 @@
   li.gap{
     list-style-type: none;
     height: 0.5cm;
+  }
+
+  .sidebar p{
+    padding-left: 10pt;
+  }
+
+  a.link{
+    text-decoration: underline;
+    color: #9e8d5a;
+    padding-left: 2pt;
+    cursor: pointer;
   }
 
   .loader{
