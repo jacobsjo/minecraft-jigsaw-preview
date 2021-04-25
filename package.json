@@ -34,7 +34,7 @@
     "ts-loader": "^7.0.4",
     "typescript": "^3.9.5",
     "webpack": "^4.44.2",
-    "webpack-cli": "^3.3.11",
+    "webpack-cli": "^4.6.0",
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
