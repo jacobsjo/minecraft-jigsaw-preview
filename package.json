@@ -3,10 +3,10 @@
   "version": "0.1.5",
   "description": "Display Minecraft Jigsaw Structures",
   "scripts": {
-    "build": "webpack-cli -p",
-    "watch": "webpack-cli -p -w",
+    "build": "webpack",
+    "watch": "webpack watch",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
-    "start": "webpack-dev-server -d --content-base ./public --host 0.0.0.0",
+    "start": "webpack serve",
     "deploy": "gh-pages -d dist"
   },
   "repository": "https://github.com/jacobsjo/minecraft-jigsaw-preview/",
@@ -21,34 +21,20 @@
   "license": "MIT",
   "main": "dist/main.js",
   "devDependencies": {
-    "@types/cordova": "0.0.34",
-    "@types/cordova-plugin-file": "4.3.2",
-    "@types/filesystem": "^0.0.28",
-    "@types/node-fetch": "^2.5.8",
-    "@types/wicg-native-file-system": "2020.6.0",
-    "@typescript-eslint/eslint-plugin": "^3.4.0",
-    "@typescript-eslint/parser": "^3.4.0",
-    "copy-webpack-plugin": "^6.4.1",
-    "eslint": "^7.3.1",
-    "gh-pages": "^3.1.0",
-    "ts-loader": "^7.0.4",
-    "typescript": "^3.9.5",
-    "webpack": "^4.44.2",
-    "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.11.0"
+    "@types/node": "^15.12.1",
+    "copy-webpack-plugin": "^9.0.0",
+    "gh-pages": "^3.2.0",
+    "ts-loader": "^9.2.3",
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.2",
+    "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
     "@webmc/core": "^0.2.1",
     "@webmc/nbt": "^0.1.1",
-    "@webmc/render": "^0.5.0",
-    "chokidar": "^3.5.1",
-    "gl-matrix": "3.3.0",
-    "jszip": "^3.5.0",
-    "native-file-system-adapter": "^0.1.0",
-    "node-fetch": "^2.6.1",
-    "pako": "^2.0.3"
-  },
-  "optionalDependencies": {
-    "fsevents": "^2.3.2"
+    "@webmc/render": "^0.6.1",
+    "gl-matrix": "^3.3.0",
+    "jszip": "^3.6.0",
+    "path": "^0.12.7"
   }
 }
