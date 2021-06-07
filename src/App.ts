@@ -178,7 +178,6 @@ async function main() {
     TemplatePool.reload()
     featuresList.innerHTML = ""
     const features = await ConfiguedStructureFeature.getAll(reader)
-    console.log(features)
     features.forEach(feature => {
       const node = document.createElement("LI");
       const textnode = document.createTextNode(feature.toString());
@@ -292,7 +291,6 @@ async function main() {
   canvas.addEventListener('mousedown', (evt:MouseEvent ) => {
     dragPos = [evt.clientX, evt.clientY]
     dragButton = evt.button
-    console.log("mousedown")
   })
 
   canvas.addEventListener('mousemove', (evt:MouseEvent ) => {

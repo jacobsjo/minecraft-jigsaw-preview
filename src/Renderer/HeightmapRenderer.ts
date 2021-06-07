@@ -123,8 +123,6 @@ export class HeightmapRenderer extends Renderer {
       }
     }
 
-    console.log(position)
-
     this.pos_buffer = createBuffer(this.gl, this.gl.ARRAY_BUFFER, new Float32Array(position))   
     this.color_buffer = createBuffer(this.gl, this.gl.ARRAY_BUFFER, new Float32Array(color))   
     this.index_buffer = createBuffer(this.gl, this.gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(indices))      

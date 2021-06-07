@@ -1,4 +1,3 @@
-import { version } from 'jszip';
 import * as path from 'path';
 import { shuffleArray } from '../util'
 import { PoolElement } from './PoolElement';

@@ -1,5 +1,4 @@
 import * as path from 'path';
-import fs from 'fs';
 
 export class ConfiguedStructureFeature{
     constructor(

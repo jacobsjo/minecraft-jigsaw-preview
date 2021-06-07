@@ -65,8 +65,6 @@ export class StructureFeatureManger{
 
         const startingPieceY = this.startingY === "heightmap" ? this.heightmap.getHeight(0,0) - 1 : this.startingY
 
-        console.debug("Starting at Y = " + startingPieceY)
-
         this.world.setStartingY(startingPieceY)
         const startingPieceNr = this.world.addStructure(startingPiece, [0, startingPieceY,0], Rotation.Rotate0, annotation)
         const placing : {"piece": number, "check": number[], "inside": number|undefined, "rigid": boolean, "depth": number}[]
