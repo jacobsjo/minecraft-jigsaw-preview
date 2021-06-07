@@ -9,7 +9,10 @@ import os
 
 
 def extractJar(version: str, version_manifest):
-   version_name = version_manifest['latest'][version]
+   if (version in ['release','snapshot']):
+      version_name = version_manifest['latest'][version]
+   else:
+      version_name = version
    print("Extracting Minecraft Jar Version " + version_name)
    version_url = next(
        filter(lambda v: v['id'] == version_name, version_manifest['versions']))['url']
@@ -32,8 +35,13 @@ def extractJar(version: str, version_manifest):
 def extractWorldgenZip(version):
    print("-> Extracting worldgen zip file")
 
-   url = "https://github.com/slicedlime/examples/raw/80fb4b8418ff3ff5724f4a0438bb422f58960bd9/vanilla_worldgen.zip" if version == "release" \
-      else "https://github.com/slicedlime/examples/raw/master/vanilla_worldgen.zip"
+   if version == "1.16.5":
+      url = "https://github.com/slicedlime/examples/raw/80fb4b8418ff3ff5724f4a0438bb422f58960bd9/vanilla_worldgen.zip"
+   elif version == "1.17":
+      url = "https://github.com/slicedlime/examples/raw/master/vanilla_worldgen.zip"
+   else:
+      url =  "https://github.com/slicedlime/examples/raw/master/vanilla_worldgen.zip"
+
    with urlopen(url) as zip_data:
          with ZipFile(BytesIO(zip_data.read())) as archive:
             for file in archive.namelist():
@@ -48,12 +56,12 @@ def zipdir(path, root_len_delta, ziph):
       for file in files:
          ziph.write(os.path.join(root, file), os.path.join(root, file)[pl:])
 
-def createZips(version):
-   zf = ZipFile("public/zips/assets_" + version + ".zip", 'w', ZIP_DEFLATED)
+def createZips(version, zip_version):
+   zf = ZipFile("public/zips/assets_" + zip_version + ".zip", 'w', ZIP_DEFLATED)
    zipdir("/tmp/minecraft/" + version + "/assets", 0, zf)
    zf.close()
 
-   zf = ZipFile("public/zips/data_" + version + ".zip", 'w', ZIP_DEFLATED)
+   zf = ZipFile("public/zips/data_" + zip_version + ".zip", 'w', ZIP_DEFLATED)
    zipdir("/tmp/minecraft/" + version + "/data", 4, zf)
    zf.close()
 
@@ -64,11 +72,15 @@ if dirpath.exists() and dirpath.is_dir():
 
 with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as version_manifest_data:
    version_manifest = json.loads(version_manifest_data.read().decode())
-   extractJar("release", version_manifest)
-   extractWorldgenZip('release')
+   extractJar("1.16.5", version_manifest)
+   extractWorldgenZip('1.16.5')
+
+   extractJar("1.17-rc2", version_manifest)
+   extractWorldgenZip('1.17-rc2')
 
    extractJar("snapshot", version_manifest)
    extractWorldgenZip('snapshot')
 
-   createZips("release")
-   createZips("snapshot")
+   createZips("1.16.5", "1_16")
+   createZips("1.17-rc2", "1_17")
+   createZips("snapshot", "snapshot")

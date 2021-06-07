@@ -1,3 +1,4 @@
+import { version } from 'jszip';
 import * as path from 'path';
 import { shuffleArray } from '../util'
 import { PoolElement } from './PoolElement';
@@ -49,6 +50,11 @@ export class TemplatePool{
                     const element = PoolElement.fromElement(reader, e.element)
                     if (doExpansionHack)
                         await element.doExpansionHack()
+                    if (e.weight > 150){
+                        throw EvalError("Template pool element weight " + e.weight + " in " + id + " too large. Maximum weight is 150 since Minecraft 1.17 for performance reasons. Higher weights are possible in 1.16 but highly discouraged. \n \n Affected Pool element: \n" + element.getDescription() )
+                    } else if (e.weight < 1){
+                        throw EvalError("Template pool element weight " + e.weight + " in " + id + " too small. Minimum weight is 1. \n \n Affected Pool element: \n" + element.getDescription() )
+                    }
                     return {weight: e.weight, element: element}
                 }))))
             } catch (e){
@@ -56,6 +62,8 @@ export class TemplatePool{
                     reject("Cound not load Template Pool " + id)
                 else if (e instanceof DOMException)
                     reject("Permission error while loading Template Pool " + id + "\nTry reloading the datapack using the Open Datapack buttons")
+                else if (e instanceof EvalError)
+                    reject(e.message)
             }
         })
 

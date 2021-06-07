@@ -172,6 +172,7 @@
     width: 30pt;
   }
 
+
   span.button{
     color: #776944;
   }
@@ -238,6 +239,16 @@
     width: 160pt;
     margin-left: 10pt;
     margin-right: 10pt;
+  }
+
+  .sidebar .button.small{
+    width: 47pt;
+    margin-left: 10pt;
+    margin-right: 0pt;
+    padding-left: 2pt;
+    padding-right: 2pt;
+    white-space: nowrap;
+    font-size: smaller;
   }
 
   .hidden{
