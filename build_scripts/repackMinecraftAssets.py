@@ -38,7 +38,7 @@ def extractWorldgenZip(version):
    if version == "1.16.5":
       url = "https://github.com/slicedlime/examples/raw/80fb4b8418ff3ff5724f4a0438bb422f58960bd9/vanilla_worldgen.zip"
    elif version == "1.17":
-      url = "https://github.com/slicedlime/examples/raw/master/vanilla_worldgen.zip"
+      url = "https://github.com/slicedlime/examples/raw/23b9ac1ba5eceab976d7bdfef27707c2a44709ea/vanilla_worldgen.zip"
    else:
       url =  "https://github.com/slicedlime/examples/raw/master/vanilla_worldgen.zip"
 
@@ -75,12 +75,12 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    extractJar("1.16.5", version_manifest)
    extractWorldgenZip('1.16.5')
 
-   extractJar("1.17-rc2", version_manifest)
-   extractWorldgenZip('1.17-rc2')
+   extractJar("1.17", version_manifest)
+   extractWorldgenZip('1.17')
 
    extractJar("snapshot", version_manifest)
    extractWorldgenZip('snapshot')
 
    createZips("1.16.5", "1_16")
-   createZips("1.17-rc2", "1_17")
+   createZips("1.17", "1_17")
    createZips("snapshot", "snapshot")
