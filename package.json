@@ -27,7 +27,7 @@
     "ts-loader": "^9.2.3",
     "webpack": "^5.38.1",
     "webpack-cli": "^4.7.2",
-    "webpack-dev-server": "^3.11.2"
+    "webpack-dev-server": "^4.0.0"
   },
   "dependencies": {
     "@webmc/core": "^0.2.1",
