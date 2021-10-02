@@ -86,7 +86,7 @@ export class CompoundStructure implements StructureProvider {
   private maxPos: BlockPos = [0,0,0]
 
   private displayMaxStep = 1
-  private stepElementTypes = new Set(['minecraft:single_pool_element', 'minecraft:list_pool_element', 'minecraft:feature_pool_element'])
+  private stepElementTypes = new Set(['minecraft:single_pool_element', 'minecraft:list_pool_element', 'minecraft:feature_pool_element', 'error'])
 
   private startingY = 0
 

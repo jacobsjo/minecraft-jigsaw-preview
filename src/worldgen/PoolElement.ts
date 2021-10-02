@@ -155,30 +155,34 @@ export class SinglePoolElement extends PoolElement{
             return 0
         }
 
-        var minHeight = 0;
-        for (const jigsaw of await this.getShuffledJigsawBlocks()){
-            if (typeof jigsaw.nbt.pool.value !== "string")
-                throw "pool element nbt of wrong type";
+        try{
+            var minHeight = 0;
+            for (const jigsaw of await this.getShuffledJigsawBlocks()){
+                if (typeof jigsaw.nbt.pool.value !== "string")
+                    throw "pool element nbt of wrong type";
 
-            const orientation: string = jigsaw.state.getProperties()['orientation'] ?? 'north_up';
-            const [forward, _] = orientation.split("_");
-            const facingPos: BlockPos = directionRelative(jigsaw.pos, forward);
-            const isInside: boolean = new BoundingBox([0,0,0] as BlockPos, (await this.structure).getSize()).isInside(facingPos);
+                const orientation: string = jigsaw.state.getProperties()['orientation'] ?? 'north_up';
+                const [forward, _] = orientation.split("_");
+                const facingPos: BlockPos = directionRelative(jigsaw.pos, forward);
+                const isInside: boolean = new BoundingBox([0,0,0] as BlockPos, (await this.structure).getSize()).isInside(facingPos);
 
-            if (!isInside)
-                continue
-            
-            const pool: TemplatePool = await TemplatePool.fromName(this.reader, jigsaw.nbt.pool.value, false);
-            const fallbackPool: TemplatePool = await TemplatePool.fromName(this.reader, pool.fallback, false);
+                if (!isInside)
+                    continue
+                
+                const pool: TemplatePool = await TemplatePool.fromName(this.reader, jigsaw.nbt.pool.value, false);
+                const fallbackPool: TemplatePool = await TemplatePool.fromName(this.reader, pool.fallback, false);
 
-            const maxHeight = await pool.getMaxHeight()
-            const maxHeightFallback = await fallbackPool.getMaxHeight()
+                const maxHeight = await pool.getMaxHeight()
+                const maxHeightFallback = await fallbackPool.getMaxHeight()
 
-            minHeight = Math.max(minHeight, Math.max(maxHeight, maxHeightFallback) + 2)
+                minHeight = Math.max(minHeight, Math.max(maxHeight, maxHeightFallback) + 2)
+            }
+            ;(await this.structure).expandY(minHeight)
+            if (minHeight > oldHeight)
+                this.expansionHackString = "\n\nBounding box height expanded from " + oldHeight + " to " + minHeight + " blocks."
+        } catch (e) {
+            this.expansionHackString = "\n\nFailed to calculate expansion of bounding box: " + e
         }
-        ;(await this.structure).expandY(minHeight)
-        if (minHeight > oldHeight)
-            this.expansionHackString = "\n\nBounding box height expanded from " + oldHeight + " to " + minHeight + " blocks."
         return minHeight
     }
 

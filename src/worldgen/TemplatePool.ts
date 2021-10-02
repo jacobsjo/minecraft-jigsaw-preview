@@ -41,11 +41,26 @@ export class TemplatePool{
         }
 
         const promise: Promise<TemplatePool> = new Promise(async (resolve, reject) => {
+            var json
             try {
                 const [namespace, name] = id.split(":")
                 const p = path.join('data', namespace, 'worldgen', 'template_pool', name + ".json")
-                const json = await reader.readFileAsJson(p)
-                resolve(new TemplatePool(json.fallback, await Promise.all(json.elements.map(async (e: any) => {
+                json = await reader.readFileAsJson(p)
+            } catch (e){
+                if (e instanceof URIError){
+                    console.warn("Cound not load Template Pool " + id)
+                } else if (e instanceof DOMException)
+                    console.warn("Permission error while loading Template Pool " + id + "\nTry reloading the datapack using the Open Datapack buttons")
+                else if (e instanceof EvalError)
+                    console.warn(e.message)
+                else
+                    console.warn(e)
+
+                json = await reader.readFileAsJson(path.join('data', 'minecraft', 'worldgen', 'template_pool', 'empty.json'))
+            } 
+
+            try {
+                const pool_element = new TemplatePool(json.fallback, await Promise.all(json.elements.map(async (e: any) => {
                     const element = PoolElement.fromElement(reader, e.element)
                     if (doExpansionHack)
                         await element.doExpansionHack()
@@ -55,18 +70,15 @@ export class TemplatePool{
                         throw EvalError("Template pool element weight " + e.weight + " in " + id + " too small. Minimum weight is 1. \n \n Affected Pool element: \n" + element.getDescription() )
                     }
                     return {weight: e.weight, element: element}
-                }))))
-            } catch (e){
-                if (e instanceof URIError)
-                    reject("Cound not load Template Pool " + id)
-                else if (e instanceof DOMException)
-                    reject("Permission error while loading Template Pool " + id + "\nTry reloading the datapack using the Open Datapack buttons")
-                else if (e instanceof EvalError)
-                    reject(e.message)
+                })))
+                resolve(pool_element)
+            } catch (e) {
+                reject(e)
             }
         })
 
         this.templatePoolMap.set(id + "|" + doExpansionHack, promise)
+
         return promise
     }
 

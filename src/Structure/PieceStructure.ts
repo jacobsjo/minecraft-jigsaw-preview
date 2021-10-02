@@ -80,6 +80,8 @@ export class PieceStructure implements StructureProvider {
         throw "Cound not load Structure " + id
       else if (e instanceof DOMException)
         throw "Permission error while loading Structure " + id + "\nTry reloading the datapack using the Open Datapack buttons"
+      else
+        throw e
     }
   }
 
