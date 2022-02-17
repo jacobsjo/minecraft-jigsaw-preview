@@ -29,6 +29,10 @@ export class ConfiguedStructureFeature{
         return this.type === 'minecraft:village'
     }
 
+    public getRadius(): number{
+        return this.type === "minecraft:ancient_city" ? 128 : 80
+    }
+
     public static async getAll(reader: DatapackReader): Promise<ConfiguedStructureFeature[]>{
         const features: ConfiguedStructureFeature[] = []
         
@@ -46,7 +50,7 @@ export class ConfiguedStructureFeature{
                 
                 try {
                     const json =  await reader.readFileAsJson(p)
-                    if (json && json.type !== 'minecraft:village' && json.type !== 'minecraft:pillager_outpost' && json.type !== 'minecraft:bastion_remnant'){
+                    if (json && json.type !== 'minecraft:village' && json.type !== 'minecraft:pillager_outpost' && json.type !== 'minecraft:bastion_remnant' && json.type !== 'minecraft:ancient_city'){
                         continue; 
                     }
             

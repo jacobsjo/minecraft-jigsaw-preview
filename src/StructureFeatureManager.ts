@@ -18,6 +18,7 @@ export class StructureFeatureManger {
         private depth: number,
         private doExpansionHack: boolean,
         private startingY: number | "heightmap",
+        private radius: number,
         private heightmap: Heightmap
     ) {
         this.world = new CompoundStructure()
@@ -64,8 +65,9 @@ export class StructureFeatureManger {
         }
 
         const startingPieceY = this.startingY === "heightmap" ? this.heightmap.getHeight(0, 0) - 1 : this.startingY
-
         this.world.setStartingY(startingPieceY)
+        this.world.setMaxRadius(this.radius)
+
         const startingPieceNr = this.world.addStructure(startingPiece, [0, startingPieceY, 0], Rotation.Rotate0, annotation)
         const placing: { "piece": number, "check": number[], "inside": number | undefined, "rigid": boolean, "depth": number }[]
             = [{ "piece": startingPieceNr, "check": [startingPieceNr], "inside": undefined, "rigid": poolElement.getProjection() === "rigid", "depth": this.depth }]
@@ -225,6 +227,6 @@ export class StructureFeatureManger {
     }
 
     public static fromConfiguredStructureFeature(reader: DatapackReader, feature: ConfiguedStructureFeature, heightmap: Heightmap) {
-        return new StructureFeatureManger(reader, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), heightmap)
+        return new StructureFeatureManger(reader, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap)
     }
 }

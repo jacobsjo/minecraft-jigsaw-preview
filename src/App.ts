@@ -38,13 +38,13 @@ async function main() {
   const urlParams = new URLSearchParams(window.location.search);
   //const version = "release"
   let mc_version = urlParams.get('version')
-  if (!['1_16', '1_17', 'snapshot'].includes(mc_version)){
+  if (!['1_16', '1_17', '1_19_exp'].includes(mc_version)){
     mc_version = '1_17'
   }
 
   document.querySelector('.sidebar .button#v1_16').classList.toggle("selected", mc_version === "1_16")
   document.querySelector('.sidebar .button#v1_17').classList.toggle("selected", mc_version === "1_17")
-  document.querySelector('.sidebar .button#snapshot').classList.toggle("selected", mc_version === "snapshot")
+  document.querySelector('.sidebar .button#experimental').classList.toggle("selected", mc_version === "1_19_exp")
 
   const reader = new DatapackReaderComposite()
   const vanillaReader = await DatapackReaderZip.fromUrl("zips/data_" + mc_version + ".zip")
