@@ -72,6 +72,7 @@ async function main() {
     icon_empty: document.querySelector('.button#icon-empty'),
     icon_feature: document.querySelector('.button#icon-feature'),
     icon_entity: document.querySelector('.button#icon-entity'),
+    //download: document.querySelector('.button#download-image'),
   }
 
   const about_link = document.querySelector('.link#about')
@@ -501,6 +502,15 @@ async function main() {
     const shown = toggleRenderedType("entity")
     setting_buttons.icon_entity.classList.toggle("selected", shown)
   })
+
+  /*
+  setting_buttons.download.addEventListener("click", async () => {
+    render();
+    var link = document.createElement('a');
+    link.download = 'image.png';
+    link.href = canvas.toDataURL()
+    link.click();
+  })*/
 
   about_link.addEventListener("click", () => {
     popupPanel.classList.remove("hidden")

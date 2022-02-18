@@ -286,7 +286,7 @@ export class CompoundStructure implements StructureProvider {
           nbt: b.nbt,
           maxStep: id
         }
-        const posIndex = (block.pos[0] + 80) * 162 * 162 + (block.pos[1] + 80) * 162 + (block.pos[2] + 80)
+        const posIndex = (block.pos[0] + this.maxRadius) * (2 * this.maxRadius + 2) * (2 * this.maxRadius + 2) + (block.pos[1] + this.maxRadius) * (2 * this.maxRadius + 2) + (block.pos[2] + this.maxRadius)
         if (this.bakedBlocks[posIndex] === undefined)
           this.bakedBlocks[posIndex] = [block]
         else
@@ -318,10 +318,10 @@ export class CompoundStructure implements StructureProvider {
     if (!this.bakedBlocks)
       this.bakeBlocks()
 
-    if (pos[0] < -80 || pos[1] < -80 || pos[2] < -80 || pos[0] > 81 || pos[1] > 81 || pos[2] > 81)
+    if (pos[0] < -this.maxRadius || pos[1] < -this.maxRadius || pos[2] < -this.maxRadius || pos[0] > this.maxRadius+1 || pos[1] > this.maxRadius+1 || pos[2] > this.maxRadius+1)
       return null
   
-    const posIndex = (pos[0] + 80) * 162 * 162 + (pos[1] + 80) * 162 + (pos[2] + 80)
+    const posIndex = (pos[0] + this.maxRadius) * (2 * this.maxRadius + 2) * (2 * this.maxRadius + 2) + (pos[1] + this.maxRadius) * (2 * this.maxRadius + 2) + (pos[2] + this.maxRadius)
     return this.bakedBlocks[posIndex]?.slice().reverse().find(block => block.maxStep<this.displayMaxStep)
     /*
     const element = this.elements.slice(0, this.displayMaxStep).reverse()
