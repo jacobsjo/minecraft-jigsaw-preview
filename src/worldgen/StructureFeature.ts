@@ -54,15 +54,8 @@ export namespace StructureFeature{
                             continue;
                         }
 
-                        //TODO use deepslate for this
-                        var start_height = 0
-                        if (json.start_height.absolute !== undefined){
-                            start_height = json.start_height.absolute
-                        } else if (json.start_height.above_bottom !== undefined){
-                            start_height = json.start_height.above_bottom - 64
-                        } else if (json.start_height.below_top !== undefined){
-                            start_height = -64 + 384 - json.start_height.below_top
-                        }
+                        //TODO read height provider
+                        var start_height = 30
 
                         features.push(new JigsawStructureFeature(namespace, id, start_height, json.use_expansion_hack, json.start_pool, json.size, json.project_start_to_heightmap))
                     }
