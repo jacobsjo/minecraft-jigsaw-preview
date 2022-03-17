@@ -161,7 +161,7 @@
   }
 
 
-  .sidebar span, .ui span {
+  .sidebar span, .ui span, .sidebar select {
     display: inline-block;
     text-align: center;
     border: 0px;
@@ -173,19 +173,19 @@
   }
 
 
-  span.button{
+  .button{
     color: #776944;
   }
 
-  span.button.enabled:hover{
+  .button.enabled:hover{
     background-color: #535353;
   }
 
-  span.button.enabled:active{
+  .button.enabled:active{
     background-color: #858585;
   }
 
-  span.button.enabled {
+  .button.enabled {
     color: #d2ad48;
     cursor: pointer;
   }
@@ -233,6 +233,10 @@
     margin-bottom: 0;
     margin-top: 10pt;
     width: 63pt;
+  }
+
+  .sidebar select.button.fullwidth{
+    width: 180pt;
   }
 
   .sidebar .button.fullwidth{

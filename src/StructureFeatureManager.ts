@@ -4,9 +4,9 @@ import { Annotation, CompoundStructure, Rotation } from './Structure/CompoundStr
 import { TemplatePool } from './worldgen/TemplatePool';
 import { shuffleArray, getRandomInt, directionRelative } from './util'
 import { BoundingBox } from './BoundingBox';
-import { ConfiguedStructureFeature } from './worldgen/ConfiguredStructureFeature';
 import { EmptyPoolElement } from './worldgen/PoolElement';
 import { Heightmap } from './Heightmap';
+import { StructureFeature } from './worldgen/StructureFeature';
 
 
 export class StructureFeatureManger {
@@ -226,7 +226,7 @@ export class StructureFeatureManger {
         return this.world
     }
 
-    public static fromConfiguredStructureFeature(reader: DatapackReader, feature: ConfiguedStructureFeature, heightmap: Heightmap) {
+    public static fromStructureFeature(reader: DatapackReader, feature: StructureFeature, heightmap: Heightmap) {
         return new StructureFeatureManger(reader, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap)
     }
 }

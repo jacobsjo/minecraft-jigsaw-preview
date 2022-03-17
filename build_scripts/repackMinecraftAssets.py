@@ -37,8 +37,10 @@ def extractWorldgenZip(version):
 
    if version == "1.16.5":
       url = "https://github.com/slicedlime/examples/raw/80fb4b8418ff3ff5724f4a0438bb422f58960bd9/vanilla_worldgen.zip"
-   elif version == "1.17":
-      url = "https://github.com/slicedlime/examples/raw/23b9ac1ba5eceab976d7bdfef27707c2a44709ea/vanilla_worldgen.zip"
+   elif version == "1.17.1":
+      url = "https://github.com/slicedlime/examples/raw/7c54f55409f395a0aa517729669b20d570969f30/vanilla_worldgen.zip"
+   elif version == "1.18.2":
+      url = "https://github.com/slicedlime/examples/raw/d766a7028865fc210bef3ddcffb54886cdaf4860/vanilla_worldgen.zip"
    else:
       url =  "https://github.com/slicedlime/examples/raw/master/vanilla_worldgen.zip"
 
@@ -46,7 +48,8 @@ def extractWorldgenZip(version):
          with ZipFile(BytesIO(zip_data.read())) as archive:
             for file in archive.namelist():
                if file.startswith('worldgen/template_pool/') \
-                       or file.startswith('worldgen/configured_structure_feature/'):
+                       or file.startswith('worldgen/configured_structure_feature/') \
+                       or file.startswith('worldgen/structure/'):
                   archive.extract(file, "/tmp/minecraft/" + version + "/data/minecraft/")
 
 def zipdir(path, root_len_delta, ziph):
@@ -75,12 +78,16 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    extractJar("1.16.5", version_manifest)
    extractWorldgenZip('1.16.5')
 
-   extractJar("1.17", version_manifest)
-   extractWorldgenZip('1.17')
+   extractJar("1.17.1", version_manifest)
+   extractWorldgenZip('1.17.1')
+
+   extractJar("1.18.2", version_manifest)
+   extractWorldgenZip('1.18.2')
 
    extractJar("snapshot", version_manifest)
    extractWorldgenZip('snapshot')
 
    createZips("1.16.5", "1_16")
-   createZips("1.17", "1_17")
+   createZips("1.17.1", "1_17")
+   createZips("1.18.2", "1_18")
    createZips("snapshot", "snapshot")

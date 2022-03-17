@@ -9,13 +9,13 @@ import { BBRenderer } from './Renderer/BoundingBoxRenderer';
 import { BoundingBox } from './BoundingBox';
 import { DatapackReaderZip } from './DatapackReader/DatapackReaderZip'
 import { read as readNbt } from '@webmc/nbt'
-import { ConfiguedStructureFeature } from './worldgen/ConfiguredStructureFeature';
 import { DatapackReaderComposite } from './DatapackReader/DatapackReaderComposite';
 import { StructureFeatureManger } from './StructureFeatureManager';
 import { DatapackReaderDirectory } from './DatapackReader/DatapackReaderDirectory';
 import { TemplatePool } from './worldgen/TemplatePool';
 import { Heightmap } from './Heightmap';
 import { HeightmapRenderer } from './Renderer/HeightmapRenderer';
+import { StructureFeature } from './worldgen/StructureFeature';
 
 declare global {
   interface Window {
@@ -32,19 +32,30 @@ const cPos = vec3.fromValues(-1.5, -65, -1.5)
 const cRot = vec2.fromValues(0.4, 0.6)
 let cDist = 10
 
+const LEGACY_MINECRAFT_VERSIONS = ["1_16", "1_17", "1_18"]
+const EXPERIMENTAL_MINECRAFT_VERSIONS = ["1_19_exp"]
+
+const MINECRAFT_VERSIONS = ["1_16", "1_17", "1_18", "1_19_exp", "snapshot"]
+
 main();
 
 async function main() {
   const urlParams = new URLSearchParams(window.location.search);
   //const version = "release"
   let mc_version = urlParams.get('version')
-  if (!['1_16', '1_17', '1_19_exp'].includes(mc_version)){
-    mc_version = '1_17'
+  if (!MINECRAFT_VERSIONS.includes(mc_version)){
+    mc_version = '1_18'
   }
 
-  document.querySelector('.sidebar .button#v1_16').classList.toggle("selected", mc_version === "1_16")
-  document.querySelector('.sidebar .button#v1_17').classList.toggle("selected", mc_version === "1_17")
-  document.querySelector('.sidebar .button#experimental').classList.toggle("selected", mc_version === "1_19_exp")
+  const version_select = document.querySelector<HTMLSelectElement>('.sidebar select#version-select')
+  version_select.selectedIndex = (MINECRAFT_VERSIONS.indexOf(mc_version))
+  version_select.onchange = () => {
+    window.open(`?version=${MINECRAFT_VERSIONS[version_select.selectedIndex]}`, '_self')
+  }
+
+  //document.querySelector('.sidebar .button#v1_16').classList.toggle("selected", mc_version === "1_16")
+  //document.querySelector('.sidebar .button#v1_17').classList.toggle("selected", mc_version === "1_17")
+  //document.querySelector('.sidebar .button#experimental').classList.toggle("selected", mc_version === "1_19_exp")
 
   const reader = new DatapackReaderComposite()
   const vanillaReader = await DatapackReaderZip.fromUrl("zips/data_" + mc_version + ".zip")
@@ -178,18 +189,18 @@ async function main() {
   async function refreshDatapacks() {
     TemplatePool.reload()
     featuresList.innerHTML = ""
-    const features = await ConfiguedStructureFeature.getAll(reader)
+    const features = await StructureFeature.getAll(reader, LEGACY_MINECRAFT_VERSIONS.includes(mc_version) ? "legacy" : EXPERIMENTAL_MINECRAFT_VERSIONS.includes(mc_version) ? "exp" : "default" )
     features.forEach(feature => {
       const node = document.createElement("LI");
-      const textnode = document.createTextNode(feature.toString());
+      const textnode = document.createTextNode(feature.getIdentifier());
       node.appendChild(textnode);
       node.classList.add("item")
-      node.setAttribute("title", feature.toString())
+      node.setAttribute("title", feature.getIdentifier())
 
       node.onclick = async () => {
         try{
           showLoader()
-          const sfm = StructureFeatureManger.fromConfiguredStructureFeature(reader, feature, heightmap)
+          const sfm = StructureFeatureManger.fromStructureFeature(reader, feature, heightmap)
           await sfm.generate()
           structure = sfm.getWorld()
           structure.lastStep()
