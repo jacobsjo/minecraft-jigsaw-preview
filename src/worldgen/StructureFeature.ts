@@ -57,7 +57,7 @@ export namespace StructureFeature{
                         //TODO read height provider
                         var start_height = 30
 
-                        features.push(new JigsawStructureFeature(namespace, id, start_height, json.use_expansion_hack, json.start_pool, json.size, json.project_start_to_heightmap))
+                        features.push(new JigsawStructureFeature(namespace, id, start_height, json.use_expansion_hack, json.start_pool, json.size, json.max_distance_from_center, json.project_start_to_heightmap))
                     }
 
                 } catch (e){
