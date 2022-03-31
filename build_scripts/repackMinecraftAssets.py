@@ -29,7 +29,8 @@ def extractJar(version: str, version_manifest):
                        or file.startswith('assets/minecraft/textures/entity/chest/') \
                        or file.startswith('data/minecraft/structures/pillager_outpost/') \
                        or file.startswith('data/minecraft/structures/village/') \
-                       or file.startswith('data/minecraft/structures/bastion/'):
+                       or file.startswith('data/minecraft/structures/bastion/') \
+                       or file.startswith('data/minecraft/structures/ancient_city/'):
                   jar_archive.extract(file, "/tmp/minecraft/" + version + "/")
 
 def extractWorldgenZip(version):

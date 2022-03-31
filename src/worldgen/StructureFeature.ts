@@ -48,8 +48,9 @@ export namespace StructureFeature{
                         features.push(new LegacyJigsawStructureFeature(json.type, namespace, id, json.config.start_pool, json.config.size))
                     }
 
+
                     if (version === "default" && json.type === "minecraft:jigsaw"){
-                        if (json.start_height === undefined || json.start_pool === undefined || json.use_expansion_hack === undefined || json.size === undefined){
+                        if (json.value.start_height === undefined || json.value.start_pool === undefined || json.value.use_expansion_hack === undefined || json.value.size === undefined){
                             console.warn(`Missing config in structure ${namespace}:${id} - ignoring`)
                             continue;
                         }
@@ -57,7 +58,7 @@ export namespace StructureFeature{
                         //TODO read height provider
                         var start_height = 30
 
-                        features.push(new JigsawStructureFeature(namespace, id, start_height, json.use_expansion_hack, json.start_pool, json.size, json.max_distance_from_center, json.project_start_to_heightmap))
+                        features.push(new JigsawStructureFeature(namespace, id, start_height, json.value.use_expansion_hack, json.value.start_pool, json.value.size, json.value.max_distance_from_center, json.value.project_start_to_heightmap))
                     }
 
                 } catch (e){
