@@ -19,7 +19,8 @@ export class StructureFeatureManger {
         private doExpansionHack: boolean,
         private startingY: number | "heightmap",
         private radius: number,
-        private heightmap: Heightmap
+        private heightmap: Heightmap,
+        private startJisawName: string | undefined
     ) {
         this.world = new CompoundStructure()
     }
@@ -68,7 +69,25 @@ export class StructureFeatureManger {
         this.world.setStartingY(startingPieceY)
         this.world.setMaxRadius(this.radius)
 
-        const startingPieceNr = this.world.addStructure(startingPiece, [0, startingPieceY, 0], Rotation.Rotate0, annotation)
+        const startRotation = getRandomInt(4)
+
+        var start_pos: BlockPos = [0, startingPieceY, 0]
+        if (this.startJisawName !== undefined){
+            const placingJigsawBlocks = await poolElement.getShuffledJigsawBlocks()
+            for (const placingBlock of placingJigsawBlocks) {
+                const name: string = (typeof placingBlock.nbt.name.value === "string") ? placingBlock.nbt.name.value : "minecraft:empty"
+                if (name === this.startJisawName){
+                    const rotatedAnchorJigsawPos: BlockPos = CompoundStructure.mapPos(startRotation, placingBlock.pos, [0, 0, 0], startingPiece.getSize());
+                    start_pos = [
+                        start_pos[0] - rotatedAnchorJigsawPos[0],
+                        start_pos[1] - rotatedAnchorJigsawPos[1],
+                        start_pos[2] - rotatedAnchorJigsawPos[2],
+                    ]
+                }
+            }
+        }
+
+        const startingPieceNr = this.world.addStructure(startingPiece, start_pos, startRotation, annotation)
         const placing: { "piece": number, "check": number[], "inside": number | undefined, "rigid": boolean, "depth": number }[]
             = [{ "piece": startingPieceNr, "check": [startingPieceNr], "inside": undefined, "rigid": poolElement.getProjection() === "rigid", "depth": this.depth }]
 
@@ -227,6 +246,6 @@ export class StructureFeatureManger {
     }
 
     public static fromStructureFeature(reader: DatapackReader, feature: StructureFeature, heightmap: Heightmap) {
-        return new StructureFeatureManger(reader, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap)
+        return new StructureFeatureManger(reader, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap, feature.getStartJigsawName())
     }
 }

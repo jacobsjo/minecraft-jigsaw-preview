@@ -10,7 +10,8 @@ export class JigsawStructureFeature implements StructureFeature{
         private start_pool: string,
         private size: number,
         private radius: number,
-        private project_start_to_heightmap?: string
+        private project_start_to_heightmap?: string,
+        private start_jigsaw_name?: string
     ){
         if (size > 7){
             console.warn("size > 7 is not supported by vanilla minecraft")
@@ -44,6 +45,10 @@ export class JigsawStructureFeature implements StructureFeature{
 
     public getRadius(): number{
         return this.radius
+    }
+
+    public getStartJigsawName(): string | undefined{
+        return this.start_jigsaw_name
     }
 
 }

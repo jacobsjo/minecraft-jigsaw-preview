@@ -34,4 +34,8 @@ export class LegacyJigsawStructureFeature implements StructureFeature{
         return this.type === "minecraft:ancient_city" ? 128 : 80
     }
 
+    public getStartJigsawName(): string | undefined {
+        return undefined
+    }
+
 }
