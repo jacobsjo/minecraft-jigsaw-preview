@@ -91,4 +91,4 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    createZips("1.16.5", "1_16")
    createZips("1.17.1", "1_17")
    createZips("1.18.2", "1_18")
-   createZips("snapshot", "snapshot")
+   createZips("snapshot", "1_19")

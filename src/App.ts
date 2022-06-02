@@ -32,10 +32,10 @@ const cPos = vec3.fromValues(-1.5, -65, -1.5)
 const cRot = vec2.fromValues(0.4, 0.6)
 let cDist = 10
 
-const LEGACY_MINECRAFT_VERSIONS = ["1_16", "1_17", "1_18"]
-const EXPERIMENTAL_MINECRAFT_VERSIONS = ["1_19_exp"]
+const LEGACY_MINECRAFT_VERSIONS: string[] = ["1_16", "1_17", "1_18"]
+const EXPERIMENTAL_MINECRAFT_VERSIONS: string[] = []
 
-const MINECRAFT_VERSIONS = ["1_16", "1_17", "1_18", "1_19_exp", "snapshot"]
+const MINECRAFT_VERSIONS: string[] = ["1_16", "1_17", "1_18", "1_19"]
 
 main();
 
@@ -44,7 +44,7 @@ async function main() {
   //const version = "release"
   let mc_version = urlParams.get('version')
   if (!MINECRAFT_VERSIONS.includes(mc_version)){
-    mc_version = '1_18'
+    mc_version = '1_19'
   }
 
   const version_select = document.querySelector<HTMLSelectElement>('.sidebar select#version-select')
