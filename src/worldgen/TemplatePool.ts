@@ -48,13 +48,12 @@ export class TemplatePool{
                 json = await reader.readFileAsJson(p)
             } catch (e){
                 if (e instanceof URIError){
-                    console.warn("Cound not load Template Pool " + id)
-                } else if (e instanceof DOMException)
-                    console.warn("Permission error while loading Template Pool " + id + "\nTry reloading the datapack using the Open Datapack buttons")
-                else if (e instanceof EvalError)
-                    console.warn(e.message)
-                else
-                    console.warn(e)
+                    reject(new EvalError("Cound not load Template Pool " + id))
+                } else if (e instanceof DOMException){
+                    reject(new EvalError("Permission error while loading Template Pool " + id + "\nTry reloading the datapack using the Open Datapack buttons"))
+                } else {
+                    reject(e)
+                }
 
                 json = await reader.readFileAsJson(path.join('data', 'minecraft', 'worldgen', 'template_pool', 'empty.json'))
             } 
