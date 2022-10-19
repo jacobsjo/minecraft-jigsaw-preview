@@ -30,9 +30,11 @@ def extractJar(version: str, version_manifest):
                        or file.startswith('data/minecraft/structures/pillager_outpost/') \
                        or file.startswith('data/minecraft/structures/village/') \
                        or file.startswith('data/minecraft/structures/bastion/') \
-                       or file.startswith('data/minecraft/structures/ancient_city/'):
+                       or file.startswith('data/minecraft/structures/ancient_city/') \
+                       or file.startswith('data/minecraft/worldgen/'):
                   jar_archive.extract(file, "/tmp/minecraft/" + version + "/")
 
+# legacy vanilla worldgen zip
 def extractWorldgenZip(version):
    print("-> Extracting worldgen zip file")
 
@@ -42,8 +44,10 @@ def extractWorldgenZip(version):
       url = "https://github.com/slicedlime/examples/raw/7c54f55409f395a0aa517729669b20d570969f30/vanilla_worldgen.zip"
    elif version == "1.18.2":
       url = "https://github.com/slicedlime/examples/raw/d766a7028865fc210bef3ddcffb54886cdaf4860/vanilla_worldgen.zip"
+   elif version == "1.19.2":
+      url =  "https://github.com/slicedlime/examples/raw/5d5e803876418f53c436ff62cc7e6dd602506cac/vanilla_worldgen.zip"
    else:
-      url =  "https://github.com/slicedlime/examples/raw/master/vanilla_worldgen.zip"
+      raise ValueError("Unsupported worldgen zip version")
 
    with urlopen(url) as zip_data:
          with ZipFile(BytesIO(zip_data.read())) as archive:
@@ -85,10 +89,13 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    extractJar("1.18.2", version_manifest)
    extractWorldgenZip('1.18.2')
 
+   extractJar("1.19.2", version_manifest)
+   extractWorldgenZip('1.19.2')
+
    extractJar("snapshot", version_manifest)
-   extractWorldgenZip('snapshot')
 
    createZips("1.16.5", "1_16")
    createZips("1.17.1", "1_17")
    createZips("1.18.2", "1_18")
-   createZips("snapshot", "1_19")
+   createZips("1.19.2", "1_19")
+   createZips("snapshot", "1_19_3")

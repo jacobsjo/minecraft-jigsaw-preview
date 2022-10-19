@@ -35,7 +35,7 @@ let cDist = 10
 const LEGACY_MINECRAFT_VERSIONS: string[] = ["1_16", "1_17", "1_18"]
 const EXPERIMENTAL_MINECRAFT_VERSIONS: string[] = []
 
-const MINECRAFT_VERSIONS: string[] = ["1_16", "1_17", "1_18", "1_19"]
+const MINECRAFT_VERSIONS: string[] = ["1_16", "1_17", "1_18", "1_19", "1_19_3"]
 
 main();
 
