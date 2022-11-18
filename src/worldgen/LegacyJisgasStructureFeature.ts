@@ -1,20 +1,20 @@
+import { Identifier } from 'deepslate';
 import * as path from 'path';
 import { StructureFeature } from './StructureFeature';
 
 export class LegacyJigsawStructureFeature implements StructureFeature{
     constructor(
         private type: string,
-        private namespace: string,
-        private id: string,
-        private start_pool: string,
+        private id: Identifier,
+        private start_pool: Identifier,
         private depth: number,
     ){}
 
-    getIdentifier(): string {
-        return this.namespace + ":" + this.id
+    getIdentifier(): Identifier {
+        return this.id
     }
 
-    public getStartPool(): string{
+    public getStartPool(): Identifier{
         return this.start_pool
     }
 

@@ -1,4 +1,4 @@
-import { BlockPos } from "@webmc/core";
+import { BlockPos } from "deepslate";
 import { vec3 } from "gl-matrix";
 
 

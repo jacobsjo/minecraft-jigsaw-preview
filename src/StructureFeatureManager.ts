@@ -1,5 +1,5 @@
 
-import { BlockPos } from '@webmc/core';
+import { BlockPos } from 'deepslate';
 import { Annotation, CompoundStructure, Rotation } from './Structure/CompoundStructure';
 import { TemplatePool } from './worldgen/TemplatePool';
 import { shuffleArray, getRandomInt, directionRelative } from './util'
@@ -7,14 +7,16 @@ import { BoundingBox } from './BoundingBox';
 import { EmptyPoolElement } from './worldgen/PoolElement';
 import { Heightmap } from './Heightmap';
 import { StructureFeature } from './worldgen/StructureFeature';
+import { Datapack } from 'mc-datapack-loader';
+import { Identifier } from 'deepslate';
 
 
 export class StructureFeatureManger {
     private world: CompoundStructure
 
     constructor(
-        private reader: DatapackReader,
-        private startingPool: string,
+        private datapack: Datapack,
+        private startingPool: Identifier,
         private depth: number,
         private doExpansionHack: boolean,
         private startingY: number | "heightmap",
@@ -48,7 +50,7 @@ export class StructureFeatureManger {
     }
 
     public async generate(): Promise<void> {
-        const pool = await TemplatePool.fromName(this.reader, this.startingPool, false) // starting pool has no expansion hack (TODO: check this ingame)
+        const pool = await TemplatePool.fromName(this.datapack, this.startingPool, false) // starting pool has no expansion hack (TODO: check this ingame)
         const poolElement = pool.getShuffeledElements().pop()
         const startingPiece = await poolElement.getStructure()
 
@@ -75,7 +77,7 @@ export class StructureFeatureManger {
         if (this.startJisawName !== undefined){
             const placingJigsawBlocks = await poolElement.getShuffledJigsawBlocks()
             for (const placingBlock of placingJigsawBlocks) {
-                const name: string = (typeof placingBlock.nbt.name.value === "string") ? placingBlock.nbt.name.value : "minecraft:empty"
+                const name: string = placingBlock.nbt.getString("name")
                 if (name === this.startJisawName){
                     const rotatedAnchorJigsawPos: BlockPos = CompoundStructure.mapPos(startRotation, placingBlock.pos, [0, 0, 0], startingPiece.getSize());
                     start_pos = [
@@ -98,11 +100,8 @@ export class StructureFeatureManger {
             //getElementBlocks returns blocks rotated and moved correctly
 
             const checkInsideList: number[] = []
-            const jigsawBlocks = shuffleArray(this.world.getElementBlocks(parent.piece).filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
+            const jigsawBlocks = shuffleArray(this.world.getElementBlocks(parent.piece).filter(block => { return block.state.getName().namespace === "minecraft" && block.state.getName().path === "jigsaw"; }))
             for (const block of jigsawBlocks) {
-                if (typeof block.nbt.pool.value !== "string")
-                    throw "pool element nbt of wrong type";
-
                 const orientation: string = block.state.getProperties()['orientation'] ?? 'north_up';
                 const [forward, up] = orientation.split("_");
                 const parentJigsasPos: BlockPos = block.pos;
@@ -119,14 +118,14 @@ export class StructureFeatureManger {
                     inside = parent.inside;
                 }
 
-                const rollable: boolean = (block.nbt.joint !== undefined && typeof block.nbt.joint.value === "string") ? block.nbt.joint.value === "rollable" : true;
-                const target: string = (typeof block.nbt.target.value === "string") ? block.nbt.target.value : "minecraft:empty"
+                const rollable: boolean = block.nbt.getString("joint") === "rollable";
+                const target: string = block.nbt.getString("target")
 
                 try {
                     var using_fallback = false
 
-                    const pool: TemplatePool = await TemplatePool.fromName(this.reader, block.nbt.pool.value, this.doExpansionHack);
-                    const fallbackPool: TemplatePool = await TemplatePool.fromName(this.reader, pool.fallback, this.doExpansionHack);
+                    const pool: TemplatePool = await TemplatePool.fromName(this.datapack, Identifier.parse(block.nbt.getString("pool")), this.doExpansionHack);
+                    const fallbackPool: TemplatePool = await TemplatePool.fromName(this.datapack, pool.fallback, this.doExpansionHack);
 
                     const poolElements = (parent.depth > 0 ? pool.getShuffeledElements() : [])
                         .concat([undefined])
@@ -145,9 +144,9 @@ export class StructureFeatureManger {
                             "check": Object.assign([], check),
                             "inside": inside,
 
-                            "pool": using_fallback ? pool.fallback : block.nbt.pool.value,
-                            "fallback_from": using_fallback ? block.nbt.pool.value : undefined,
-                            "element": await placingElement.getDescription(),
+                            "pool": using_fallback ? pool.fallback : Identifier.parse(block.nbt.getString("pool")),
+                            "fallback_from": using_fallback ? Identifier.parse(block.nbt.getString("pool")) : undefined,
+                            "element": placingElement.getDescription(),
                             "element_type": placingElement.getType(),
                             "joint": target,
                             "joint_type": (forward == "up" || forward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
@@ -168,7 +167,7 @@ export class StructureFeatureManger {
                             const placingOrientation: string = placingBlock.state.getProperties()['orientation'] ?? 'north_up';
                             const [placingForward, placingUp] = placingOrientation.split("_");
 
-                            const name: string = (typeof placingBlock.nbt.name.value === "string") ? placingBlock.nbt.name.value : "minecraft:empty"
+                            const name: string = placingBlock.nbt.getString("name")
                             if (target !== name)
                                 continue
 
@@ -223,8 +222,8 @@ export class StructureFeatureManger {
                         "check": Object.assign([], check),
                         "inside": inside,
 
-                        "pool": using_fallback ? pool.fallback : block.nbt.pool.value,
-                        "fallback_from": using_fallback ? block.nbt.pool.value : undefined,
+                        "pool": using_fallback ? pool.fallback : Identifier.parse(block.nbt.getString("pool")),
+                        "fallback_from": using_fallback ? Identifier.parse(block.nbt.getString("pool")) : undefined,
                         "element": error_message,
                         "element_type": "error" ,
                         "joint": target,
@@ -245,7 +244,7 @@ export class StructureFeatureManger {
         return this.world
     }
 
-    public static fromStructureFeature(reader: DatapackReader, feature: StructureFeature, heightmap: Heightmap) {
-        return new StructureFeatureManger(reader, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap, feature.getStartJigsawName())
+    public static fromStructureFeature(datapack: Datapack, feature: StructureFeature, heightmap: Heightmap) {
+        return new StructureFeatureManger(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap, feature.getStartJigsawName())
     }
 }

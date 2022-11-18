@@ -1,3 +1,4 @@
+import { Identifier } from "deepslate"
 
 const opaqueSet = new Set([    
   "minecraft:acacia_planks",
@@ -316,12 +317,9 @@ const opaqueSet = new Set([
   "minecraft:sculk"
 ])
 
-export function isOpaque(name?: string): boolean{
+export function isOpaque(name?: Identifier): boolean{
     if (!name)
       return false
   
-    if (!name.startsWith("minecraft:"))
-      name = "minecraft:" + name
-  
-    return opaqueSet.has(name)
+    return opaqueSet.has(name.toString())
   }

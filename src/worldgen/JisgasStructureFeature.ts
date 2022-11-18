@@ -1,13 +1,13 @@
+import { Identifier } from 'deepslate';
 import * as path from 'path';
 import { StructureFeature } from './StructureFeature';
 
 export class JigsawStructureFeature implements StructureFeature{
     constructor(
-        private namespace: string,
-        private id: string,
+        private id: Identifier,
         private start_height: number,
         private use_expansion_hack: boolean,
-        private start_pool: string,
+        private start_pool: Identifier,
         private size: number,
         private radius: number,
         private project_start_to_heightmap?: string,
@@ -23,11 +23,11 @@ export class JigsawStructureFeature implements StructureFeature{
 
     }
 
-    getIdentifier(): string {
-        return this.namespace + ":" + this.id
+    getIdentifier(): Identifier {
+        return this.id
     }
 
-    public getStartPool(): string{
+    public getStartPool(): Identifier{
         return this.start_pool
     }
 

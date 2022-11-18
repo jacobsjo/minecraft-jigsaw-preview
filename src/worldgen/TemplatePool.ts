@@ -1,11 +1,23 @@
+import { Identifier } from 'deepslate';
+import { Datapack } from 'mc-datapack-loader';
 import * as path from 'path';
 import { shuffleArray } from '../util'
 import { PoolElement } from './PoolElement';
 
-export class TemplatePool{
+const EMPTY = new Identifier("minecraft", "empty")
 
+export type TemplatePoolJson = {
+    fallback: string,
+    elements: {
+        [key: string]: any;
+        element_type: string;
+    }[]
+}
+
+export class TemplatePool{
+    
     private constructor(
-        readonly fallback: string,
+        readonly fallback: Identifier,
         private elements : {
             weight: number;
             element: PoolElement;
@@ -35,7 +47,7 @@ export class TemplatePool{
         return maxHeight
     }
 
-    public static fromName(reader: DatapackReader, id: string, doExpansionHack: boolean): Promise<TemplatePool>{
+    public static fromName(datapack: Datapack, id: Identifier, doExpansionHack: boolean): Promise<TemplatePool>{
         if (this.templatePoolMap.has(id + "|" + doExpansionHack)){
             return this.templatePoolMap.get(id + "|" + doExpansionHack)
         }
@@ -43,9 +55,7 @@ export class TemplatePool{
         const promise: Promise<TemplatePool> = new Promise(async (resolve, reject) => {
             var json
             try {
-                const [namespace, name] = id.split(":")
-                const p = path.join('data', namespace, 'worldgen', 'template_pool', name + ".json")
-                json = await reader.readFileAsJson(p)
+                json = await datapack.get("worldgen/template_pool", id) as TemplatePoolJson
             } catch (e){
                 if (e instanceof URIError){
                     reject(new EvalError("Cound not load Template Pool " + id))
@@ -55,12 +65,12 @@ export class TemplatePool{
                     reject(e)
                 }
 
-                json = await reader.readFileAsJson(path.join('data', 'minecraft', 'worldgen', 'template_pool', 'empty.json'))
+                json = await datapack.get("worldgen/template_pool", EMPTY) as TemplatePoolJson
             } 
 
             try {
-                const pool_element = new TemplatePool(json.fallback, await Promise.all(json.elements.map(async (e: any) => {
-                    const element = PoolElement.fromElement(reader, e.element)
+                const pool_element = new TemplatePool(Identifier.parse(json.fallback), await Promise.all(json.elements.map(async (e: any) => {
+                    const element = PoolElement.fromElement(datapack, e.element)
                     if (doExpansionHack)
                         await element.doExpansionHack()
                     if (e.weight > 150){

@@ -1,5 +1,5 @@
 //import { NamedNbtTag, NbtTag, getTag, getListTag, getOptional } from "@webmc/nbt";
-import { BlockNbt, BlockPos, BlockState, StructureProvider, Structure} from "@webmc/core";
+import { NbtCompound, BlockPos, BlockState, StructureProvider, Structure, Identifier} from "deepslate";
 //import fs from 'fs';
 import {BoundingBox} from "../BoundingBox"
 
@@ -62,8 +62,8 @@ export type Annotation = {
   check: number[],
   inside: number | undefined,
 
-  pool: string | undefined,
-  fallback_from: string | undefined,
+  pool: Identifier | undefined,
+  fallback_from: Identifier | undefined,
   element: string | undefined,
   element_type: string | undefined,
   joint: string | undefined,
@@ -94,13 +94,13 @@ export class CompoundStructure implements StructureProvider {
   private bakedBlocksPerStructure: {
     pos: BlockPos;
     state: BlockState;
-    nbt: BlockNbt;
+    nbt: NbtCompound;
   }[][] | undefined = undefined // first array: structure, second array: blocks in structure
 
   private bakedBlocks: {
     pos: BlockPos;
     state: BlockState;
-    nbt: BlockNbt;
+    nbt: NbtCompound;
     maxStep: number;
   }[][] | undefined = undefined // first array: block pos, second array: blocks at block pos
 
@@ -161,7 +161,7 @@ export class CompoundStructure implements StructureProvider {
   public static mapElementBlocks(element: { structure: StructureProvider; rot: Rotation; pos: number[]; }) : {
     pos: BlockPos;
     state: BlockState;
-    nbt: BlockNbt;
+    nbt: NbtCompound;
 }[]  {
     const size = element.structure.getSize()
     const blocks = element.structure.getBlocks()
@@ -253,7 +253,7 @@ export class CompoundStructure implements StructureProvider {
   public getElementBlocks(nr: number) : {
     pos: BlockPos;
     state: BlockState;
-    nbt: BlockNbt;
+    nbt: NbtCompound;
   }[]{
     return CompoundStructure.mapElementBlocks(this.elements[nr])
   }
@@ -299,7 +299,7 @@ export class CompoundStructure implements StructureProvider {
   public getBlocks() : {
     pos: BlockPos;
     state: BlockState;
-    nbt: BlockNbt;
+    nbt: NbtCompound;
   }[] {
     if (!this.bakedBlocks)
       this.bakeBlocks()
@@ -312,7 +312,7 @@ export class CompoundStructure implements StructureProvider {
   public getBlock(pos: BlockPos) : {
     pos: BlockPos;
     state: BlockState;
-    nbt: BlockNbt;
+    nbt: NbtCompound;
   } {
     //search reverse to find inner blocks first
     if (!this.bakedBlocks)
@@ -381,7 +381,7 @@ export class CompoundStructure implements StructureProvider {
   private static getRotatedBlockState(state: BlockState, rot: Rotation): BlockState{
     const swapXZ : {[name: string]: string} = {'x': 'z', 'y': 'y', 'z': 'x'}
     
-    const name: string = state.getName()
+    const name: Identifier = state.getName()
     const properties = Object.assign({}, state.getProperties())
 
     const facingMapping = Rotation.getFacingMapping(rot)
@@ -408,7 +408,7 @@ export class CompoundStructure implements StructureProvider {
     }
 
     //Rail shapes
-    if (name.endsWith('rail') && 'shape' in properties){
+    if (name.path.endsWith('rail') && 'shape' in properties){
       const facings = properties['shape'].split("_");
       let shape = facingMapping[facings[0]] + "_" + facingMapping[facings[1]]
 
@@ -452,6 +452,7 @@ export class CompoundStructure implements StructureProvider {
     return new BlockState(state.getName(), properties)
   }
 
+  /*
   getAnnotations(): {pos: BlockPos, annotation: string; data: any; }[] {
     return this.elements.slice(0, this.displayMaxStep).flatMap(element => element.structure.getAnnotations().map(a => {
       const offsetPos = [a.pos[0]-0.5, a.pos[1], a.pos[2]-0.5] as BlockPos
@@ -462,7 +463,7 @@ export class CompoundStructure implements StructureProvider {
         data: a.data
       }
     }))
-  }
+  }*/
 
 
 }

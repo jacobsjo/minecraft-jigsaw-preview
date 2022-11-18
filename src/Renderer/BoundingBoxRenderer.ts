@@ -1,6 +1,6 @@
-import { ShaderProgram } from "@webmc/render";
 import { mat4 } from "gl-matrix";
 import { BoundingBox } from "../BoundingBox";
+import { ShaderProgram } from "./ShaderProgram";
 
 const vsGrid = `
   attribute vec4 vertPos;

@@ -1,25 +1,21 @@
 
-import { AnnotationRenderer, BlocksRenderer, Resources, StructureRenderer } from '@webmc/render';
 import { ResourceManager } from './ResourceManager'
-import { mat4 , vec2, vec3 } from 'gl-matrix'
+import { mat4, vec2, vec3 } from 'gl-matrix'
 import { Annotation, CompoundStructure, Rotation } from "./Structure/CompoundStructure";
-import { Structure } from '@webmc/core';
 import { clamp, clampVec3, negVec3 } from './util'
 import { BBRenderer } from './Renderer/BoundingBoxRenderer';
 import { BoundingBox } from './BoundingBox';
-import { DatapackReaderZip } from './DatapackReader/DatapackReaderZip'
-import { read as readNbt } from '@webmc/nbt'
-import { DatapackReaderComposite } from './DatapackReader/DatapackReaderComposite';
 import { StructureFeatureManger } from './StructureFeatureManager';
-import { DatapackReaderDirectory } from './DatapackReader/DatapackReaderDirectory';
 import { TemplatePool } from './worldgen/TemplatePool';
 import { Heightmap } from './Heightmap';
 import { HeightmapRenderer } from './Renderer/HeightmapRenderer';
 import { StructureFeature } from './worldgen/StructureFeature';
+import { CompositeDatapack, FileListDatapack, ZipDatapack } from 'mc-datapack-loader';
+import { Identifier, NbtFile, Structure, StructureRenderer } from 'deepslate';
 
 declare global {
   interface Window {
-    showDirectoryPicker:any;
+    showDirectoryPicker: any;
   }
 }
 
@@ -43,7 +39,7 @@ async function main() {
   const urlParams = new URLSearchParams(window.location.search);
   //const version = "release"
   let mc_version = urlParams.get('version')
-  if (!MINECRAFT_VERSIONS.includes(mc_version)){
+  if (!MINECRAFT_VERSIONS.includes(mc_version)) {
     mc_version = '1_19'
   }
 
@@ -57,9 +53,8 @@ async function main() {
   //document.querySelector('.sidebar .button#v1_17').classList.toggle("selected", mc_version === "1_17")
   //document.querySelector('.sidebar .button#experimental').classList.toggle("selected", mc_version === "1_19_exp")
 
-  const reader = new DatapackReaderComposite()
-  const vanillaReader = await DatapackReaderZip.fromUrl("zips/data_" + mc_version + ".zip")
-  reader.readers = [vanillaReader]
+  const vanillaDatapack = await ZipDatapack.fromUrl("zips/data_" + mc_version + ".zip")
+  const compositeDatapack = new CompositeDatapack([vanillaDatapack])
 
   const resources = new ResourceManager()
   await resources.loadFromZip("/zips/assets_" + mc_version + ".zip")
@@ -118,7 +113,7 @@ async function main() {
   }
 
   var ext = gl.getExtension('OES_element_index_uint')
-  if (!ext){
+  if (!ext) {
     throw new Error('Unable to load OES_element_index_uint wegbl extension. Your browser or machine may not support it.')
   }
 
@@ -126,45 +121,33 @@ async function main() {
 
   const exampleRes1 = await fetch('example.nbt')
   const exampleData1 = await exampleRes1.arrayBuffer()
-  const exampleNbt1 = readNbt(new Uint8Array(exampleData1))
-  const structure1 = Structure.fromNbt(exampleNbt1.result)
-  const annotation : Annotation = {
+  const exampleNbt1 = NbtFile.read(new Uint8Array(exampleData1))
+  const structure1 = Structure.fromNbt(exampleNbt1.root)
+  const annotation: Annotation = {
     check: [],
     inside: undefined,
     element: "{}",
     element_type: "",
     joint: undefined,
     joint_type: undefined,
-    pool: "Welcome",
+    pool: new Identifier("welcome", "jigsaw"),
     fallback_from: undefined,
     depth: 0
   }
-  structure.addStructure(structure1, [0,65,0], Rotation.Rotate0, annotation)
+  structure.addStructure(structure1, [0, 65, 0], Rotation.Rotate0, annotation)
   structure.setStartingY(64)
 
   var heightmap = await Heightmap.fromImage("heightmaps/flat.png")
 
-  const renderer = new StructureRenderer(gl)
 
-  const resourcesObject : Resources = {
-    blockAtlas: resources.getBlockAtlas(), 
-    blockDefinitions: resources,
-    blockModels: resources,
-    blockProperties: resources
-  }
+  const renderer = new StructureRenderer(gl, structure, resources)
 
   const renderedTypes = new Set(['entity', 'feature'])
 
-  renderer.addRenderer(new BlocksRenderer(gl, structure, resourcesObject, chunkSize))
+  //  const annotationRenderer = new AnnotationRenderer(gl, structure, resources)
+  //  annotationRenderer.setRenderedTypes(Array.from(renderedTypes))
 
-  const annotationRenderer = new AnnotationRenderer(gl, structure, resourcesObject)
-  annotationRenderer.setRenderedTypes(Array.from(renderedTypes))
-  renderer.addRenderer(annotationRenderer)
-
-  const heightmapRenderer = new HeightmapRenderer(gl, structure, resourcesObject, heightmap)
-
-  renderer.addRenderer(heightmapRenderer)
-
+  const heightmapRenderer = new HeightmapRenderer(gl, structure, resources, heightmap)
   const bbRenderer = new BBRenderer(gl)
 
   let drawBB = true
@@ -177,11 +160,11 @@ async function main() {
   refreshStructure()
   hideLoader()
 
-  function showLoader(){
+  function showLoader() {
     loader.classList.remove("hidden")
   }
 
-  function hideLoader(){
+  function hideLoader() {
     loader.classList.add("hidden")
   }
 
@@ -189,18 +172,18 @@ async function main() {
   async function refreshDatapacks() {
     TemplatePool.reload()
     featuresList.innerHTML = ""
-    const features = await StructureFeature.getAll(reader, LEGACY_MINECRAFT_VERSIONS.includes(mc_version) ? "legacy" : EXPERIMENTAL_MINECRAFT_VERSIONS.includes(mc_version) ? "exp" : "default" )
+    const features = await StructureFeature.getAll(compositeDatapack, LEGACY_MINECRAFT_VERSIONS.includes(mc_version) ? "legacy" : EXPERIMENTAL_MINECRAFT_VERSIONS.includes(mc_version) ? "exp" : "default")
     features.forEach(feature => {
       const node = document.createElement("LI");
-      const textnode = document.createTextNode(feature.getIdentifier());
+      const textnode = document.createTextNode(feature.getIdentifier().toString());
       node.appendChild(textnode);
       node.classList.add("item")
-      node.setAttribute("title", feature.getIdentifier())
+      node.setAttribute("title", feature.getIdentifier().toString())
 
       node.onclick = async () => {
-        try{
+        try {
           showLoader()
-          const sfm = StructureFeatureManger.fromStructureFeature(reader, feature, heightmap)
+          const sfm = StructureFeatureManger.fromStructureFeature(compositeDatapack, feature, heightmap)
           await sfm.generate()
           structure = sfm.getWorld()
           structure.lastStep()
@@ -220,8 +203,8 @@ async function main() {
   }
 
   function refreshStructure(bb?: BoundingBox) {
-    if (bb !== null) 
-      renderer.updateAll(bb?.getAffectedChunks(chunkSize))
+    if (bb !== null)
+      renderer.updateStructureBuffers(bb?.getAffectedChunks(chunkSize))
 
     const step = structure.getStep()
 
@@ -241,10 +224,10 @@ async function main() {
 
     const annotation = structure.getAnnotation(step - 1)
 
-    infoTempletePool.innerHTML = annotation.pool
+    infoTempletePool.innerHTML = annotation.pool.toString()
     infoFallbackFrom.innerHTML = annotation.fallback_from ? "Fallback from " + annotation.fallback_from : ""
     infoElement.innerHTML = annotation.element
-    if (annotation.joint){
+    if (annotation.joint) {
       infoJoint.innerHTML = annotation.joint
       infoJointType.innerHTML = annotation.joint_type ? "(" + annotation.joint_type + ")" : ""
       infoJointDiv.classList.remove('hidden')
@@ -283,9 +266,9 @@ async function main() {
     const viewMatrix = getViewMatrix()
 
     //renderer.drawGrid(viewMatrix);
-    renderer.drawAll(viewMatrix);
+    renderer.drawStructure(viewMatrix);
 
-    if (drawBB){
+    if (drawBB) {
       checkBBs.forEach(bb => bbRenderer.drawBB(viewMatrix, bb, 2))
       bbRenderer.drawBB(viewMatrix, insideBB, 1)
       bbRenderer.drawBB(viewMatrix, ownBB, 0)
@@ -300,12 +283,12 @@ async function main() {
   //let dragTime: number
   let dragPos: [number, number] | null = null
   let dragButton: number
-  canvas.addEventListener('mousedown', (evt:MouseEvent ) => {
+  canvas.addEventListener('mousedown', (evt: MouseEvent) => {
     dragPos = [evt.clientX, evt.clientY]
     dragButton = evt.button
   })
 
-  canvas.addEventListener('mousemove', (evt:MouseEvent ) => {
+  canvas.addEventListener('mousemove', (evt: MouseEvent) => {
     if (dragPos) {
       const dx = (evt.clientX - dragPos[0]) / 100
       const dy = (evt.clientY - dragPos[1]) / 100
@@ -329,22 +312,22 @@ async function main() {
   let touchStartDistance: number | null = null
   let touchStartCDist: number | null = null
 
-  canvas.addEventListener('touchstart', (evt:TouchEvent) => {
+  canvas.addEventListener('touchstart', (evt: TouchEvent) => {
     touchPos = [evt.touches[0].clientX, evt.touches[0].clientY]
-    if (evt.touches.length > 1){
+    if (evt.touches.length > 1) {
       touchStartDistance = Math.sqrt(Math.pow(evt.touches[0].clientX - evt.touches[1].clientX, 2) + Math.pow(evt.touches[0].clientY - evt.touches[1].clientY, 2))
       touchStartCDist = cDist
     }
   })
 
-  canvas.addEventListener('touchmove', (evt:TouchEvent) => {
-    if (touchPos){
+  canvas.addEventListener('touchmove', (evt: TouchEvent) => {
+    if (touchPos) {
       const dx = (evt.touches[0].clientX - touchPos[0]) / 100
       const dy = (evt.touches[0].clientY - touchPos[1]) / 100
 
-      if (evt.touches.length === 1){
+      if (evt.touches.length === 1) {
         rotateCamera(dx, dy)
-      } else if (evt.touches.length > 1){
+      } else if (evt.touches.length > 1) {
         moveCamera(dx, dy)
         const d = Math.sqrt(Math.pow(evt.touches[0].clientX - evt.touches[1].clientX, 2) + Math.pow(evt.touches[0].clientY - evt.touches[1].clientY, 2))
         cDist = touchStartCDist * touchStartDistance / d
@@ -357,22 +340,22 @@ async function main() {
     }
   })
 
-  canvas.addEventListener('touchend', (evt:TouchEvent) => {
+  canvas.addEventListener('touchend', (evt: TouchEvent) => {
     touchPos = null
   })
 
-  canvas.addEventListener('touchcancel', (evt:TouchEvent) => {
+  canvas.addEventListener('touchcancel', (evt: TouchEvent) => {
     touchPos = null
   })
 
 
-  function rotateCamera(dx: number, dy: number){
+  function rotateCamera(dx: number, dy: number) {
     vec2.add(cRot, cRot, [dx, dy])
     cRot[0] = cRot[0] % (Math.PI * 2)
     cRot[1] = clamp(cRot[1], -Math.PI / 2, Math.PI / 2)
   }
 
-  function moveCamera(dx: number, dy: number){
+  function moveCamera(dx: number, dy: number) {
     const [min, max] = structure.getBounds()
     vec3.rotateY(cPos, cPos, [0, 0, 0], cRot[0])
     vec3.rotateX(cPos, cPos, [0, 0, 0], cRot[1])
@@ -384,7 +367,7 @@ async function main() {
     clampVec3(cPos, negVec3(max), negVec3(min))
   }
 
-  canvas.addEventListener('wheel', (evt:WheelEvent ) => {
+  canvas.addEventListener('wheel', (evt: WheelEvent) => {
     cDist += evt.deltaY > 0 ? 1 : -1
     cDist = Math.max(5, Math.min(100, cDist))
     render();
@@ -404,26 +387,26 @@ async function main() {
     input.accept = '.zip'
 
     input.onchange = async () => {
-      if (input.files.length===0){
+      if (input.files.length === 0) {
         alert("No file selected")
       }
-      if (!input.files[0].name.toLowerCase().endsWith('.zip')){
+      if (!input.files[0].name.toLowerCase().endsWith('.zip')) {
         alert("Please select a .zip file")
       }
 
-      reader.readers = [vanillaReader, await DatapackReaderZip.fromFile(input.files[0])]
+      compositeDatapack.readers = [vanillaDatapack, await ZipDatapack.fromFile(input.files[0])]
       refreshDatapacks()
     }
     input.click()
   })
 
   openFolderButton.addEventListener('click', async () => {
-    const input:any = document.createElement('input')
+    const input: any = document.createElement('input')
     input.type = 'file'
     input.webkitdirectory = true
 
     input.onchange = async () => {
-      reader.readers = [vanillaReader, await DatapackReaderDirectory.fromFileList(Array.from(input.files))]
+      compositeDatapack.readers = [vanillaDatapack, new FileListDatapack(Array.from(input.files))]
       refreshDatapacks()
     }
     input.click()
@@ -435,12 +418,12 @@ async function main() {
 
   function next() {
     structure.nextStep()
-    refreshStructure(structure.getBoundingBoxes(structure.getStep()-1)[0])
+    refreshStructure(structure.getBoundingBoxes(structure.getStep() - 1)[0])
     requestAnimationFrame(render)
   }
 
   function prev() {
-    const bb = structure.getBoundingBoxes(structure.getStep()-1)[0]
+    const bb = structure.getBoundingBoxes(structure.getStep() - 1)[0]
     structure.prevStep()
     refreshStructure(bb)
     requestAnimationFrame(render)
@@ -490,7 +473,7 @@ async function main() {
     const enabled = selectHeightmapButton.classList.toggle("selected")
     heightmapPanel.classList.toggle("hidden", !enabled)
 
-    if (enabled){
+    if (enabled) {
       infoPanel.classList.add("hidden")
     } else {
       infoPanel.classList.toggle("hidden", !setting_buttons.info.classList.contains("selected"))
@@ -531,20 +514,20 @@ async function main() {
     popupPanel.classList.add("hidden")
   })
 
-  function toggleRenderedType(type: string): boolean{
+  function toggleRenderedType(type: string): boolean {
     const has = renderedTypes.has(type)
-    if (has){
+    if (has) {
       renderedTypes.delete(type)
     } else {
       renderedTypes.add(type)
     }
-    annotationRenderer.setRenderedTypes(Array.from(renderedTypes))
+    //annotationRenderer.setRenderedTypes(Array.from(renderedTypes))  //TODO
     requestAnimationFrame(render)
     return !has
   }
 
   heightmap_entries.forEach(entry => entry.addEventListener("click", async () => {
-    if (entry.id  === "upload"){
+    if (entry.id === "upload") {
       console.warn("Upload not yet implemented")
     } else {
       console.debug("Loading Heightmap " + entry.id)
@@ -562,13 +545,13 @@ async function main() {
     }
   }))
 
-  window.addEventListener('keyup', async (evt:KeyboardEvent) => {
-    if (evt.key === "ArrowLeft"){
+  window.addEventListener('keyup', async (evt: KeyboardEvent) => {
+    if (evt.key === "ArrowLeft") {
       prev()
-    } else if (evt.key === "ArrowRight"){
+    } else if (evt.key === "ArrowRight") {
       next()
     }
-  } , true)
+  }, true)
 
 
   window.addEventListener('resize', () => {

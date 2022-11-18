@@ -1,4 +1,4 @@
-import { StructureProvider, BlockPos } from "@webmc/core";
+import { StructureProvider, BlockPos } from "deepslate";
 
 export class ListStructure implements StructureProvider {
   private size: BlockPos = [0, 0, 0]
@@ -30,7 +30,7 @@ export class ListStructure implements StructureProvider {
     return this.pieces[this.pieces.length - 1].getBlock(pos)
   }
 
-  getAnnotations(): { pos: BlockPos, annotation: string; data: any; }[] {
+/*  getAnnotations(): { pos: BlockPos, annotation: string; data: any; }[] {
     return this.pieces.flatMap(piece => piece.getAnnotations())
-  }
+  }*/
 }

@@ -1,12 +1,12 @@
-import { BlockNbt, BlockPos, BlockState, Structure, StructureProvider } from "@webmc/core"
+import { NbtCompound, BlockPos, BlockState, Structure, StructureProvider, Identifier, PlacedBlock, RawDataInput, NbtFile } from "deepslate"
 import { FeatureStructure } from "../Structure/FeatrueStructure";
-import { CompoundStructure, Rotation } from "../Structure/CompoundStructure";
 import { EmptyStructure} from "../Structure/EmptyStructure"
 import { directionRelative, shuffleArray } from "../util";
-import { PieceStructure } from "../Structure/PieceStructure";
 import { BoundingBox } from "../BoundingBox";
 import { TemplatePool } from "./TemplatePool";
 import { ListStructure } from "../Structure/ListStructure";
+import { Datapack } from "mc-datapack-loader";
+import { YExpandedStructure } from "../Structure/YExpandedStructure";
 
 export abstract class PoolElement{
     public async doExpansionHack(): Promise<number>{
@@ -16,17 +16,13 @@ export abstract class PoolElement{
     public abstract getStructure(): Promise<StructureProvider>
     public abstract getProjection(): "rigid" | "terrain_matching"
 
-    public abstract getShuffledJigsawBlocks(): Promise<{
-        pos: BlockPos;
-        state: BlockState;
-        nbt: BlockNbt;
-    }[]>
+    public abstract getShuffledJigsawBlocks(): Promise<PlacedBlock[]>
 
     public abstract getType(): string
 
     public abstract getDescription(): string
 
-    public static fromElement(reader: DatapackReader, element: {
+    public static fromElement(datapack: Datapack, element: {
         element_type: string;
         [key: string]: any;
     }): PoolElement {
@@ -36,13 +32,13 @@ export abstract class PoolElement{
 
             case "minecraft:single_pool_element":
             case "minecraft:legacy_single_pool_element":
-                return new SinglePoolElement(reader, element.location, element.processors, element.projection)
+                return new SinglePoolElement(datapack, Identifier.parse(element.location), element.processors, element.projection)
 
             case "minecraft:feature_pool_element" :
-                return new FeaturePoolElement(reader, element.feature, element.projection)
+                return new FeaturePoolElement(datapack, element.feature, element.projection)
             
             case "minecraft:list_pool_element" :
-                return new ListPoolElement(reader, element.elements, element.projection)
+                return new ListPoolElement(datapack, element.elements, element.projection)
 
             default:
                 console.warn("Pool element not readable: " + element?.element_type)
@@ -63,7 +59,7 @@ export class EmptyPoolElement extends PoolElement{
         return "minecraft:empty_pool_element"
     }
 
-    public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {
+    public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: NbtCompound; }[]> {
         return []
     }
 
@@ -78,7 +74,7 @@ export class FeaturePoolElement extends PoolElement{
     private static JIGSAW = {
         pos: [0, 0, 0] as BlockPos,
         state: new BlockState("minecraft:jigsaw", {"orientation": "down_south"}),
-        nbt: {
+        nbt: NbtCompound.fromJson({
             "name": {
                 "type": "string",
                 "value": "minecraft:bottom"
@@ -99,12 +95,12 @@ export class FeaturePoolElement extends PoolElement{
                 "type": "string",
                 "value": "rollable"
             },
-        } as BlockNbt
+        })
     }
 
     constructor(
-        reader: DatapackReader,
-        private feature: string,
+        datapack: Datapack,
+        private feature: Identifier,
         private projection: "rigid" | "terrain_matching"
     ){
         super()
@@ -122,7 +118,7 @@ export class FeaturePoolElement extends PoolElement{
         return this.projection
     }
 
-    public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {
+    public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: NbtCompound; }[]> {
         return [FeaturePoolElement.JIGSAW]
     }
 
@@ -137,16 +133,25 @@ export class FeaturePoolElement extends PoolElement{
 }
 
 export class SinglePoolElement extends PoolElement{
-    private structure : Promise<PieceStructure>
+    private structure : Promise<StructureProvider>
     private expansionHackString = ""
     constructor(
-        private reader: DatapackReader,
-        private location: string,
+        private datapack: Datapack,
+        private id: Identifier,
         private processors: string,
         private projection: "rigid" | "terrain_matching",
     ){
         super()
-        this.structure = PieceStructure.fromName(reader, this.location);
+        this.structure = new Promise(async (resolve) => {
+            try {
+                const arrayBuffer = (await datapack.get("structures", id)) as ArrayBuffer
+                  const nbt = NbtFile.read(new Uint8Array(arrayBuffer))
+                resolve(Structure.fromNbt(nbt.root))
+            } catch (e) {
+                console.warn(`Could not load structure ${id.toString()}: ${e}`)
+                resolve(new Structure([1,1,1]))
+            }
+        });
     }
 
     public async doExpansionHack(){
@@ -158,9 +163,6 @@ export class SinglePoolElement extends PoolElement{
         try{
             var minHeight = 0;
             for (const jigsaw of await this.getShuffledJigsawBlocks()){
-                if (typeof jigsaw.nbt.pool.value !== "string")
-                    throw "pool element nbt of wrong type";
-
                 const orientation: string = jigsaw.state.getProperties()['orientation'] ?? 'north_up';
                 const [forward, _] = orientation.split("_");
                 const facingPos: BlockPos = directionRelative(jigsaw.pos, forward);
@@ -169,15 +171,17 @@ export class SinglePoolElement extends PoolElement{
                 if (!isInside)
                     continue
                 
-                const pool: TemplatePool = await TemplatePool.fromName(this.reader, jigsaw.nbt.pool.value, false);
-                const fallbackPool: TemplatePool = await TemplatePool.fromName(this.reader, pool.fallback, false);
+                const pool: TemplatePool = await TemplatePool.fromName(this.datapack, Identifier.parse(jigsaw.nbt.getString("pool")), false);
+                const fallbackPool: TemplatePool = await TemplatePool.fromName(this.datapack, pool.fallback, false);
 
                 const maxHeight = await pool.getMaxHeight()
                 const maxHeightFallback = await fallbackPool.getMaxHeight()
 
                 minHeight = Math.max(minHeight, Math.max(maxHeight, maxHeightFallback) + 2)
             }
-            ;(await this.structure).expandY(minHeight)
+            this.structure = new Promise(async (resolve) => {
+                resolve(new YExpandedStructure(await this.structure, minHeight))
+            })
             if (minHeight > oldHeight)
                 this.expansionHackString = "\n\nBounding box height expanded from " + oldHeight + " to " + minHeight + " blocks."
         } catch (e) {
@@ -198,14 +202,14 @@ export class SinglePoolElement extends PoolElement{
         return this.projection
     }
 
-    public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {
-        return shuffleArray((await this.structure).getBlocks().filter(block => { return block.state.getName() === "minecraft:jigsaw"; }))
+    public async getShuffledJigsawBlocks(): Promise<PlacedBlock[]> {
+        return shuffleArray((await this.structure).getBlocks().filter(block => { return block.state.getName().namespace === "minecraft" && block.state.getName().path === "jigsaw"; }))
     }
 
     public getDescription(){
         return `{
   "element_type": "minecraft:single_pool_element",
-  "location": "`+this.location+`",
+  "location": "`+this.id.toString+`",
   "processors": "`+this.processors+`",
   "projection": "`+this.projection+`"
 }` + this.expansionHackString
@@ -217,7 +221,7 @@ export class ListPoolElement extends PoolElement{
     private structure: Promise<ListStructure>
 
     constructor(
-        reader: DatapackReader,
+        datapack: Datapack,
         elements: {
             element_type: string;
             [key: string]: string;
@@ -225,7 +229,7 @@ export class ListPoolElement extends PoolElement{
         private projection: "rigid" | "terrain_matching",
     ){
         super()
-        this.pool_elements = elements.map(element => PoolElement.fromElement(reader, element))
+        this.pool_elements = elements.map(element => PoolElement.fromElement(datapack, element))
         this.structure = new Promise(async (resolve) => {
             resolve(new ListStructure(await Promise.all(this.pool_elements.map(element => element.getStructure()))));
         })
@@ -249,7 +253,7 @@ export class ListPoolElement extends PoolElement{
         return this.projection
     }
 
-    public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: BlockNbt; }[]> {
+    public async getShuffledJigsawBlocks(): Promise<PlacedBlock[]> {
         return this.pool_elements[0].getShuffledJigsawBlocks()
     }
 

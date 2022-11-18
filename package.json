@@ -21,21 +21,20 @@
   "license": "MIT",
   "main": "dist/main.js",
   "devDependencies": {
-    "@types/node": "^15.12.1",
-    "@webpack-cli/serve": "^1.6.1",
-    "copy-webpack-plugin": "^9.0.0",
-    "gh-pages": "^3.2.0",
-    "ts-loader": "^9.2.3",
-    "webpack": "^5.38.1",
-    "webpack-cli": "^4.7.2",
-    "webpack-dev-server": "^3.11.2"
+    "@types/node": "^15.14.9",
+    "@webpack-cli/serve": "^1.7.0",
+    "copy-webpack-plugin": "^9.1.0",
+    "gh-pages": "^3.2.3",
+    "ts-loader": "^9.4.1",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^3.11.3"
   },
   "dependencies": {
-    "@webmc/core": "^0.2.1",
-    "@webmc/nbt": "^0.1.1",
-    "@webmc/render": "^0.5.0",
-    "gl-matrix": "^3.3.0",
-    "jszip": "^3.6.0",
+    "deepslate": "^0.15.2",
+    "mc-datapack-loader": "file://",
+    "gl-matrix": "^3.4.3",
+    "jszip": "^3.10.1",
     "path": "^0.12.7"
   }
 }

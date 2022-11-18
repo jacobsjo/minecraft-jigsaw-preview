@@ -24,9 +24,6 @@ module.exports = (env, argv) => ({
       patterns: [
         { from: 'public', to: '' }
       ]
-    }),
-    new webpack.ProvidePlugin({
-      process: 'process/browser',
     }) 
-  ]
+   ]
 })

@@ -1,16 +1,14 @@
-import { StructureProvider } from "@webmc/core";
-import { Resources } from "@webmc/render";
-import { Renderer } from "@webmc/render/lib/StructureRenderer/Renderer";
 import { vec3, mat4 } from "gl-matrix";
 import { inv_lerp, setVertexAttr } from "../util";
 import { setUniform } from "../util";
 import { createBuffer } from "../util";
 import { Heightmap } from "../Heightmap";
+import { Resources, StructureProvider } from "deepslate";
 //import { Renderer } from "@webmc/render"
 
 
 
-export class HeightmapRenderer extends Renderer {
+export class HeightmapRenderer {
   private static vs = `
     attribute vec4 vertPos;
     attribute vec3 vertColor;
@@ -49,7 +47,7 @@ export class HeightmapRenderer extends Renderer {
     resources: Resources,
     heightmap: Heightmap
   ) {
-    super(gl, structure, resources, HeightmapRenderer.vs, HeightmapRenderer.fs)
+//    super(gl, structure, resources, HeightmapRenderer.vs, HeightmapRenderer.fs)
 
     this.setHeightmap(heightmap)
   }
@@ -123,15 +121,18 @@ export class HeightmapRenderer extends Renderer {
       }
     }
 
+    /*
     this.pos_buffer = createBuffer(this.gl, this.gl.ARRAY_BUFFER, new Float32Array(position))   
     this.color_buffer = createBuffer(this.gl, this.gl.ARRAY_BUFFER, new Float32Array(color))   
     this.index_buffer = createBuffer(this.gl, this.gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(indices))      
+    */
   }
 
   draw(viewMatrix: mat4, projMatrix: mat4): void {
     if (!this.doRender)
       return 
 
+    /*
     this.gl.useProgram(this.shaderProgram)
 
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.index_buffer)
@@ -140,6 +141,7 @@ export class HeightmapRenderer extends Renderer {
     setUniform(this.gl, this.shaderProgram, 'mView', viewMatrix)
     setUniform(this.gl, this.shaderProgram, 'mProj', projMatrix)
     this.gl.drawElements(this.gl.TRIANGLES, this.lenght, this.gl.UNSIGNED_INT, 0)
+    */
   }
 
 }
