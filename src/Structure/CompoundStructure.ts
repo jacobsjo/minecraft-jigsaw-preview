@@ -2,6 +2,7 @@
 import { NbtCompound, BlockPos, BlockState, StructureProvider, Structure, Identifier} from "deepslate";
 //import fs from 'fs';
 import {BoundingBox} from "../BoundingBox"
+import { AnnotationProvider, StructureAnnotation } from "./AnnotationProvider";
 
 export enum Rotation {
   Rotate0 = 0,
@@ -58,7 +59,7 @@ export namespace Rotation {
   }  
 }
 
-export type Annotation = {
+export type PieceInfo = {
   check: number[],
   inside: number | undefined,
 
@@ -72,14 +73,14 @@ export type Annotation = {
 }
 
 type CompoundStructureElement = {
-  structure: StructureProvider,
+  structure: StructureProvider & AnnotationProvider,
   pos: BlockPos,
   rot: Rotation,
-  annotation: Annotation
+  pieceInfo: PieceInfo
 }
  
 
-export class CompoundStructure implements StructureProvider {
+export class CompoundStructure implements StructureProvider, AnnotationProvider {
 
   private elements: CompoundStructureElement[] = []
   private minPos: BlockPos = [0,0,0]
@@ -126,13 +127,13 @@ export class CompoundStructure implements StructureProvider {
   public nextStep(): void{
     do{
       this.displayMaxStep = Math.min(this.displayMaxStep+1, this.elements.length)
-    } while (!this.stepElementTypes.has(this.elements[this.displayMaxStep-1].annotation.element_type) && this.displayMaxStep < this.elements.length)
+    } while (!this.stepElementTypes.has(this.elements[this.displayMaxStep-1].pieceInfo.element_type) && this.displayMaxStep < this.elements.length)
   }
 
   public prevStep(): void{
     do{
       this.displayMaxStep = Math.max(this.displayMaxStep-1, 1)
-    } while (!this.stepElementTypes.has(this.elements[this.displayMaxStep-1].annotation.element_type) && this.displayMaxStep > 1)
+    } while (!this.stepElementTypes.has(this.elements[this.displayMaxStep-1].pieceInfo.element_type) && this.displayMaxStep > 1)
   }
 
   public firstStep(): void{
@@ -261,17 +262,17 @@ export class CompoundStructure implements StructureProvider {
   public getBoundingBoxes(i: number): [BoundingBox, BoundingBox | undefined, BoundingBox[]]{
     const ownBB = this.getBB(i)
 
-    const inside = this.elements[i].annotation.inside
+    const inside = this.elements[i].pieceInfo.inside
     const insideBB = this.getBB(inside)
 
-    const check = this.elements[i].annotation.check
+    const check = this.elements[i].pieceInfo.check
     const checkBBs = check.map(c => this.getBB(c))
 
     return [ownBB, insideBB, checkBBs]
   }
 
-  public getAnnotation(i: number){
-    return this.elements[i].annotation
+  public getPieceInfo(i: number){
+    return this.elements[i].pieceInfo
   }
 
   public bakeBlocks() : void{
@@ -342,7 +343,7 @@ export class CompoundStructure implements StructureProvider {
 //    return this.getBlocks().find(b => b.pos[0] === pos[0] && b.pos[1] === pos[1] && b.pos[2] === pos[2])
   }
 
-  public addStructure(structure: StructureProvider, pos: BlockPos, rot: Rotation, annotation: Annotation | undefined): number{
+  public addStructure(structure: StructureProvider & AnnotationProvider, pos: BlockPos, rot: Rotation, annotation: PieceInfo | undefined): number{
 
     const size = structure.getSize()
     const newSize : BlockPos = [size[0], size[1], size[2]]
@@ -374,7 +375,7 @@ export class CompoundStructure implements StructureProvider {
       structure: structure,
       pos: pos,
       rot: rot,
-      annotation: annotation
+      pieceInfo: annotation
     }) - 1
   }
 
@@ -452,8 +453,7 @@ export class CompoundStructure implements StructureProvider {
     return new BlockState(state.getName(), properties)
   }
 
-  /*
-  getAnnotations(): {pos: BlockPos, annotation: string; data: any; }[] {
+  getAnnotations(): StructureAnnotation[] {
     return this.elements.slice(0, this.displayMaxStep).flatMap(element => element.structure.getAnnotations().map(a => {
       const offsetPos = [a.pos[0]-0.5, a.pos[1], a.pos[2]-0.5] as BlockPos
       const mappedPos = CompoundStructure.mapPos(element.rot, offsetPos, element.pos, element.structure.getSize())
@@ -461,9 +461,9 @@ export class CompoundStructure implements StructureProvider {
         pos: [mappedPos[0]+0.5, mappedPos[1], mappedPos[2]+0.5],
         annotation: a.annotation,
         data: a.data
-      }
+      } as StructureAnnotation
     }))
-  }*/
+  }
 
 
 }

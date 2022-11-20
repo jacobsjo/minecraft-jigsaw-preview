@@ -1,7 +1,7 @@
 
 import { ResourceManager } from './ResourceManager'
 import { mat4, vec2, vec3 } from 'gl-matrix'
-import { Annotation, CompoundStructure, Rotation } from "./Structure/CompoundStructure";
+import { PieceInfo, CompoundStructure, Rotation } from "./Structure/CompoundStructure";
 import { clamp, clampVec3, negVec3 } from './util'
 import { BBRenderer } from './Renderer/BoundingBoxRenderer';
 import { BoundingBox } from './BoundingBox';
@@ -12,6 +12,8 @@ import { HeightmapRenderer } from './Renderer/HeightmapRenderer';
 import { StructureFeature } from './worldgen/StructureFeature';
 import { CompositeDatapack, FileListDatapack, ZipDatapack } from 'mc-datapack-loader';
 import { Identifier, NbtFile, Structure, StructureRenderer } from 'deepslate';
+import { EntityAnnotatedStructure } from './Structure/EntityAnnotatedStructure';
+import { AnnotationRenderer } from './Renderer/AnnotationRenderer';
 
 declare global {
   interface Window {
@@ -122,8 +124,8 @@ async function main() {
   const exampleRes1 = await fetch('example.nbt')
   const exampleData1 = await exampleRes1.arrayBuffer()
   const exampleNbt1 = NbtFile.read(new Uint8Array(exampleData1))
-  const structure1 = Structure.fromNbt(exampleNbt1.root)
-  const annotation: Annotation = {
+  const structure1 = EntityAnnotatedStructure.fromNbt(exampleNbt1.root)
+  const pieceInfo: PieceInfo = {
     check: [],
     inside: undefined,
     element: "{}",
@@ -134,20 +136,20 @@ async function main() {
     fallback_from: undefined,
     depth: 0
   }
-  structure.addStructure(structure1, [0, 65, 0], Rotation.Rotate0, annotation)
+  structure.addStructure(structure1, [0, 65, 0], Rotation.Rotate0, pieceInfo)
   structure.setStartingY(64)
 
   var heightmap = await Heightmap.fromImage("heightmaps/flat.png")
 
 
-  const renderer = new StructureRenderer(gl, structure, resources)
+  const renderer = new StructureRenderer(gl, structure, resources, {chunkSize: chunkSize})
 
   const renderedTypes = new Set(['entity', 'feature'])
 
-  //  const annotationRenderer = new AnnotationRenderer(gl, structure, resources)
-  //  annotationRenderer.setRenderedTypes(Array.from(renderedTypes))
+  const annotationRenderer = new AnnotationRenderer(gl, structure, resources)
+  annotationRenderer.setRenderedTypes(Array.from(renderedTypes))
 
-  const heightmapRenderer = new HeightmapRenderer(gl, structure, resources, heightmap)
+  const heightmapRenderer = new HeightmapRenderer(gl, heightmap)
   const bbRenderer = new BBRenderer(gl)
 
   let drawBB = true
@@ -188,6 +190,7 @@ async function main() {
           structure = sfm.getWorld()
           structure.lastStep()
           renderer.setStructure(structure)
+          annotationRenderer.setStructure(structure)
           refreshStructure(null)
           requestAnimationFrame(render);
         } catch (e) {
@@ -206,6 +209,8 @@ async function main() {
     if (bb !== null)
       renderer.updateStructureBuffers(bb?.getAffectedChunks(chunkSize))
 
+    annotationRenderer.update()
+
     const step = structure.getStep()
 
     const bbs = structure.getBoundingBoxes(step - 1)
@@ -222,7 +227,7 @@ async function main() {
 
     stepDisplay.innerHTML = step + " / " + maxSteps
 
-    const annotation = structure.getAnnotation(step - 1)
+    const annotation = structure.getPieceInfo(step - 1)
 
     infoTempletePool.innerHTML = annotation.pool.toString()
     infoFallbackFrom.innerHTML = annotation.fallback_from ? "Fallback from " + annotation.fallback_from : ""
@@ -247,6 +252,8 @@ async function main() {
 
       renderer.setViewport(0, 0, canvas.width, canvas.height)
       bbRenderer.setViewport(0, 0, canvas.width, canvas.height)
+      annotationRenderer.setViewport(0, 0, canvas.width, canvas.height)
+      heightmapRenderer.setViewport(0, 0, canvas.width, canvas.height)
       return true
     }
   }
@@ -273,6 +280,9 @@ async function main() {
       bbRenderer.drawBB(viewMatrix, insideBB, 1)
       bbRenderer.drawBB(viewMatrix, ownBB, 0)
     }
+
+    annotationRenderer.draw(viewMatrix)
+    heightmapRenderer.draw(viewMatrix)
   }
   requestAnimationFrame(render);
 
@@ -418,7 +428,8 @@ async function main() {
 
   function next() {
     structure.nextStep()
-    refreshStructure(structure.getBoundingBoxes(structure.getStep() - 1)[0])
+    const bb = structure.getBoundingBoxes(structure.getStep() - 1)[0]
+    refreshStructure(bb)
     requestAnimationFrame(render)
   }
 
@@ -521,7 +532,7 @@ async function main() {
     } else {
       renderedTypes.add(type)
     }
-    //annotationRenderer.setRenderedTypes(Array.from(renderedTypes))  //TODO
+    annotationRenderer.setRenderedTypes(Array.from(renderedTypes))  //TODO
     requestAnimationFrame(render)
     return !has
   }

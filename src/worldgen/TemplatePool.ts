@@ -2,7 +2,7 @@ import { Identifier } from 'deepslate';
 import { Datapack } from 'mc-datapack-loader';
 import * as path from 'path';
 import { shuffleArray } from '../util'
-import { PoolElement } from './PoolElement';
+import { PoolElement } from './PoolElements/PoolElement';
 
 const EMPTY = new Identifier("minecraft", "empty")
 

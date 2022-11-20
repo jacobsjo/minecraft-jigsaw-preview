@@ -1,10 +1,10 @@
 
 import { BlockPos } from 'deepslate';
-import { Annotation, CompoundStructure, Rotation } from './Structure/CompoundStructure';
+import { PieceInfo, CompoundStructure, Rotation } from './Structure/CompoundStructure';
 import { TemplatePool } from './worldgen/TemplatePool';
 import { shuffleArray, getRandomInt, directionRelative } from './util'
 import { BoundingBox } from './BoundingBox';
-import { EmptyPoolElement } from './worldgen/PoolElement';
+import { EmptyPoolElement } from "./worldgen/PoolElements/EmptyPoolElement";
 import { Heightmap } from './Heightmap';
 import { StructureFeature } from './worldgen/StructureFeature';
 import { Datapack } from 'mc-datapack-loader';
@@ -54,7 +54,7 @@ export class StructureFeatureManger {
         const poolElement = pool.getShuffeledElements().pop()
         const startingPiece = await poolElement.getStructure()
 
-        const annotation: Annotation = {
+        const annotation: PieceInfo = {
             check: [],
             inside: undefined,
 
@@ -140,7 +140,7 @@ export class StructureFeatureManger {
                             continue
                         }
 
-                        const annotation: Annotation = {
+                        const annotation: PieceInfo = {
                             "check": Object.assign([], check),
                             "inside": inside,
 
@@ -214,11 +214,11 @@ export class StructureFeatureManger {
                     }
                 } catch (e) {
 
-                    const parent_annotation = this.world.getAnnotation(parent.piece)
+                    const parent_annotation = this.world.getPieceInfo(parent.piece)
 
                     const error_message = "Error while generating structure: " + e ;
 
-                    const annotation: Annotation = {
+                    const annotation: PieceInfo = {
                         "check": Object.assign([], check),
                         "inside": inside,
 

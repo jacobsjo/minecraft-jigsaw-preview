@@ -4,49 +4,53 @@ import { setUniform } from "../util";
 import { createBuffer } from "../util";
 import { Heightmap } from "../Heightmap";
 import { Resources, StructureProvider } from "deepslate";
+import { ShaderProgram } from "./ShaderProgram";
 //import { Renderer } from "@webmc/render"
 
 
+const vs = `
+attribute vec4 vertPos;
+attribute vec3 vertColor;
+
+uniform mat4 mView;
+uniform mat4 mProj;
+
+varying highp vec3 vColor;
+
+void main(void) {
+  gl_Position = mProj * mView * vertPos;
+  vColor = vertColor;
+}
+`;
+
+const fs = `
+precision highp float;
+varying highp vec3 vColor;
+
+void main(void) {
+  gl_FragColor = vec4(vColor, 0.3);
+}
+`;
 
 export class HeightmapRenderer {
-  private static vs = `
-    attribute vec4 vertPos;
-    attribute vec3 vertColor;
-
-    uniform mat4 mView;
-    uniform mat4 mProj;
-
-    varying highp vec3 vColor;
-
-    void main(void) {
-      gl_Position = mProj * mView * vertPos;
-      vColor = vertColor;
-    }
-  `;
-
-  protected static fs = `
-    precision highp float;
-    varying highp vec3 vColor;
-
-    void main(void) {
-      gl_FragColor = vec4(vColor, 0.3);
-    }
-  `;
+ 
 
   private pos_buffer: WebGLBuffer
   private color_buffer: WebGLBuffer
   private index_buffer: WebGLBuffer
   private lenght: number
+  private shaderProgram: WebGLProgram;
+  private projMatrix: mat4
 
   private doRender = false;
   private heightmap: Heightmap
 
   constructor(
-    gl: WebGLRenderingContext,
-    structure: StructureProvider,
-    resources: Resources,
+    private readonly gl: WebGLRenderingContext,
     heightmap: Heightmap
   ) {
+    this.shaderProgram = new ShaderProgram(gl, vs, fs).getProgram()
+
 //    super(gl, structure, resources, HeightmapRenderer.vs, HeightmapRenderer.fs)
 
     this.setHeightmap(heightmap)
@@ -89,6 +93,19 @@ export class HeightmapRenderer {
     // do nothing
   }
 
+  private getPerspective() {
+    const fieldOfView = 70 * Math.PI / 180;
+    const aspect = (this.gl.canvas as HTMLCanvasElement).clientWidth / (this.gl.canvas as HTMLCanvasElement).clientHeight;
+    const projMatrix = mat4.create();
+    mat4.perspective(projMatrix, fieldOfView, aspect, 0.1, 500.0);
+    return projMatrix
+  }
+
+  public setViewport(x: number, y: number, width: number, height: number): void {
+    this.gl.viewport(x, y, width, height)
+    this.projMatrix = this.getPerspective()
+  }
+
   public setHeightmap(heightmap: Heightmap){
     this.heightmap = heightmap
 
@@ -121,27 +138,23 @@ export class HeightmapRenderer {
       }
     }
 
-    /*
     this.pos_buffer = createBuffer(this.gl, this.gl.ARRAY_BUFFER, new Float32Array(position))   
     this.color_buffer = createBuffer(this.gl, this.gl.ARRAY_BUFFER, new Float32Array(color))   
     this.index_buffer = createBuffer(this.gl, this.gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(indices))      
-    */
   }
 
-  draw(viewMatrix: mat4, projMatrix: mat4): void {
+  draw(viewMatrix: mat4): void {
     if (!this.doRender)
       return 
 
-    /*
     this.gl.useProgram(this.shaderProgram)
 
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.index_buffer)
     setVertexAttr(this.gl, this.shaderProgram, 'vertPos', 3, this.pos_buffer)
     setVertexAttr(this.gl, this.shaderProgram, 'vertColor', 3, this.color_buffer)
     setUniform(this.gl, this.shaderProgram, 'mView', viewMatrix)
-    setUniform(this.gl, this.shaderProgram, 'mProj', projMatrix)
+    setUniform(this.gl, this.shaderProgram, 'mProj', this.projMatrix)
     this.gl.drawElements(this.gl.TRIANGLES, this.lenght, this.gl.UNSIGNED_INT, 0)
-    */
   }
 
 }

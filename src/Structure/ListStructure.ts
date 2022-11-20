@@ -1,10 +1,11 @@
 import { StructureProvider, BlockPos } from "deepslate";
+import { AnnotationProvider, StructureAnnotation } from "./AnnotationProvider";
 
-export class ListStructure implements StructureProvider {
+export class ListStructure implements StructureProvider, AnnotationProvider {
   private size: BlockPos = [0, 0, 0]
 
   constructor(
-      private pieces: StructureProvider[]
+      private pieces: (StructureProvider & AnnotationProvider)[]
     ) {
       for (const piece of this.pieces){
         const piece_size = piece.getSize()
@@ -30,7 +31,7 @@ export class ListStructure implements StructureProvider {
     return this.pieces[this.pieces.length - 1].getBlock(pos)
   }
 
-/*  getAnnotations(): { pos: BlockPos, annotation: string; data: any; }[] {
+  getAnnotations(): StructureAnnotation[] {
     return this.pieces.flatMap(piece => piece.getAnnotations())
-  }*/
+  }
 }

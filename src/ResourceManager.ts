@@ -72,11 +72,9 @@ export class ResourceManager implements Resources {
     Object.assign(this.blockModels, ChestResourceManagerHelper.getBlockModels())
     */
 
-    /*
-    textures['webmc:annotation/entity'] = await (await fetch("/annotation_icons/entity.png")).blob()
-    textures['webmc:annotation/feature'] = await (await fetch("/annotation_icons/feature.png")).blob()
-    textures['webmc:annotation/empty'] = await (await fetch("/annotation_icons/empty.png")).blob()
-    */
+    textures['jigsaw_previewer:annotation/entity'] = await (await fetch("/annotation_icons/entity.png")).blob()
+    textures['jigsaw_previewer:annotation/feature'] = await (await fetch("/annotation_icons/feature.png")).blob()
+    textures['jigsaw_previewer:annotation/empty'] = await (await fetch("/annotation_icons/empty.png")).blob()
 
     this.blockAtlas = await TextureAtlas.fromBlobs(textures)
     Object.values(this.blockModels).forEach(m => m.flatten(this))

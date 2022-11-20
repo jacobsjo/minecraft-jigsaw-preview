@@ -1,9 +1,10 @@
 import { BlockPos, BlockState, NbtCompound, StructureProvider } from "deepslate";
+import { AnnotationProvider, StructureAnnotation } from "./AnnotationProvider";
 
 
-export class YExpandedStructure implements StructureProvider{
+export class YExpandedStructure implements StructureProvider, AnnotationProvider{
     constructor(
-        private readonly baseStructure: StructureProvider,
+        private readonly baseStructure: StructureProvider & AnnotationProvider,
         private readonly height: number
     ){}
 
@@ -20,4 +21,8 @@ export class YExpandedStructure implements StructureProvider{
         return this.baseStructure.getBlock(pos)
     }
     
+    getAnnotations(): StructureAnnotation[] {
+        return this.baseStructure.getAnnotations()
+    }
+
 }

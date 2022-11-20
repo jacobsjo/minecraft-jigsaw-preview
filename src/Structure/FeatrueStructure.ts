@@ -1,6 +1,7 @@
 import { NbtCompound, BlockPos, BlockState, StructureProvider, Identifier } from "deepslate";
+import { AnnotationProvider, AnnotationType, StructureAnnotation } from "./AnnotationProvider";
 
-export class FeatureStructure implements StructureProvider{
+export class FeatureStructure implements StructureProvider, AnnotationProvider{
     constructor(
         private feature: Identifier
     ){}
@@ -17,14 +18,12 @@ export class FeatureStructure implements StructureProvider{
         return undefined
     }
 
-    // TODO Feature annotation
-    /*
-    getAnnotations(): { pos: BlockPos; annotation: string; data: any; }[] {
+    getAnnotations(): StructureAnnotation[] {
         return [{
             pos: [0.5, 0.5, 0.5],
             annotation: "feature",
             data: this.feature
         }]
-    }*/
+    }
 
 }
