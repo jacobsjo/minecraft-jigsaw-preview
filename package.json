@@ -25,6 +25,7 @@
     "@webpack-cli/serve": "^1.7.0",
     "copy-webpack-plugin": "^9.1.0",
     "gh-pages": "^3.2.3",
+    "license-webpack-plugin": "^4.0.2",
     "ts-loader": "^9.4.1",
     "webpack": "^5.75.0",
     "webpack-cli": "^4.10.0",
@@ -32,9 +33,9 @@
   },
   "dependencies": {
     "deepslate": "^0.15.2",
-    "mc-datapack-loader": "file://",
     "gl-matrix": "^3.4.3",
     "jszip": "^3.10.1",
+    "mc-datapack-loader": "file://",
     "path": "^0.12.7"
   }
 }
