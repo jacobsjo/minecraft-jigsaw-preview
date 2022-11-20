@@ -314,7 +314,10 @@ const opaqueSet = new Set([
   "minecraft:calcite",
   "minecraft:cobbled_deepslate",
   "minecraft:reinforced_deepslate",
-  "minecraft:sculk"
+  "minecraft:sculk",
+  "minecraft:bamboo_planks",
+  "minecraft:bamboo_mosaic",
+  "minecraft:chiseled_bookshelf"
 ])
 
 export function isOpaque(name?: Identifier): boolean{
