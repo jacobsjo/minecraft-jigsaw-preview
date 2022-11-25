@@ -11,7 +11,7 @@ import { Heightmap } from './Heightmap/Heightmap';
 import { HeightmapRenderer } from './Renderer/HeightmapRenderer';
 import { StructureFeature } from './worldgen/StructureFeature';
 import { CompositeDatapack, FileListDatapack, ZipDatapack } from 'mc-datapack-loader';
-import { Identifier, NbtFile } from 'deepslate';
+import { BlockPos, Identifier, NbtFile } from 'deepslate';
 import { EntityAnnotatedStructure } from './Structure/EntityAnnotatedStructure';
 import { AnnotationRenderer } from './Renderer/AnnotationRenderer';
 import { ImageHeightmap } from './Heightmap/ImageHeightmap';
@@ -141,7 +141,8 @@ async function main() {
     joint_type: undefined,
     pool: new Identifier("welcome", "jigsaw"),
     fallback_from: undefined,
-    depth: 0
+    depth: 0,
+    jigsaw_pos: undefined
   }
   structure.addPiece(structure1, [0, 65, 0], pieceInfo, [])
   structure.setStartingY(64)
@@ -165,6 +166,7 @@ async function main() {
   let ownBB: BoundingBox
   let insideBB: BoundingBox | undefined
   let checkBBs: BoundingBox[]
+  let jigsawPos: BlockPos
 
   refreshDatapacks()
   refreshStructure()
@@ -228,10 +230,10 @@ async function main() {
     ownBB = bbs[0]
     insideBB = bbs[1]
     checkBBs = bbs[2]
+    jigsawPos = structure.getPiece(step - 1).pieceInfo.jigsaw_pos
+
 
     const maxSteps = structure.getStepCount()
-    const maxFailingSteps = structure.getPiece(step - 1).failedPieces.length
-    console.log("Failing step: " + failing_step)
 
     nav_buttons.first.classList.toggle("enabled", step > 1)
     nav_buttons.prev.classList.toggle("enabled", step > 1)
@@ -249,6 +251,9 @@ async function main() {
       .on("click", (evt, d) => {
         display.toggleFailedStep(d.nr)
         const bb = structure.getBoundingBoxes(display.getStep() - 1)[0]
+        if (display.getFailedStep() >= 0){
+          failedRenderer.setStructure(structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()].piece)
+        }
         refreshStructure(bb)
         requestAnimationFrame(render)
       })
@@ -312,7 +317,6 @@ async function main() {
     renderer.drawStructure(viewMatrix);
     //console.log(structure.getPiece(display.getStep()-1).failedPieces)
     if (display.getFailedStep() >= 0){
-      failedRenderer.setStructure(structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()].piece)
       failedRenderer.drawTintedStructure(viewMatrix)
     }
 
@@ -324,6 +328,9 @@ async function main() {
         bbRenderer.drawBB(viewMatrix, new BoundingBox(failedPiece.getOffset(), failedPiece.getSize()), 0)
       } else {
         bbRenderer.drawBB(viewMatrix, ownBB, 0)
+      }
+      if (jigsawPos){
+        bbRenderer.drawBB(viewMatrix, new BoundingBox(jigsawPos, [1,1,1]), 3, 3)
       }
     }
 

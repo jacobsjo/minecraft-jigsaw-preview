@@ -71,7 +71,8 @@ export class JigsawGenerator {
             element_type: poolElement.getType(),
             joint: undefined,
             joint_type: undefined,
-            depth: 0
+            depth: 0,
+            jigsaw_pos: undefined
         }
 
         const startingPieceY = this.startingY === "heightmap" ? this.heightmap.getHeight(0, 0) - 1 : this.startingY
@@ -164,7 +165,8 @@ export class JigsawGenerator {
                             "element_type": placingElement.getType(),
                             "joint": target,
                             "joint_type": (forward == "up" || forward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
-                            "depth": this.depth - parent.depth + 1
+                            "depth": this.depth - parent.depth + 1,
+                            "jigsaw_pos": parentJigsasPos
                         }
                         const placingRigid = placingElement.getProjection() === "rigid"
                         const placingStructure = await placingElement.getStructure();
@@ -245,7 +247,8 @@ export class JigsawGenerator {
                         "element_type": "error" ,
                         "joint": target,
                         "joint_type": (forward == "up" || forward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
-                        "depth": this.depth - parent.depth + 1
+                        "depth": this.depth - parent.depth + 1,
+                        "jigsaw_pos": parentJigsasPos
                     }
 
                     console.warn(error_message)

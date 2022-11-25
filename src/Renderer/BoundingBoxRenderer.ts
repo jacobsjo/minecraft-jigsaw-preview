@@ -71,6 +71,7 @@ export class BBRenderer {
     const color1: number[] = []
     const color2: number[] = []
     const color3: number[] = []
+    const color4: number[] = []
 
     position.push(0, 0, 0, 0, 0, 1)
     position.push(1, 0, 0, 1, 0, 1)
@@ -91,13 +92,15 @@ export class BBRenderer {
         color1.push(0,0,1,0,0,1)
         color2.push(0,1,0,0,1,0)
         color3.push(1,0,0,1,0,0)
+        color4.push(1,0.5,0.5,1,0.5,0.5)
     }
 
     return {
       position: this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(position)),
       colors: [this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color1)),
                this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color2)),
-               this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color3))],
+               this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color3)),
+               this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color4))],
       length: position.length / 3
     }
   }
@@ -110,7 +113,7 @@ export class BBRenderer {
     return buffer
   }
 
-  public drawBB(viewMatrix: mat4, bb: BoundingBox, color: number): void {
+  public drawBB(viewMatrix: mat4, bb: BoundingBox, color: number, lineWidth: number = 1.5): void {
     this.setShader(this.gridShaderProgram)
 
     this.setVertexAttr('vertPos', 3, this.bbBuffers.position)
@@ -122,6 +125,7 @@ export class BBRenderer {
     this.setUniform('mView', translatedMatrix)
     this.setUniform('mProj', this.projMatrix)
 
+    this.gl.lineWidth(lineWidth)
     this.gl.drawArrays(this.gl.LINES, 0, this.bbBuffers.length)
   }
 

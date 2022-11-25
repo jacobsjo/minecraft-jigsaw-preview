@@ -1,5 +1,5 @@
 //import { NamedNbtTag, NbtTag, getTag, getListTag, getOptional } from "@webmc/nbt";
-import { NbtCompound, BlockPos, BlockState, StructureProvider, Structure, Identifier } from "deepslate";
+import { NbtCompound, BlockPos, BlockState, StructureProvider, Structure, Identifier, PlacedBlock } from "deepslate";
 //import fs from 'fs';
 import { BoundingBox } from "./BoundingBox"
 import { AnnotationProvider, StructureAnnotation } from "../Structure/AnnotationProvider";
@@ -17,7 +17,8 @@ export type PieceInfo = {
     element_type: string | undefined,
     joint: string | undefined,
     joint_type: "alligned" | "rollable" | undefined,
-    depth: number
+    depth: number,
+    jigsaw_pos: BlockPos
 }
 
 type Piece = {
@@ -38,6 +39,12 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
     private startingY = 0
     private maxRadius = 80
+
+    private bakedBlocks: Map<string, {
+        pos: BlockPos;
+        state: BlockState;
+        nbt: NbtCompound;
+    }> = new Map()
 
     public setStartingY(y: number) {
         this.startingY = y
@@ -108,20 +115,28 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         return this.pieces[i]
     }
 
+    public bakeBlocks(): void { 
+        this.bakedBlocks.clear()
+
+        const pieceList = this.lastStep ? this.pieces.slice(0, this.lastStep) : this.pieces
+
+        pieceList.forEach(e => e.structure.getBlocks().forEach(b => {
+            const new_pos: BlockPos = [b.pos[0] + e.pos[0], b.pos[1] + e.pos[1], b.pos[2] + e.pos[2]]
+            this.bakedBlocks.set(`${new_pos[0]}, ${new_pos[1]}, ${new_pos[2]}`, {
+                pos: new_pos,
+                state: b.state,
+                nbt: b.nbt
+            })
+        }))
+    }
+
     public getBlocks(): {
         pos: BlockPos;
         state: BlockState;
         nbt?: NbtCompound;
     }[] {
-        const pieceList = this.lastStep ? this.pieces.slice(0, this.lastStep) : this.pieces
-
-        return pieceList.flatMap(e => e.structure.getBlocks().map(b => {
-            return {
-                pos: [b.pos[0] + e.pos[0], b.pos[1] + e.pos[1], b.pos[2] + e.pos[2]],
-                state: b.state,
-                nbt: b.nbt
-            }
-        }))
+        this.bakeBlocks()
+        return Array.from(this.bakedBlocks.values())
     }
 
     public getBlock(pos: BlockPos): {
@@ -129,7 +144,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         state: BlockState;
         nbt: NbtCompound;
     } {
-        return undefined
+        return this.bakedBlocks.get(`${pos[0]}, ${pos[1]}, ${pos[2]}`)
     }
 
     public addPiece(structure: StructureProvider & AnnotationProvider, pos: BlockPos, annotation: PieceInfo | undefined, failedPieces: {name: string, piece: (StructureProvider & AnnotationProvider)}[]): number {
