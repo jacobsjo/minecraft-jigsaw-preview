@@ -1,8 +1,8 @@
 import { vec3, mat4 } from "gl-matrix";
-import { inv_lerp, setVertexAttr } from "../util";
-import { setUniform } from "../util";
-import { createBuffer } from "../util";
-import { Heightmap } from "../Heightmap";
+import { inv_lerp, setVertexAttr } from "../Util/util";
+import { setUniform } from "../Util/util";
+import { createBuffer } from "../Util/util";
+import { Heightmap } from "../Heightmap/Heightmap";
 import { Resources, StructureProvider } from "deepslate";
 import { ShaderProgram } from "./ShaderProgram";
 //import { Renderer } from "@webmc/render"

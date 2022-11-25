@@ -1,6 +1,6 @@
 import jszip from 'jszip'
 import { BlockDefinition, BlockDefinitionProvider, BlockModel, BlockModelProvider, BlockPropertiesProvider, Identifier, Resources, TextureAtlas } from 'deepslate'
-import { isOpaque } from './OpaqueHelper'
+import { isOpaque } from './Util/OpaqueHelper'
 
 export class ResourceManager implements Resources {
   private blockDefinitions: { [id: string]: BlockDefinition }

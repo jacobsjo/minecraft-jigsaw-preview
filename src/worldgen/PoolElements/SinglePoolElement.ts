@@ -1,6 +1,6 @@
 import { BlockPos, StructureProvider, Identifier, PlacedBlock, NbtFile } from "deepslate";
-import { directionRelative, shuffleArray } from "../../util";
-import { BoundingBox } from "../../BoundingBox";
+import { directionRelative, shuffleArray } from "../../Util/util";
+import { BoundingBox } from "../../Jigsaw/BoundingBox";
 import { TemplatePool } from "../TemplatePool";
 import { Datapack } from "mc-datapack-loader";
 import { YExpandedStructure } from "../../Structure/YExpandedStructure";

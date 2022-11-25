@@ -1,18 +1,22 @@
 
-import { BlockPos } from 'deepslate';
-import { PieceInfo, CompoundStructure, Rotation } from './Structure/CompoundStructure';
-import { TemplatePool } from './worldgen/TemplatePool';
-import { shuffleArray, getRandomInt, directionRelative } from './util'
+import { BlockPos, StructureProvider } from 'deepslate';
+import { PieceInfo, JigsawStructure } from './JigsawStructure';
+import { TemplatePool } from '../worldgen/TemplatePool';
+import { shuffleArray, getRandomInt, directionRelative } from '../Util/util'
 import { BoundingBox } from './BoundingBox';
-import { EmptyPoolElement } from "./worldgen/PoolElements/EmptyPoolElement";
-import { Heightmap } from './Heightmap';
-import { StructureFeature } from './worldgen/StructureFeature';
+import { EmptyPoolElement } from "../worldgen/PoolElements/EmptyPoolElement";
+import { Heightmap } from '../Heightmap/Heightmap';
+import { StructureFeature } from '../worldgen/StructureFeature';
 import { Datapack } from 'mc-datapack-loader';
 import { Identifier } from 'deepslate';
+import { Rotation } from '../Util/Rotation';
+import { RotatedStructure } from '../Structure/RotatedStructure';
+import { AnnotationProvider } from '../Structure/AnnotationProvider';
+import { OffsetStructure } from '../Structure/OffsetStructure';
 
 
-export class StructureFeatureManger {
-    private world: CompoundStructure
+export class JigsawGenerator {
+    private world: JigsawStructure
 
     constructor(
         private datapack: Datapack,
@@ -24,7 +28,7 @@ export class StructureFeatureManger {
         private heightmap: Heightmap,
         private startJisawName: string | undefined
     ) {
-        this.world = new CompoundStructure()
+        this.world = new JigsawStructure()
     }
 
 
@@ -52,7 +56,10 @@ export class StructureFeatureManger {
     public async generate(): Promise<void> {
         const pool = await TemplatePool.fromName(this.datapack, this.startingPool, false) // starting pool has no expansion hack (TODO: check this ingame)
         const poolElement = pool.getShuffeledElements().pop()
-        const startingPiece = await poolElement.getStructure()
+        
+        const startRotation = getRandomInt(4) as Rotation
+
+        const startingPiece = new RotatedStructure(await poolElement.getStructure(), startRotation)
 
         const annotation: PieceInfo = {
             check: [],
@@ -71,7 +78,6 @@ export class StructureFeatureManger {
         this.world.setStartingY(startingPieceY)
         this.world.setMaxRadius(this.radius)
 
-        const startRotation = getRandomInt(4)
 
         var start_pos: BlockPos = [0, startingPieceY, 0]
         if (this.startJisawName !== undefined){
@@ -79,7 +85,7 @@ export class StructureFeatureManger {
             for (const placingBlock of placingJigsawBlocks) {
                 const name: string = placingBlock.nbt.getString("name")
                 if (name === this.startJisawName){
-                    const rotatedAnchorJigsawPos: BlockPos = CompoundStructure.mapPos(startRotation, placingBlock.pos, [0, 0, 0], startingPiece.getSize());
+                    const rotatedAnchorJigsawPos: BlockPos = startingPiece.mapPos(placingBlock.pos);
                     start_pos = [
                         start_pos[0] - rotatedAnchorJigsawPos[0],
                         start_pos[1] - rotatedAnchorJigsawPos[1],
@@ -89,7 +95,7 @@ export class StructureFeatureManger {
             }
         }
 
-        const startingPieceNr = this.world.addStructure(startingPiece, start_pos, startRotation, annotation)
+        const startingPieceNr = this.world.addPiece(startingPiece, start_pos, annotation, [])
         const placing: { "piece": number, "check": number[], "inside": number | undefined, "rigid": boolean, "depth": number }[]
             = [{ "piece": startingPieceNr, "check": [startingPieceNr], "inside": undefined, "rigid": poolElement.getProjection() === "rigid", "depth": this.depth }]
 
@@ -100,8 +106,15 @@ export class StructureFeatureManger {
             //getElementBlocks returns blocks rotated and moved correctly
 
             const checkInsideList: number[] = []
-            const jigsawBlocks = shuffleArray(this.world.getElementBlocks(parent.piece).filter(block => { return block.state.getName().namespace === "minecraft" && block.state.getName().path === "jigsaw"; }))
+            const jigsawBlocks = shuffleArray(this.world.getPiece(parent.piece).structure.getBlocks().filter(block => { return block.state.getName().namespace === "minecraft" && block.state.getName().path === "jigsaw"; })).map(block => {
+                return {
+                    pos: [block.pos[0] + bb.min[0], block.pos[1] + bb.min[1], block.pos[2] + bb.min[2]] as BlockPos,
+                    state: block.state,
+                    nbt: block.nbt
+                }
+            })
             for (const block of jigsawBlocks) {
+
                 const orientation: string = block.state.getProperties()['orientation'] ?? 'north_up';
                 const [forward, up] = orientation.split("_");
                 const parentJigsasPos: BlockPos = block.pos;
@@ -121,6 +134,8 @@ export class StructureFeatureManger {
                 const rollable: boolean = block.nbt.getString("joint") === "rollable";
                 const target: string = block.nbt.getString("target")
 
+                const failedPieces: (StructureProvider & AnnotationProvider)[] = []
+
                 try {
                     var using_fallback = false
 
@@ -131,7 +146,6 @@ export class StructureFeatureManger {
                         .concat([undefined])
                         .concat(fallbackPool.getShuffeledElements())
                         .concat([new EmptyPoolElement()])
-
 
                     try_all_pool_element:
                     for (const placingElement of poolElements) {
@@ -155,7 +169,7 @@ export class StructureFeatureManger {
                         const placingRigid = placingElement.getProjection() === "rigid"
                         const placingStructure = await placingElement.getStructure();
                         if (placingElement instanceof EmptyPoolElement) {
-                            this.world.addStructure(placingStructure, parentJigsawFacingPos, Rotation.Rotate0, annotation);
+                            this.world.addPiece(placingStructure, parentJigsawFacingPos, annotation, failedPieces);
                             break;
                         }
 
@@ -175,9 +189,11 @@ export class StructureFeatureManger {
                             if (rotation === undefined)
                                 continue
 
+                            const rotatedPlacingStructure = new RotatedStructure(placingStructure, rotation)
+
                             const size = placingStructure.getSize();
                             const placingJigsasPos: BlockPos = placingBlock.pos;
-                            const rotatedPlacingJigsawPos: BlockPos = CompoundStructure.mapPos(rotation, placingJigsasPos, [0, 0, 0], size);
+                            const rotatedPlacingJigsawPos: BlockPos = rotatedPlacingStructure.mapPos(placingJigsasPos);
 
                             const offset: BlockPos = [
                                 parentJigsawFacingPos[0] - rotatedPlacingJigsawPos[0],
@@ -197,25 +213,26 @@ export class StructureFeatureManger {
 
                             const placingBB = new BoundingBox(offset, newSize);
 
-                            if (!placingBB.containedIn(this.world.getBB(inside), false))
+                            if (!placingBB.containedIn(this.world.getBB(inside), false)){
+                                failedPieces.push(new OffsetStructure(rotatedPlacingStructure, offset))
                                 continue
+                            }
 
                             for (let l = 0; l < check.length; l++) {
-                                if (placingBB.intersects(this.world.getBB(check[l])))
+                                if (placingBB.intersects(this.world.getBB(check[l]))){
+                                    failedPieces.push(new OffsetStructure(rotatedPlacingStructure, offset))
                                     continue nextPlacingJigsawBlocks
+                                }
                             }
 
 
-                            const placingNr = this.world.addStructure(placingStructure, offset, rotation, annotation);
+                            const placingNr = this.world.addPiece(rotatedPlacingStructure, offset, annotation, failedPieces);
                             check.push(placingNr);
                             placing.push({ "piece": placingNr, "check": check, "inside": inside, "rigid": placingRigid, "depth": parent.depth - 1 });
                             break try_all_pool_element // successfully placed structure, don't try more
                         }
                     }
                 } catch (e) {
-
-                    const parent_annotation = this.world.getPieceInfo(parent.piece)
-
                     const error_message = "Error while generating structure: " + e ;
 
                     const annotation: PieceInfo = {
@@ -232,7 +249,7 @@ export class StructureFeatureManger {
                     }
 
                     console.warn(error_message)
-                    this.world.addStructure(await new EmptyPoolElement().getStructure(), parentJigsawFacingPos, Rotation.Rotate0, annotation);
+                    this.world.addPiece(await new EmptyPoolElement().getStructure(), parentJigsawFacingPos, annotation, failedPieces);
 
                 }
             }
@@ -240,11 +257,11 @@ export class StructureFeatureManger {
         }
     }
 
-    public getWorld(): CompoundStructure {
+    public getWorld(): JigsawStructure {
         return this.world
     }
 
     public static fromStructureFeature(datapack: Datapack, feature: StructureFeature, heightmap: Heightmap) {
-        return new StructureFeatureManger(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap, feature.getStartJigsawName())
+        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap, feature.getStartJigsawName())
     }
 }

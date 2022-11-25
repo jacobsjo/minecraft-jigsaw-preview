@@ -1,7 +1,7 @@
 import { Identifier, Resources, StructureProvider } from "deepslate";
 import { vec3, mat4 } from "gl-matrix";
 import { AnnotationProvider } from "../Structure/AnnotationProvider";
-import { createBuffer, setUniform, setVertexAttr, updateBuffer } from "../util";
+import { createBuffer, setUniform, setVertexAttr, updateBuffer } from "../Util/util";
 import { ShaderProgram } from "./ShaderProgram";
 
 const vs = `

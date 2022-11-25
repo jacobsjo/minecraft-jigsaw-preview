@@ -1,5 +1,5 @@
 import { mat4 } from "gl-matrix";
-import { BoundingBox } from "../BoundingBox";
+import { BoundingBox } from "../Jigsaw/BoundingBox";
 import { ShaderProgram } from "./ShaderProgram";
 
 const vsGrid = `

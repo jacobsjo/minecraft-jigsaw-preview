@@ -1,19 +1,23 @@
 
 import { ResourceManager } from './ResourceManager'
 import { mat4, vec2, vec3 } from 'gl-matrix'
-import { PieceInfo, CompoundStructure, Rotation } from "./Structure/CompoundStructure";
-import { clamp, clampVec3, negVec3 } from './util'
+import { PieceInfo, JigsawStructure } from "./Jigsaw/JigsawStructure";
+import { clamp, clampVec3, negVec3 } from './Util/util'
 import { BBRenderer } from './Renderer/BoundingBoxRenderer';
-import { BoundingBox } from './BoundingBox';
-import { StructureFeatureManger } from './StructureFeatureManager';
+import { BoundingBox } from './Jigsaw/BoundingBox';
+import { JigsawGenerator } from './Jigsaw/JigsawGenerator';
 import { TemplatePool } from './worldgen/TemplatePool';
-import { Heightmap } from './Heightmap';
+import { Heightmap } from './Heightmap/Heightmap';
 import { HeightmapRenderer } from './Renderer/HeightmapRenderer';
 import { StructureFeature } from './worldgen/StructureFeature';
 import { CompositeDatapack, FileListDatapack, ZipDatapack } from 'mc-datapack-loader';
-import { Identifier, NbtFile, Structure, StructureRenderer } from 'deepslate';
+import { Identifier, NbtFile } from 'deepslate';
 import { EntityAnnotatedStructure } from './Structure/EntityAnnotatedStructure';
 import { AnnotationRenderer } from './Renderer/AnnotationRenderer';
+import { ImageHeightmap } from './Heightmap/ImageHeightmap';
+import { DisplayManager } from './UI/DisplayManager';
+import { OffsetStructure } from './Structure/OffsetStructure';
+import { StructureRenderer } from './Renderer/StructureRenderer';
 
 declare global {
   interface Window {
@@ -73,6 +77,14 @@ async function main() {
     last: document.querySelector('.ui .button#last'),
   }
 
+  const failing_nav_buttons = {
+    enable: document.querySelector('.ui .button#failing'),
+    first: document.querySelector('.ui .button#failing_first'),
+    prev: document.querySelector('.ui .button#failing_prev'),
+    next: document.querySelector('.ui .button#failing_next'),
+    last: document.querySelector('.ui .button#failing_last'),
+  }
+
   const setting_buttons = {
     bb: document.querySelector('.button#bb'),
     info: document.querySelector('.button#info'),
@@ -119,7 +131,8 @@ async function main() {
     throw new Error('Unable to load OES_element_index_uint wegbl extension. Your browser or machine may not support it.')
   }
 
-  let structure = new CompoundStructure()
+  var structure = new JigsawStructure()
+  var display = new DisplayManager(structure)
 
   const exampleRes1 = await fetch('example.nbt')
   const exampleData1 = await exampleRes1.arrayBuffer()
@@ -136,13 +149,14 @@ async function main() {
     fallback_from: undefined,
     depth: 0
   }
-  structure.addStructure(structure1, [0, 65, 0], Rotation.Rotate0, pieceInfo)
+  structure.addPiece(structure1, [0, 65, 0], pieceInfo, [])
   structure.setStartingY(64)
 
-  var heightmap = await Heightmap.fromImage("heightmaps/flat.png")
+  var heightmap = await ImageHeightmap.fromImage("heightmaps/flat.png")
 
 
-  const renderer = new StructureRenderer(gl, structure, resources, {chunkSize: chunkSize})
+  const renderer = new StructureRenderer(gl, structure, resources)
+  const failedRenderer = new StructureRenderer(gl, structure, resources)
 
   const renderedTypes = new Set(['entity', 'feature'])
 
@@ -185,10 +199,12 @@ async function main() {
       node.onclick = async () => {
         try {
           showLoader()
-          const sfm = StructureFeatureManger.fromStructureFeature(compositeDatapack, feature, heightmap)
+          const sfm = JigsawGenerator.fromStructureFeature(compositeDatapack, feature, heightmap)
           await sfm.generate()
           structure = sfm.getWorld()
-          structure.lastStep()
+          display = new DisplayManager(structure)
+
+          display.lastStep()
           renderer.setStructure(structure)
           annotationRenderer.setStructure(structure)
           refreshStructure(null)
@@ -211,7 +227,8 @@ async function main() {
 
     annotationRenderer.update()
 
-    const step = structure.getStep()
+    const step = display.getStep()
+    const failing_step = display.getFailedStep()
 
     const bbs = structure.getBoundingBoxes(step - 1)
     ownBB = bbs[0]
@@ -219,15 +236,30 @@ async function main() {
     checkBBs = bbs[2]
 
     const maxSteps = structure.getStepCount()
+    const maxFailingSteps = structure.getPiece(step - 1).failedPieces.length
+    console.log("Failing step: " + failing_step)
 
     nav_buttons.first.classList.toggle("enabled", step > 1)
     nav_buttons.prev.classList.toggle("enabled", step > 1)
     nav_buttons.next.classList.toggle("enabled", step < maxSteps)
     nav_buttons.last.classList.toggle("enabled", step < maxSteps)
 
+    failing_nav_buttons.enable.classList.toggle("enabled", maxFailingSteps > 0)
+    failing_nav_buttons.enable.classList.toggle("opened", failing_step >= 0)
+
+    failing_nav_buttons.first.classList.toggle("hidden", failing_step === -1)
+    failing_nav_buttons.prev.classList.toggle("hidden", failing_step === -1)
+    failing_nav_buttons.next.classList.toggle("hidden", failing_step === -1)
+    failing_nav_buttons.last.classList.toggle("hidden", failing_step === -1)
+
+    failing_nav_buttons.first.classList.toggle("enabled", failing_step > 0)
+    failing_nav_buttons.prev.classList.toggle("enabled", failing_step > 0)
+    failing_nav_buttons.next.classList.toggle("enabled", failing_step < maxFailingSteps - 1)
+    failing_nav_buttons.last.classList.toggle("enabled", failing_step < maxFailingSteps - 1)
+
     stepDisplay.innerHTML = step + " / " + maxSteps
 
-    const annotation = structure.getPieceInfo(step - 1)
+    const annotation = structure.getPiece(step - 1).pieceInfo
 
     infoTempletePool.innerHTML = annotation.pool.toString()
     infoFallbackFrom.innerHTML = annotation.fallback_from ? "Fallback from " + annotation.fallback_from : ""
@@ -251,6 +283,7 @@ async function main() {
       canvas.height = displayHeight;
 
       renderer.setViewport(0, 0, canvas.width, canvas.height)
+      failedRenderer.setViewport(0, 0, canvas.width, canvas.height)
       bbRenderer.setViewport(0, 0, canvas.width, canvas.height)
       annotationRenderer.setViewport(0, 0, canvas.width, canvas.height)
       heightmapRenderer.setViewport(0, 0, canvas.width, canvas.height)
@@ -274,11 +307,21 @@ async function main() {
 
     //renderer.drawGrid(viewMatrix);
     renderer.drawStructure(viewMatrix);
+    console.log(structure.getPiece(display.getStep()-1).failedPieces)
+    if (display.getFailedStep() >= 0){
+      failedRenderer.setStructure(structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()])
+      failedRenderer.drawTintedStructure(viewMatrix)
+    }
 
     if (drawBB) {
       checkBBs.forEach(bb => bbRenderer.drawBB(viewMatrix, bb, 2))
       bbRenderer.drawBB(viewMatrix, insideBB, 1)
-      bbRenderer.drawBB(viewMatrix, ownBB, 0)
+      if (display.getFailedStep() >= 0){
+        const failedPiece = structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()] as OffsetStructure
+        bbRenderer.drawBB(viewMatrix, new BoundingBox(failedPiece.getOffset(), failedPiece.getSize()), 0)
+      } else {
+        bbRenderer.drawBB(viewMatrix, ownBB, 0)
+      }
     }
 
     annotationRenderer.draw(viewMatrix)
@@ -427,22 +470,22 @@ async function main() {
    */
 
   function next() {
-    structure.nextStep()
-    const bb = structure.getBoundingBoxes(structure.getStep() - 1)[0]
+    display.nextStep()
+    const bb = structure.getBoundingBoxes(display.getStep() - 1)[0]
     refreshStructure(bb)
     requestAnimationFrame(render)
   }
 
   function prev() {
-    const bb = structure.getBoundingBoxes(structure.getStep() - 1)[0]
-    structure.prevStep()
+    const bb = structure.getBoundingBoxes(display.getStep() - 1)[0]
+    display.prevStep()
     refreshStructure(bb)
     requestAnimationFrame(render)
   }
 
 
   nav_buttons.first.addEventListener("click", async () => {
-    structure.firstStep()
+    display.firstStep()
     refreshStructure()
     requestAnimationFrame(render)
   })
@@ -456,10 +499,46 @@ async function main() {
   })
 
   nav_buttons.last.addEventListener("click", async () => {
-    structure.lastStep()
+    display.lastStep()
     refreshStructure()
     requestAnimationFrame(render)
   })
+
+  failing_nav_buttons.enable.addEventListener("click", async () => {
+    const bb = structure.getBoundingBoxes(display.getStep() - 1)[0]
+    if (display.getFailedStep() === -1){
+      display.startFailed()
+    } else {
+      display.successfullStep()
+    }
+    refreshStructure(bb)
+    requestAnimationFrame(render)
+  })
+
+  failing_nav_buttons.first.addEventListener("click", async () => {
+    display.firstFailedStep()
+    refreshStructure(null)
+    requestAnimationFrame(render)
+  })
+
+  failing_nav_buttons.prev.addEventListener("click", async () => {
+    display.prevFailedStep()
+    refreshStructure(null)
+    requestAnimationFrame(render)
+  })
+
+  failing_nav_buttons.next.addEventListener("click", async () => {
+    display.nextFailedStep()
+    refreshStructure(null)
+    requestAnimationFrame(render)
+  })
+
+  failing_nav_buttons.last.addEventListener("click", async () => {
+    display.lastFailedStep()
+    refreshStructure(null)
+    requestAnimationFrame(render)
+  })
+
 
   setting_buttons.bb.addEventListener("click", async () => {
     drawBB = !drawBB
@@ -493,13 +572,13 @@ async function main() {
 
   setting_buttons.icon_empty.addEventListener("click", async () => {
     const shown = toggleRenderedType("empty")
-    structure.setStepElementType("minecraft:empty_pool_element", shown)
+    display.setStepElementType("minecraft:empty_pool_element", shown)
     setting_buttons.icon_empty.classList.toggle("selected", shown)
   })
 
   setting_buttons.icon_feature.addEventListener("click", async () => {
     const shown = toggleRenderedType("feature")
-    structure.setStepElementType("minecraft:feature_pool_element", shown)
+    display.setStepElementType("minecraft:feature_pool_element", shown)
     setting_buttons.icon_feature.classList.toggle("selected", shown)
   })
 
@@ -542,7 +621,7 @@ async function main() {
       console.warn("Upload not yet implemented")
     } else {
       console.debug("Loading Heightmap " + entry.id)
-      heightmap = await Heightmap.fromImage("heightmaps/" + entry.id + ".png")
+      heightmap = await ImageHeightmap.fromImage("heightmaps/" + entry.id + ".png")
       heightmapRenderer.setHeightmap(heightmap)
       heightmapRenderer.toggleRendering(true)
       setting_buttons.heightmap.classList.toggle("selected", true)

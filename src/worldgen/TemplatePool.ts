@@ -1,7 +1,7 @@
 import { Identifier } from 'deepslate';
 import { Datapack } from 'mc-datapack-loader';
 import * as path from 'path';
-import { shuffleArray } from '../util'
+import { shuffleArray, weightedShuffleArray } from '../Util/util'
 import { PoolElement } from './PoolElements/PoolElement';
 
 const EMPTY = new Identifier("minecraft", "empty")
@@ -26,16 +26,7 @@ export class TemplatePool{
     }
 
     public getShuffeledElements(): PoolElement[]{
-
-        const list : PoolElement[] = []
-
-        this.elements.forEach(element => {
-            for (let i = 0 ; i < element.weight ; i++){
-                list.push(element.element)
-            }
-        });
-
-        return shuffleArray(list)
+        return weightedShuffleArray(this.elements)
     }
 
     public async getMaxHeight(): Promise<number>{

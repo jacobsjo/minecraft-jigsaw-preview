@@ -190,6 +190,10 @@
     cursor: pointer;
   }
 
+  .button.hidden {
+    opacity: 0;
+  }
+
   div.iconbar{
     position: absolute;
     bottom: 0pt;

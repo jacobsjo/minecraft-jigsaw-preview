@@ -9,6 +9,10 @@ export function shuffleArray<T>(array: T[]): T[] {
   return array
 }
 
+export function weightedShuffleArray<T>(array: {weight: number, element: T}[]): T[] {
+  return array.map(a => {return {element: a.element, k: Math.random() ** (1/a.weight)}}).sort((a, b) => b.k - a.k).map(a => a.element)
+}
+
 export function getRandomInt(max: number): number {
   return Math.floor(Math.random() * Math.floor(max));
 }
