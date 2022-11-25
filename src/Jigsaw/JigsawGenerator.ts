@@ -61,26 +61,27 @@ export class JigsawGenerator {
 
         const startingPiece = new RotatedStructure(await poolElement.getStructure(), startRotation)
 
-        const annotation: PieceInfo = {
-            check: [],
-            inside: undefined,
-
-            pool: this.startingPool,
-            fallback_from: undefined,
-            element: await poolElement.getDescription(),
-            element_type: poolElement.getType(),
-            joint: undefined,
-            joint_type: undefined,
-            depth: 0,
-            jigsaw_pos: undefined
-        }
-
         const startingPieceY = this.startingY === "heightmap" ? this.heightmap.getHeight(0, 0) - 1 : this.startingY
         this.world.setStartingY(startingPieceY)
         this.world.setMaxRadius(this.radius)
 
 
         var start_pos: BlockPos = [0, startingPieceY, 0]
+
+        const annotation: PieceInfo = {
+            check: [],
+            inside: undefined,
+
+            pool: this.startingPool,
+            fallback_from: undefined,
+            element: poolElement.getDescription(),
+            element_type: poolElement.getType(),
+            joint: undefined,
+            joint_type: undefined,
+            depth: 0,
+            jigsaw_pos: this.startJisawName ? start_pos : undefined
+        }
+
         if (this.startJisawName !== undefined){
             const placingJigsawBlocks = await poolElement.getShuffledJigsawBlocks()
             for (const placingBlock of placingJigsawBlocks) {
@@ -118,8 +119,8 @@ export class JigsawGenerator {
 
                 const orientation: string = block.state.getProperties()['orientation'] ?? 'north_up';
                 const [forward, up] = orientation.split("_");
-                const parentJigsasPos: BlockPos = block.pos;
-                const parentJigsawFacingPos: BlockPos = directionRelative(parentJigsasPos, forward);
+                const parentJigsawPos: BlockPos = block.pos;
+                const parentJigsawFacingPos: BlockPos = directionRelative(parentJigsawPos, forward);
 
                 const isInside: boolean = bb.isInside(parentJigsawFacingPos);
 
@@ -166,7 +167,7 @@ export class JigsawGenerator {
                             "joint": target,
                             "joint_type": (forward == "up" || forward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
                             "depth": this.depth - parent.depth + 1,
-                            "jigsaw_pos": parentJigsasPos
+                            "jigsaw_pos": parentJigsawPos
                         }
                         const placingRigid = placingElement.getProjection() === "rigid"
                         const placingStructure = await placingElement.getStructure();
@@ -194,8 +195,8 @@ export class JigsawGenerator {
                             const rotatedPlacingStructure = new RotatedStructure(placingStructure, rotation)
 
                             const size = placingStructure.getSize();
-                            const placingJigsasPos: BlockPos = placingBlock.pos;
-                            const rotatedPlacingJigsawPos: BlockPos = rotatedPlacingStructure.mapPos(placingJigsasPos);
+                            const placingJigsawPos: BlockPos = placingBlock.pos;
+                            const rotatedPlacingJigsawPos: BlockPos = rotatedPlacingStructure.mapPos(placingJigsawPos);
 
                             const offset: BlockPos = [
                                 parentJigsawFacingPos[0] - rotatedPlacingJigsawPos[0],
@@ -204,7 +205,7 @@ export class JigsawGenerator {
                             ];
 
                             if (!parent.rigid || !placingRigid) {
-                                offset[1] = this.heightmap.getHeight(parentJigsasPos[0], parentJigsasPos[2]) - rotatedPlacingJigsawPos[1]
+                                offset[1] = this.heightmap.getHeight(parentJigsawPos[0], parentJigsawPos[2]) - rotatedPlacingJigsawPos[1]
                             }
 
                             const newSize: BlockPos = [size[0], size[1], size[2]]
@@ -248,7 +249,7 @@ export class JigsawGenerator {
                         "joint": target,
                         "joint_type": (forward == "up" || forward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
                         "depth": this.depth - parent.depth + 1,
-                        "jigsaw_pos": parentJigsasPos
+                        "jigsaw_pos": parentJigsawPos
                     }
 
                     console.warn(error_message)
