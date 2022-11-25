@@ -24,7 +24,7 @@ type Piece = {
     structure: StructureProvider & AnnotationProvider,
     pos: BlockPos,
     pieceInfo: PieceInfo,
-    failedPieces: (StructureProvider & AnnotationProvider) [],
+    failedPieces: {name: string, piece: (StructureProvider & AnnotationProvider)}[],
 }
 
 
@@ -132,7 +132,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         return undefined
     }
 
-    public addPiece(structure: StructureProvider & AnnotationProvider, pos: BlockPos, annotation: PieceInfo | undefined, failedPieces: (StructureProvider & AnnotationProvider)[]): number {
+    public addPiece(structure: StructureProvider & AnnotationProvider, pos: BlockPos, annotation: PieceInfo | undefined, failedPieces: {name: string, piece: (StructureProvider & AnnotationProvider)}[]): number {
 
         const size = structure.getSize()
 

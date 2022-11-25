@@ -55,7 +55,7 @@ export class JigsawGenerator {
 
     public async generate(): Promise<void> {
         const pool = await TemplatePool.fromName(this.datapack, this.startingPool, false) // starting pool has no expansion hack (TODO: check this ingame)
-        const poolElement = pool.getShuffeledElements().pop()
+        const poolElement = pool.getShuffeledElements()[0]
         
         const startRotation = getRandomInt(4) as Rotation
 
@@ -134,7 +134,7 @@ export class JigsawGenerator {
                 const rollable: boolean = block.nbt.getString("joint") === "rollable";
                 const target: string = block.nbt.getString("target")
 
-                const failedPieces: (StructureProvider & AnnotationProvider)[] = []
+                const failedPieces: {name: string, piece: (StructureProvider & AnnotationProvider)}[] = []
 
                 try {
                     var using_fallback = false
@@ -214,13 +214,13 @@ export class JigsawGenerator {
                             const placingBB = new BoundingBox(offset, newSize);
 
                             if (!placingBB.containedIn(this.world.getBB(inside), false)){
-                                failedPieces.push(new OffsetStructure(rotatedPlacingStructure, offset))
+                                failedPieces.push({name: placingElement.getShortDescription(), piece: new OffsetStructure(rotatedPlacingStructure, offset)})
                                 continue
                             }
 
                             for (let l = 0; l < check.length; l++) {
                                 if (placingBB.intersects(this.world.getBB(check[l]))){
-                                    failedPieces.push(new OffsetStructure(rotatedPlacingStructure, offset))
+                                    failedPieces.push({name: placingElement.getShortDescription(), piece: new OffsetStructure(rotatedPlacingStructure, offset)})
                                     continue nextPlacingJigsawBlocks
                                 }
                             }

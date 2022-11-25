@@ -45,4 +45,8 @@ export class FeaturePoolElement extends PoolElement {
   "projection": "` + this.projection + `"
 }`;
     }
+
+    public getShortDescription(): string {
+        return `[feature] ${this.feature}`
+    }
 }

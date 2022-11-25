@@ -15,6 +15,8 @@ export abstract class PoolElement{
     public abstract getType(): string
 
     public abstract getDescription(): string
+
+    public abstract getShortDescription(): string
 }
 
 import { SinglePoolElement } from "./SinglePoolElement";

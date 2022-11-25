@@ -10,7 +10,29 @@ export function shuffleArray<T>(array: T[]): T[] {
 }
 
 export function weightedShuffleArray<T>(array: {weight: number, element: T}[]): T[] {
-  return array.map(a => {return {element: a.element, k: Math.random() ** (1/a.weight)}}).sort((a, b) => b.k - a.k).map(a => a.element)
+
+  /*
+  const result: T[] = []
+  
+  const _array: {weight: number, element: T}[] = array.map(a=>a)
+
+  while (_array.length > 0){
+    const total_weight = _array.reduce((s, e) => s + e.weight, 0)
+    
+    const select = Math.random() * total_weight
+    var running_weight = 0
+    for (var e = 0; e < _array.length ; e++){
+      running_weight += _array[e].weight
+      if (running_weight > select){
+        result.push(_array[e].element)
+        _array.splice(e, 1)
+      }
+    }
+  }
+  return result
+  */
+
+  return array.map(a => {return {element: a.element, k: Math.pow(Math.random(), 1/a.weight)}}).sort((a, b) => b.k - a.k).map(a => a.element)
 }
 
 export function getRandomInt(max: number): number {

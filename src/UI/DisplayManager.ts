@@ -1,3 +1,4 @@
+import { clamp } from "deepslate"
 import { JigsawStructure } from "../Jigsaw/JigsawStructure"
 
 
@@ -48,37 +49,19 @@ export class DisplayManager{
         this.jigsawStructure.setLastStep(this.step)
     }
 
-    public startFailed(): void {
-        this.failedStep = 0
-        this.jigsawStructure.setLastStep(this.step - 1)
+    public toggleFailedStep(failedStep: number): void {
+        if (this.failedStep === failedStep){
+            this.successfullStep()
+        } else {
+            this.failedStep = clamp(failedStep, 0, this.jigsawStructure.getPiece(this.step - 1).failedPieces.length - 1)
+            this.jigsawStructure.setLastStep(this.step - 1)
+        }
     }
 
     public successfullStep(): void {
         this.failedStep = -1
         this.jigsawStructure.setLastStep(this.step)
     }
-
-    public nextFailedStep(): void {
-        this.failedStep = Math.min(this.failedStep + 1, this.jigsawStructure.getPiece(this.step - 1).failedPieces.length - 1)
-        this.jigsawStructure.setLastStep(this.step - 1)
-    }
-
-    public prevFailedStep(): void {
-        this.failedStep = Math.max(this.failedStep - 1, 0)
-        this.jigsawStructure.setLastStep(this.step - 1)
-    }
-
-    public firstFailedStep(): void {
-        this.failedStep = 0
-        this.jigsawStructure.setLastStep(this.step)
-    }
-
-    public lastFailedStep(): void {  
-        this.failedStep = this.jigsawStructure.getPiece(this.step - 1).failedPieces.length - 1
-        this.jigsawStructure.setLastStep(this.step)
-    }
-
-
 
     public getStep(): number {
         return this.step

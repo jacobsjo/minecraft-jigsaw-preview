@@ -54,11 +54,6 @@
       <span class="text" id="step">&nbsp;</span></span>
       <span class="button" id="next"> &gt; </span>
       <span class="button" id="last"> &gt;&gt;| </span>&nbsp;&nbsp;&nbsp;&nbsp;
-      <span class="button" id="failing"> ? </span>
-      <span class="button hidden" id="failing_first"> |&lt;&lt; </span>
-      <span class="button hidden" id="failing_prev"> &lt; </span>
-      <span class="button hidden" id="failing_next"> &gt; </span>
-      <span class="button hidden" id="failing_last"> &gt;&gt;| </span>
     </div>
     <div class="infopanel info hidden">
       <div class="title" id="templete-pool"></div>
@@ -66,6 +61,10 @@
       <div class="text"><pre><code id="element"></code></pre></div>
       <div class="text"><span class="label">Depth: </span> <span id="depth"></span></div>
       <div class="text hidden" id="joint-div"><span class="label">Joint: </span> <span class="name" id="joint"></span> <span id="joint_type"></span></div>
+      <hr class="dashed">
+      <div class="label" id="failedLabel">Failed prior attemps:</div>
+      <ui class="list" id="failed">
+      </ui>
     </div>
     <div class="infopanel heightmap-selector hidden">
       <div class="title">Select a heightmap to use</div>

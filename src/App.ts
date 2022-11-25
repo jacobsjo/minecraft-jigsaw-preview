@@ -18,6 +18,7 @@ import { ImageHeightmap } from './Heightmap/ImageHeightmap';
 import { DisplayManager } from './UI/DisplayManager';
 import { OffsetStructure } from './Structure/OffsetStructure';
 import { StructureRenderer } from './Renderer/StructureRenderer';
+import * as d3 from 'd3';
 
 declare global {
   interface Window {
@@ -77,13 +78,6 @@ async function main() {
     last: document.querySelector('.ui .button#last'),
   }
 
-  const failing_nav_buttons = {
-    enable: document.querySelector('.ui .button#failing'),
-    first: document.querySelector('.ui .button#failing_first'),
-    prev: document.querySelector('.ui .button#failing_prev'),
-    next: document.querySelector('.ui .button#failing_next'),
-    last: document.querySelector('.ui .button#failing_last'),
-  }
 
   const setting_buttons = {
     bb: document.querySelector('.button#bb'),
@@ -244,18 +238,27 @@ async function main() {
     nav_buttons.next.classList.toggle("enabled", step < maxSteps)
     nav_buttons.last.classList.toggle("enabled", step < maxSteps)
 
-    failing_nav_buttons.enable.classList.toggle("enabled", maxFailingSteps > 0)
-    failing_nav_buttons.enable.classList.toggle("opened", failing_step >= 0)
+    const failedPieceLi = d3.select("ui.list#failed")
+      .selectAll("li")
+      .data(structure.getPiece(step - 1).failedPieces.map((d, nr) => {return {name: d.name, nr: nr}}))
 
-    failing_nav_buttons.first.classList.toggle("hidden", failing_step === -1)
-    failing_nav_buttons.prev.classList.toggle("hidden", failing_step === -1)
-    failing_nav_buttons.next.classList.toggle("hidden", failing_step === -1)
-    failing_nav_buttons.last.classList.toggle("hidden", failing_step === -1)
+    failedPieceLi
+      .join("li")
+      .classed("item", true)
+      .text(d => d.name)
+      .on("click", (evt, d) => {
+        display.toggleFailedStep(d.nr)
+        const bb = structure.getBoundingBoxes(display.getStep() - 1)[0]
+        refreshStructure(bb)
+        requestAnimationFrame(render)
+      })
+      .classed("selected", d => d.nr === display.getFailedStep())
 
-    failing_nav_buttons.first.classList.toggle("enabled", failing_step > 0)
-    failing_nav_buttons.prev.classList.toggle("enabled", failing_step > 0)
-    failing_nav_buttons.next.classList.toggle("enabled", failing_step < maxFailingSteps - 1)
-    failing_nav_buttons.last.classList.toggle("enabled", failing_step < maxFailingSteps - 1)
+    failedPieceLi
+      .exit()
+      .remove()
+
+    d3.select("#failedLabel").classed("hidden", structure.getPiece(step - 1).failedPieces.length === 0)
 
     stepDisplay.innerHTML = step + " / " + maxSteps
 
@@ -307,9 +310,9 @@ async function main() {
 
     //renderer.drawGrid(viewMatrix);
     renderer.drawStructure(viewMatrix);
-    console.log(structure.getPiece(display.getStep()-1).failedPieces)
+    //console.log(structure.getPiece(display.getStep()-1).failedPieces)
     if (display.getFailedStep() >= 0){
-      failedRenderer.setStructure(structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()])
+      failedRenderer.setStructure(structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()].piece)
       failedRenderer.drawTintedStructure(viewMatrix)
     }
 
@@ -317,7 +320,7 @@ async function main() {
       checkBBs.forEach(bb => bbRenderer.drawBB(viewMatrix, bb, 2))
       bbRenderer.drawBB(viewMatrix, insideBB, 1)
       if (display.getFailedStep() >= 0){
-        const failedPiece = structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()] as OffsetStructure
+        const failedPiece = structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()].piece as OffsetStructure
         bbRenderer.drawBB(viewMatrix, new BoundingBox(failedPiece.getOffset(), failedPiece.getSize()), 0)
       } else {
         bbRenderer.drawBB(viewMatrix, ownBB, 0)
@@ -470,7 +473,15 @@ async function main() {
    */
 
   function next() {
+
+    if (display.getFailedStep() >= 0){
+      display.successfullStep()
+      const bb = structure.getBoundingBoxes(display.getStep() - 1)[0]
+      refreshStructure(bb)
+    }
+
     display.nextStep()
+
     const bb = structure.getBoundingBoxes(display.getStep() - 1)[0]
     refreshStructure(bb)
     requestAnimationFrame(render)
@@ -501,41 +512,6 @@ async function main() {
   nav_buttons.last.addEventListener("click", async () => {
     display.lastStep()
     refreshStructure()
-    requestAnimationFrame(render)
-  })
-
-  failing_nav_buttons.enable.addEventListener("click", async () => {
-    const bb = structure.getBoundingBoxes(display.getStep() - 1)[0]
-    if (display.getFailedStep() === -1){
-      display.startFailed()
-    } else {
-      display.successfullStep()
-    }
-    refreshStructure(bb)
-    requestAnimationFrame(render)
-  })
-
-  failing_nav_buttons.first.addEventListener("click", async () => {
-    display.firstFailedStep()
-    refreshStructure(null)
-    requestAnimationFrame(render)
-  })
-
-  failing_nav_buttons.prev.addEventListener("click", async () => {
-    display.prevFailedStep()
-    refreshStructure(null)
-    requestAnimationFrame(render)
-  })
-
-  failing_nav_buttons.next.addEventListener("click", async () => {
-    display.nextFailedStep()
-    refreshStructure(null)
-    requestAnimationFrame(render)
-  })
-
-  failing_nav_buttons.last.addEventListener("click", async () => {
-    display.lastFailedStep()
-    refreshStructure(null)
     requestAnimationFrame(render)
   })
 

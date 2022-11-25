@@ -91,4 +91,8 @@ export class SinglePoolElement extends PoolElement {
   "projection": "` + this.projection + `"
 }` + this.expansionHackString;
     }
+
+    public getShortDescription(): string {
+        return this.id.toString()
+    }
 }

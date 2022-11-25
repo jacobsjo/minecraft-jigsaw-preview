@@ -8,6 +8,11 @@ body {
   overflow: hidden;
 }
 
+hr {
+  border: 0;
+  height: 15pt;
+}
+
 .sidebar {
   position: absolute;
   top: 0pt;
@@ -54,6 +59,15 @@ body {
   background-color: rgba(0, 0, 0, 0.5);
   color: white;
   padding: 10pt;
+}
+
+.infopanel .list#failed{
+  display: block;
+  padding-top: 0;
+  max-height: 40vh;
+  overflow: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 .info #fallback_from {

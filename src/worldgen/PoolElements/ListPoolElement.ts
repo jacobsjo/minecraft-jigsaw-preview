@@ -49,11 +49,15 @@ export class ListPoolElement extends PoolElement {
         return `{
   "element_type": "minecraft:list_pool_element",
   "elements": [
-` + this.pool_elements.map(async (e) => {
+` + this.pool_elements.map((e) => {
             return "    " + e.getDescription().split("\n").join("\n    ");
         }).join(",\n") + `
   ],
   "projection": "` + this.projection + `"
 }`;
+    }
+
+    public getShortDescription(): string {
+        return `[list] ${this.pool_elements[0].getShortDescription()} et al.`
     }
 }

@@ -26,4 +26,8 @@ export class EmptyPoolElement extends PoolElement {
   "element_type": "minecraft:empty_pool_element"
 }`;
     }
+
+    public getShortDescription(): string {
+        return `[empty]`
+    }
 }
