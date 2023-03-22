@@ -34,10 +34,10 @@
   },
   "dependencies": {
     "d3": "^7.6.1",
-    "deepslate": "^0.15.2",
+    "deepslate": "^0.17.4",
     "gl-matrix": "^3.4.3",
     "jszip": "^3.10.1",
-    "mc-datapack-loader": "file://",
+    "mc-datapack-loader": "0.1.5",
     "path": "^0.12.7"
   }
 }

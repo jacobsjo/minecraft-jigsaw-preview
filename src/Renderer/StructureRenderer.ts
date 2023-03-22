@@ -77,8 +77,8 @@ export class StructureRenderer extends Renderer {
 		this.setTexture(this.atlasTexture)
 		this.prepareDraw(viewMatrix)
 
-		this.chunkBuilder.getBuffers().forEach(buffer => {
-			this.drawBuffers(buffer)
+		this.chunkBuilder.getMeshes().forEach(mesh => {
+			this.drawMesh(mesh, { pos: true, color: true, texture: true, normal: true })
 		})
 	}
 
@@ -86,8 +86,8 @@ export class StructureRenderer extends Renderer {
 		this.setShader(this.tintedShaderProgram)
 		this.prepareDraw(viewMatrix)
 
-		this.chunkBuilder.getBuffers().forEach(buffer => {
-			this.drawBuffers(buffer)
+		this.chunkBuilder.getMeshes().forEach(mesh => {
+			this.drawMesh(mesh, { pos: true, color: true, texture: true, normal: true })
 		})
 	}
 }

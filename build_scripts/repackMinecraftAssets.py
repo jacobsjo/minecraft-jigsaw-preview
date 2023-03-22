@@ -31,6 +31,7 @@ def extractJar(version: str, version_manifest):
                        or file.startswith('data/minecraft/structures/village/') \
                        or file.startswith('data/minecraft/structures/bastion/') \
                        or file.startswith('data/minecraft/structures/ancient_city/') \
+                       or file.startswith('data/minecraft/structures/trail_ruins/') \
                        or file.startswith('data/minecraft/worldgen/'):
                   jar_archive.extract(file, "/tmp/minecraft/" + version + "/")
 
@@ -98,4 +99,4 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    createZips("1.17.1", "1_17")
    createZips("1.18.2", "1_18")
    createZips("1.19.2", "1_19")
-   createZips("snapshot", "1_19_3")
+   createZips("snapshot", "1_20")
