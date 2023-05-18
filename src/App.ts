@@ -89,8 +89,6 @@ async function main() {
     //download: document.querySelector('.button#download-image'),
   }
 
-  const about_link = document.querySelector('.link#about')
-
   const heightmap_entries = document.querySelectorAll('.heightmap-selector li.item')
 
   const stepDisplay = document.querySelector('.ui .text#step')
@@ -112,9 +110,6 @@ async function main() {
   const infoDepth = document.querySelector('.info #depth')
 
   const heightmapPanel = document.querySelector('.heightmap-selector')
-
-  const popupPanel = document.querySelector('.popup')
-  const popupClosingX = document.querySelector('.popup .closing_x')
 
   if (!gl) {
     throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.')
@@ -578,14 +573,6 @@ async function main() {
     link.href = canvas.toDataURL()
     link.click();
   })*/
-
-  about_link.addEventListener("click", () => {
-    popupPanel.classList.remove("hidden")
-  })
-
-  popupClosingX.addEventListener("click", () => {
-    popupPanel.classList.add("hidden")
-  })
 
   function toggleRenderedType(type: string): boolean {
     const has = renderedTypes.has(type)
