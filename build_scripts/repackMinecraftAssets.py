@@ -93,10 +93,12 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    extractJar("1.19.2", version_manifest)
    extractWorldgenZip('1.19.2')
 
-   extractJar("snapshot", version_manifest)
+   extractJar("1.20", version_manifest)
+
+   # extractJar("snapshot", version_manifest)
 
    createZips("1.16.5", "1_16")
    createZips("1.17.1", "1_17")
    createZips("1.18.2", "1_18")
    createZips("1.19.2", "1_19")
-   createZips("snapshot", "1_20")
+   createZips("1.20", "1_20")

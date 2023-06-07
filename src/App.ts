@@ -47,7 +47,7 @@ async function main() {
   //const version = "release"
   let mc_version = urlParams.get('version')
   if (!MINECRAFT_VERSIONS.includes(mc_version)) {
-    mc_version = '1_19'
+    mc_version = '1_20'
   }
 
   const version_select = document.querySelector<HTMLSelectElement>('.sidebar select#version-select')
