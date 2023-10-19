@@ -1,9 +1,8 @@
-import { Identifier } from 'deepslate';
+import { Identifier, Json } from 'deepslate';
 import { Datapack, DataType } from 'mc-datapack-loader';
-import * as path from 'path';
-import { start } from 'repl';
 import { JigsawStructureFeature } from './JisgasStructureFeature';
 import { LegacyJigsawStructureFeature } from './LegacyJisgasStructureFeature';
+import { PoolAliasBinding } from './PoolAlias';
 
 const LEGACY_STRUCUTE_TYPES = ['minecraft:village', 'minecraft:pillager_outpost', 'minecraft:bastion_remnant']
 
@@ -15,6 +14,7 @@ export interface StructureFeature {
     doExpansionHack(): boolean
     getRadius(): number
     getStartJigsawName(): string | undefined
+    getPoolAliases(): PoolAliasBinding[]
 }
 
 export namespace StructureFeature {
@@ -44,7 +44,7 @@ export namespace StructureFeature {
                 }
 
 
-                if (version === "default" && json.type === "minecraft:jigsaw") {
+                if (version === "default" && (Identifier.parse(json.type).equals(Identifier.create("jigsaw")))) {
                     if (json.start_height === undefined || json.start_pool === undefined || json.use_expansion_hack === undefined || json.size === undefined) {
                         console.warn(`Missing config in structure ${id.toString()} - ignoring`)
                         continue;
@@ -53,11 +53,22 @@ export namespace StructureFeature {
                     //TODO read height provider
                     var start_height = 30
 
-                    features.push(new JigsawStructureFeature(id, start_height, json.use_expansion_hack, Identifier.parse(json.start_pool), json.size, json.max_distance_from_center, json.project_start_to_heightmap, json.start_jigsaw_name))
+                    features.push(new JigsawStructureFeature(
+                        id,
+                        start_height,
+                        json.use_expansion_hack,
+                        Identifier.parse(json.start_pool),
+                        json.size,
+                        json.max_distance_from_center,
+                        json.project_start_to_heightmap,
+                        json.start_jigsaw_name,
+                        json.pool_aliases ? Json.readArray(json.pool_aliases, PoolAliasBinding.fromJson) : []
+                    ))
                 }
 
             } catch (e) {
                 console.warn(`Cound not Parse JSON File ${id.toString()} - ignoring`)
+                console.warn(e)
             }
         }
 

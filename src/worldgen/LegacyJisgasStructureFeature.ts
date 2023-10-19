@@ -1,5 +1,6 @@
 import { Identifier } from 'deepslate';
 import * as path from 'path';
+import { PoolAliasBinding } from './PoolAlias';
 import { StructureFeature } from './StructureFeature';
 
 export class LegacyJigsawStructureFeature implements StructureFeature{
@@ -36,6 +37,10 @@ export class LegacyJigsawStructureFeature implements StructureFeature{
 
     public getStartJigsawName(): string | undefined {
         return undefined
+    }
+
+    public getPoolAliases(): PoolAliasBinding[] {
+        return []
     }
 
 }

@@ -1,5 +1,5 @@
 
-import { BlockPos, StructureProvider } from 'deepslate';
+import { BlockPos, LegacyRandom, StructureProvider } from 'deepslate';
 import { PieceInfo, JigsawStructure } from './JigsawStructure';
 import { TemplatePool } from '../worldgen/TemplatePool';
 import { shuffleArray, getRandomInt, directionRelative } from '../Util/util'
@@ -13,6 +13,7 @@ import { Rotation } from '../Util/Rotation';
 import { RotatedStructure } from '../Structure/RotatedStructure';
 import { AnnotationProvider } from '../Structure/AnnotationProvider';
 import { OffsetStructure } from '../Structure/OffsetStructure';
+import { PoolAliasBinding, PoolAliasLookup } from '../worldgen/PoolAlias';
 
 
 export class JigsawGenerator {
@@ -26,7 +27,8 @@ export class JigsawGenerator {
         private startingY: number | "heightmap",
         private radius: number,
         private heightmap: Heightmap,
-        private startJisawName: string | undefined
+        private startJisawName: string | undefined,
+        private poolAliases: PoolAliasBinding[]
     ) {
         this.world = new JigsawStructure()
     }
@@ -54,7 +56,9 @@ export class JigsawGenerator {
     }
 
     public async generate(): Promise<void> {
-        const pool = await TemplatePool.fromName(this.datapack, this.startingPool, false) // starting pool has no expansion hack (TODO: check this ingame)
+        const aliasLookup = PoolAliasLookup.build(this.poolAliases, new LegacyRandom(BigInt(Date.now())))
+
+        const pool = await TemplatePool.fromName(this.datapack, this.startingPool, false) // starting pool has no expansion hack; and no pool aliasing (MC-265908)
         const poolElement = pool.getShuffeledElements()[0]
         
         const startRotation = getRandomInt(4) as Rotation
@@ -141,7 +145,8 @@ export class JigsawGenerator {
                 try {
                     var using_fallback = false
 
-                    const pool: TemplatePool = await TemplatePool.fromName(this.datapack, Identifier.parse(block.nbt.getString("pool")), this.doExpansionHack);
+                    const poolId = aliasLookup.lookup(Identifier.parse(block.nbt.getString("pool")))
+                    const pool: TemplatePool = await TemplatePool.fromName(this.datapack, poolId, this.doExpansionHack);
                     const fallbackPool: TemplatePool = await TemplatePool.fromName(this.datapack, pool.fallback, this.doExpansionHack);
 
                     const poolElements = (parent.depth > 0 ? pool.getShuffeledElements() : [])
@@ -266,6 +271,6 @@ export class JigsawGenerator {
     }
 
     public static fromStructureFeature(datapack: Datapack, feature: StructureFeature, heightmap: Heightmap) {
-        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap, feature.getStartJigsawName())
+        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases())
     }
 }

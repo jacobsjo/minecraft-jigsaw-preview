@@ -1,5 +1,6 @@
 import { Identifier } from 'deepslate';
 import * as path from 'path';
+import { PoolAliasBinding } from './PoolAlias';
 import { StructureFeature } from './StructureFeature';
 
 export class JigsawStructureFeature implements StructureFeature{
@@ -11,7 +12,8 @@ export class JigsawStructureFeature implements StructureFeature{
         private size: number,
         private radius: number,
         private project_start_to_heightmap?: string,
-        private start_jigsaw_name?: string
+        private start_jigsaw_name?: string,
+        private pool_aliases?: PoolAliasBinding[]
     ){
         if (size > 7){
             console.warn("size > 7 is not supported by vanilla minecraft")
@@ -49,6 +51,10 @@ export class JigsawStructureFeature implements StructureFeature{
 
     public getStartJigsawName(): string | undefined{
         return this.start_jigsaw_name
+    }
+
+    public getPoolAliases(): PoolAliasBinding[] {
+        return this.pool_aliases
     }
 
 }
