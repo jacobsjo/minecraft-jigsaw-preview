@@ -70,7 +70,7 @@ hr {
   scroll-behavior: smooth;
 }
 
-.info #fallback_from {
+.info #fallback_from, .info #aliased_from {
   font-size: smaller;
 }
 

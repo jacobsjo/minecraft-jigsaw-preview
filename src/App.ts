@@ -103,6 +103,7 @@ async function main() {
   const infoPanel = document.querySelector('.info')
   const infoTempletePool = document.querySelector('.info #templete-pool')
   const infoFallbackFrom = document.querySelector('.info #fallback_from')
+  const infoAliasedFrom = document.querySelector('.info #aliased_from')
   const infoElement = document.querySelector('.info #element')
   const infoJointDiv = document.querySelector('.info #joint-div')
   const infoJoint = document.querySelector('.info #joint')
@@ -136,6 +137,7 @@ async function main() {
     joint_type: undefined,
     pool: new Identifier("welcome", "jigsaw"),
     fallback_from: undefined,
+    aliased_from: undefined,
     depth: 0,
     jigsaw_pos: undefined
   }
@@ -266,6 +268,7 @@ async function main() {
 
     infoTempletePool.innerHTML = annotation.pool.toString()
     infoFallbackFrom.innerHTML = annotation.fallback_from ? "Fallback from " + annotation.fallback_from : ""
+    infoAliasedFrom.innerHTML = annotation.aliased_from ? "Aliased from " + annotation.aliased_from : ""
     infoElement.innerHTML = annotation.element
     if (annotation.joint) {
       infoJoint.innerHTML = annotation.joint

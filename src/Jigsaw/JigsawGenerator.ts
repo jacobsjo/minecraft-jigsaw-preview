@@ -78,6 +78,7 @@ export class JigsawGenerator {
 
             pool: this.startingPool,
             fallback_from: undefined,
+            aliased_from: undefined,
             element: poolElement.getDescription(),
             element_type: poolElement.getType(),
             joint: undefined,
@@ -145,7 +146,8 @@ export class JigsawGenerator {
                 try {
                     var using_fallback = false
 
-                    const poolId = aliasLookup.lookup(Identifier.parse(block.nbt.getString("pool")))
+                    const poolAlias = Identifier.parse(block.nbt.getString("pool"))
+                    const poolId = aliasLookup.lookup(poolAlias)
                     const pool: TemplatePool = await TemplatePool.fromName(this.datapack, poolId, this.doExpansionHack);
                     const fallbackPool: TemplatePool = await TemplatePool.fromName(this.datapack, pool.fallback, this.doExpansionHack);
 
@@ -165,7 +167,8 @@ export class JigsawGenerator {
                             "check": Object.assign([], check),
                             "inside": inside,
 
-                            "pool": using_fallback ? pool.fallback : Identifier.parse(block.nbt.getString("pool")),
+                            "pool": using_fallback ? pool.fallback : poolId,
+                            "aliased_from": poolAlias.equals(poolId) ? undefined : poolAlias,
                             "fallback_from": using_fallback ? Identifier.parse(block.nbt.getString("pool")) : undefined,
                             "element": placingElement.getDescription(),
                             "element_type": placingElement.getType(),
@@ -248,6 +251,7 @@ export class JigsawGenerator {
                         "inside": inside,
 
                         "pool": using_fallback ? pool.fallback : Identifier.parse(block.nbt.getString("pool")),
+                        "aliased_from": undefined,
                         "fallback_from": using_fallback ? Identifier.parse(block.nbt.getString("pool")) : undefined,
                         "element": error_message,
                         "element_type": "error" ,

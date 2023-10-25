@@ -12,6 +12,7 @@ export type PieceInfo = {
     inside: number | undefined,
 
     pool: Identifier | undefined,
+    aliased_from: Identifier | undefined
     fallback_from: Identifier | undefined,
     element: string | undefined,
     element_type: string | undefined,
