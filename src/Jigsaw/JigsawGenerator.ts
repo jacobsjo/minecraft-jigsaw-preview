@@ -14,7 +14,12 @@ import { RotatedStructure } from '../Structure/RotatedStructure';
 import { AnnotationProvider } from '../Structure/AnnotationProvider';
 import { OffsetStructure } from '../Structure/OffsetStructure';
 import { PoolAliasBinding, PoolAliasLookup } from '../worldgen/PoolAlias';
+import { SequencedPriorityList } from '../Util/SequencedPriorityList';
 
+
+type PlacementInfo = { "piece": number, "check": number[], "inside": number | undefined, "rigid": boolean, "depth": number }
+
+const JIGSAW = Identifier.create("jigsaw")
 
 export class JigsawGenerator {
     private world: JigsawStructure
@@ -103,24 +108,28 @@ export class JigsawGenerator {
         }
 
         const startingPieceNr = this.world.addPiece(startingPiece, start_pos, annotation, [])
-        const placing: { "piece": number, "check": number[], "inside": number | undefined, "rigid": boolean, "depth": number }[]
-            = [{ "piece": startingPieceNr, "check": [startingPieceNr], "inside": undefined, "rigid": poolElement.getProjection() === "rigid", "depth": this.depth }]
+        const placing = new SequencedPriorityList<PlacementInfo>()
+        
+        const startingPieceElement: PlacementInfo = { "piece": startingPieceNr, "check": [startingPieceNr], "inside": undefined, "rigid": poolElement.getProjection() === "rigid", "depth": this.depth }
 
-        while (placing.length > 0) {
-            const parent = placing.shift()
-
+        for (var parent = startingPieceElement; parent !== undefined ; parent = placing.getNext()) {
             const bb = this.world.getBB(parent.piece)
             //getElementBlocks returns blocks rotated and moved correctly
 
             const checkInsideList: number[] = []
-            const jigsawBlocks = shuffleArray(this.world.getPiece(parent.piece).structure.getBlocks().filter(block => { return block.state.getName().namespace === "minecraft" && block.state.getName().path === "jigsaw"; })).map(block => {
+            //TODO!!!
+            const jigsawBlocks = this.world.getPiece(parent.piece).structure.getBlocks().filter(block => { return block.state.getName().equals(JIGSAW) }).map(block => {
                 return {
                     pos: [block.pos[0] + bb.min[0], block.pos[1] + bb.min[1], block.pos[2] + bb.min[2]] as BlockPos,
                     state: block.state,
-                    nbt: block.nbt
+                    nbt: block.nbt,
+                    selection_priority: block.nbt.has("selection_priority") ? block.nbt.getNumber("selection_priority") : 0
                 }
             })
-            for (const block of jigsawBlocks) {
+
+            const orderedJigsawBlock = shuffleArray(jigsawBlocks).sort((a, b) => b.selection_priority - a.selection_priority)
+
+            for (const block of orderedJigsawBlock) {
 
                 const orientation: string = block.state.getProperties()['orientation'] ?? 'north_up';
                 const [forward, up] = orientation.split("_");
@@ -140,6 +149,7 @@ export class JigsawGenerator {
 
                 const rollable: boolean = block.nbt.getString("joint") === "rollable";
                 const target: string = block.nbt.getString("target")
+                const placement_priority: number = block.nbt.has("placement_priority") ? block.nbt.getNumber("placement_priority") : 0
 
                 const failedPieces: {name: string, piece: (StructureProvider & AnnotationProvider)}[] = []
 
@@ -239,7 +249,7 @@ export class JigsawGenerator {
 
                             const placingNr = this.world.addPiece(rotatedPlacingStructure, offset, annotation, failedPieces);
                             check.push(placingNr);
-                            placing.push({ "piece": placingNr, "check": check, "inside": inside, "rigid": placingRigid, "depth": parent.depth - 1 });
+                            placing.add({ "piece": placingNr, "check": check, "inside": inside, "rigid": placingRigid, "depth": parent.depth - 1 }, placement_priority);
                             break try_all_pool_element // successfully placed structure, don't try more
                         }
                     }
