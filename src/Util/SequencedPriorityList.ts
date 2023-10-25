@@ -13,7 +13,8 @@ export class SequencedPriorityList<T> {
     }
 
     public getNext(){
-        return [...this.valuesByPriority.entries()].reduce((prev, curr) => prev[0] < curr[0] && curr[1].length > 0 ? prev : curr)[1].shift()
+        console.log(this.valuesByPriority)
+        return [...this.valuesByPriority.entries()].reduce((prev, curr) => prev[0] > curr[0] || curr[1].length === 0 ? prev : curr)[1].shift()
     }
 
 }
