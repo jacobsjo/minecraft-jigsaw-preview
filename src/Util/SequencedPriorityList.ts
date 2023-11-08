@@ -13,6 +13,9 @@ export class SequencedPriorityList<T> {
     }
 
     public getNext(){
+        if (this.valuesByPriority.size === 0){
+            return undefined
+        }
         return [...this.valuesByPriority.entries()].reduce((prev, curr) => prev[0] > curr[0] || curr[1].length === 0 ? prev : curr)[1].shift()
     }
 

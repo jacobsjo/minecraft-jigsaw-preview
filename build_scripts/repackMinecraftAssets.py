@@ -21,19 +21,25 @@ def extractJar(version: str, version_manifest):
       jar_url = version_json['downloads']['client']['url']
       with urlopen(jar_url) as jar_data:
          with ZipFile(BytesIO(jar_data.read())) as jar_archive:
-            for file in jar_archive.namelist():
-               if file.startswith('assets/minecraft/blockstates/') \
-                       or file.startswith('assets/minecraft/models/block/') \
-                       or file.startswith('assets/minecraft/textures/block/') \
-                       or file.startswith('assets/minecraft/textures/block/') \
-                       or file.startswith('assets/minecraft/textures/entity/chest/') \
-                       or file.startswith('data/minecraft/structures/pillager_outpost/') \
-                       or file.startswith('data/minecraft/structures/village/') \
-                       or file.startswith('data/minecraft/structures/bastion/') \
-                       or file.startswith('data/minecraft/structures/ancient_city/') \
-                       or file.startswith('data/minecraft/structures/trail_ruins/') \
-                       or file.startswith('data/minecraft/worldgen/'):
+            for file in jar_archive.infolist():
+               if file.is_dir():
+                  continue
+               if file.filename.startswith('assets/minecraft/blockstates/') \
+                       or file.filename.startswith('assets/minecraft/models/block/') \
+                       or file.filename.startswith('assets/minecraft/textures/block/') \
+                       or file.filename.startswith('assets/minecraft/textures/block/') \
+                       or file.filename.startswith('assets/minecraft/textures/entity/chest/') \
+                       or file.filename.startswith('data/minecraft/structures/pillager_outpost/') \
+                       or file.filename.startswith('data/minecraft/structures/village/') \
+                       or file.filename.startswith('data/minecraft/structures/bastion/') \
+                       or file.filename.startswith('data/minecraft/structures/ancient_city/') \
+                       or file.filename.startswith('data/minecraft/structures/trail_ruins/') \
+                       or file.filename.startswith('data/minecraft/structures/trial_chambers/') \
+                       or file.filename.startswith('data/minecraft/worldgen/'):
                   jar_archive.extract(file, "/tmp/minecraft/" + version + "/")
+               if file.filename.startswith('data/minecraft/datapacks/update_1_21/data/minecraft/worldgen/'):
+                  file.filename = file.filename[37:] 
+                  jar_archive.extract(file, "/tmp/minecraft/" + version + "/" )
 
 # legacy vanilla worldgen zip
 def extractWorldgenZip(version):

@@ -28,10 +28,13 @@ export namespace PoolAliasBinding {
         const type = Json.readString(json.type)
         switch (type){
             case 'direct':
+            case 'minecraft:direct':
                 return new Direct(Identifier.parse(Json.readString(json.alias)), Identifier.parse(Json.readString(json.target)))
             case 'random':
+            case 'minecraft:random':
                 return new Random(Identifier.parse(Json.readString(json.alias)), WeightedRandomList.fromJson(json.targets, (obj: unknown) => Identifier.parse(Json.readString(obj))))
             case 'random_group':
+            case 'minecraft:random_group':
                 return new RandomGroup(WeightedRandomList.fromJson(json.groups, (obj: unknown) => Json.readArray(obj, (obj: unknown) => fromJson(obj))))
             default:
                 throw new Error('invalid pool alias binding type')

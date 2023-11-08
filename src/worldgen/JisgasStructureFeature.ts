@@ -15,8 +15,8 @@ export class JigsawStructureFeature implements StructureFeature{
         private start_jigsaw_name?: string,
         private pool_aliases?: PoolAliasBinding[]
     ){
-        if (size > 7){
-            console.warn("size > 7 is not supported by vanilla minecraft")
+        if (size > 20){
+            console.warn("size > 20 is not supported by vanilla minecraft")
         }
 
         if (radius > 128){
