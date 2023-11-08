@@ -76,6 +76,35 @@ export class ResourceManager implements Resources {
     textures['jigsaw_previewer:annotation/feature'] = await (await fetch("/annotation_icons/feature.png")).blob()
     textures['jigsaw_previewer:annotation/empty'] = await (await fetch("/annotation_icons/empty.png")).blob()
 
+    Object.assign(this.blockModels, {
+      "minecraft:block/jigsaw": BlockModel.fromJson("minecraft:block/jigsaw", {
+        "parent": "block/block",
+        "elements": [
+          {
+            "from": [0, 0, 0],
+            "to": [16, 16, 16],
+            "faces": {
+              "down": { "texture": "#down", "rotation": 180 },
+              "up": { "texture": "#up"},
+              "north": { "texture": "#north" },
+              "south": { "texture": "#south" },
+              "west": { "texture": "#west", "rotation": 270 },
+              "east": { "texture": "#east", "rotation": 90 }
+            }
+          }
+        ],
+        "textures": {
+          "down": "minecraft:block/jigsaw_side",
+          "east": "minecraft:block/jigsaw_side",
+          "north": "minecraft:block/jigsaw_top",
+          "particle": "minecraft:block/jigsaw_top",
+          "south": "minecraft:block/jigsaw_bottom",
+          "up": "minecraft:block/jigsaw_lock",
+          "west": "minecraft:block/jigsaw_side"
+        }
+      })
+    })
+
     this.blockAtlas = await TextureAtlas.fromBlobs(textures)
     Object.values(this.blockModels).forEach(m => m.flatten(this))
   }
