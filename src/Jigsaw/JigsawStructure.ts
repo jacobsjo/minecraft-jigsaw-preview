@@ -19,7 +19,9 @@ export type PieceInfo = {
     joint: string | undefined,
     joint_type: "alligned" | "rollable" | undefined,
     depth: number,
-    jigsaw_pos: BlockPos
+    jigsaw_pos: BlockPos,
+    selection_priority: number,
+    placement_priority: number
 }
 
 type Piece = {

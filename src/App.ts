@@ -109,6 +109,8 @@ async function main() {
   const infoJoint = document.querySelector('.info #joint')
   const infoJointType = document.querySelector('.info #joint_type')
   const infoDepth = document.querySelector('.info #depth')
+  const infoPlacementPriority = document.querySelector('.info #placement_priority')
+  const infoSelectionPriority = document.querySelector('.info #selection_priority')
 
   const heightmapPanel = document.querySelector('.heightmap-selector')
 
@@ -139,7 +141,9 @@ async function main() {
     fallback_from: undefined,
     aliased_from: undefined,
     depth: 0,
-    jigsaw_pos: undefined
+    jigsaw_pos: undefined,
+    placement_priority: 0,
+    selection_priority: 0
   }
   structure.addPiece(structure1, [0, 65, 0], pieceInfo, [])
   structure.setStartingY(64)
@@ -278,6 +282,8 @@ async function main() {
       infoJointDiv.classList.add('hidden')
     }
     infoDepth.innerHTML = annotation.depth.toString()
+    infoSelectionPriority.innerHTML = annotation.selection_priority.toString()
+    infoPlacementPriority.innerHTML = annotation.placement_priority.toString()
   }
 
   function resize() {

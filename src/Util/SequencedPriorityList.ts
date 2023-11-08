@@ -16,7 +16,7 @@ export class SequencedPriorityList<T> {
         if (this.valuesByPriority.size === 0){
             return undefined
         }
-        return [...this.valuesByPriority.entries()].reduce((prev, curr) => prev[0] > curr[0] || curr[1].length === 0 ? prev : curr)[1].shift()
+        return [...this.valuesByPriority.entries()].reduce((prev, curr) => prev[0] > curr[0] || curr[1].length === 0 ? prev : curr, [Number.NEGATIVE_INFINITY, []])[1].shift()
     }
 
 }

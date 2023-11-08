@@ -90,7 +90,9 @@ export class JigsawGenerator {
             joint: undefined,
             joint_type: undefined,
             depth: 0,
-            jigsaw_pos: this.startJisawName ? start_pos : undefined
+            jigsaw_pos: this.startJisawName ? start_pos : undefined,
+            selection_priority: 0,
+            placement_priority: 0
         }
 
         if (this.startJisawName !== undefined){
@@ -186,7 +188,9 @@ export class JigsawGenerator {
                             "joint": target,
                             "joint_type": (forward == "up" || forward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
                             "depth": this.depth - parent.depth + 1,
-                            "jigsaw_pos": parentJigsawPos
+                            "jigsaw_pos": parentJigsawPos,
+                            "selection_priority": block.selection_priority,
+                            "placement_priority": placement_priority
                         }
                         const placingRigid = placingElement.getProjection() === "rigid"
                         const placingStructure = await placingElement.getStructure();
@@ -269,7 +273,9 @@ export class JigsawGenerator {
                         "joint": target,
                         "joint_type": (forward == "up" || forward == "down") ? (rollable ? "rollable" : "alligned") : undefined,
                         "depth": this.depth - parent.depth + 1,
-                        "jigsaw_pos": parentJigsawPos
+                        "jigsaw_pos": parentJigsawPos,
+                        "selection_priority": block.selection_priority,
+                        "placement_priority": placement_priority
                     }
 
                     console.warn(error_message)
