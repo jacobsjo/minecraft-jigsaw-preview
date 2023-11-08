@@ -40,6 +40,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
     private startingY = 0
     private maxRadius = 80
+    private burried = false
 
     private bakedBlocks: Map<string, {
         pos: BlockPos;
@@ -55,6 +56,9 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         this.maxRadius = radius
     }
 
+    public setBurried(burried: boolean){
+        this.burried = burried
+    }
 
     public getBounds(): [BlockPos, BlockPos] {
         return [this.minPos, this.maxPos]
@@ -145,7 +149,11 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         state: BlockState;
         nbt: NbtCompound;
     } {
-        return this.bakedBlocks.get(`${pos[0]}, ${pos[1]}, ${pos[2]}`)
+        return this.bakedBlocks.get(`${pos[0]}, ${pos[1]}, ${pos[2]}`) ?? (this.burried ? {
+            pos: pos,
+            state: BlockState.STONE,
+            nbt: undefined
+        } : undefined)
     }
 
     public addPiece(structure: StructureProvider & AnnotationProvider, pos: BlockPos, annotation: PieceInfo | undefined, failedPieces: {name: string, piece: (StructureProvider & AnnotationProvider)}[]): number {

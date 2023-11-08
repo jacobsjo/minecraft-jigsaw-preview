@@ -33,7 +33,8 @@ export class JigsawGenerator {
         private radius: number,
         private heightmap: Heightmap,
         private startJisawName: string | undefined,
-        private poolAliases: PoolAliasBinding[]
+        private poolAliases: PoolAliasBinding[],
+        private burried: boolean
     ) {
         this.world = new JigsawStructure()
     }
@@ -73,7 +74,7 @@ export class JigsawGenerator {
         const startingPieceY = this.startingY === "heightmap" ? this.heightmap.getHeight(0, 0) - 1 : this.startingY
         this.world.setStartingY(startingPieceY)
         this.world.setMaxRadius(this.radius)
-
+        this.world.setBurried(this.burried)
 
         var start_pos: BlockPos = [0, startingPieceY, 0]
 
@@ -285,6 +286,6 @@ export class JigsawGenerator {
     }
 
     public static fromStructureFeature(datapack: Datapack, feature: StructureFeature, heightmap: Heightmap) {
-        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases())
+        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases(), feature.getTerrainAdaptation() === "bury")
     }
 }

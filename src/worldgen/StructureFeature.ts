@@ -15,6 +15,7 @@ export interface StructureFeature {
     getRadius(): number
     getStartJigsawName(): string | undefined
     getPoolAliases(): PoolAliasBinding[]
+    getTerrainAdaptation(): string
 }
 
 export namespace StructureFeature {
@@ -62,7 +63,8 @@ export namespace StructureFeature {
                         json.max_distance_from_center,
                         json.project_start_to_heightmap,
                         json.start_jigsaw_name,
-                        json.pool_aliases ? Json.readArray(json.pool_aliases, PoolAliasBinding.fromJson) : []
+                        json.pool_aliases ? Json.readArray(json.pool_aliases, PoolAliasBinding.fromJson) : [],
+                        json.terrain_adaptation ?? "none"
                     ))
                 }
 

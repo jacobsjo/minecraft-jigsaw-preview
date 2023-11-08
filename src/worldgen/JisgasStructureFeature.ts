@@ -13,7 +13,8 @@ export class JigsawStructureFeature implements StructureFeature{
         private radius: number,
         private project_start_to_heightmap?: string,
         private start_jigsaw_name?: string,
-        private pool_aliases?: PoolAliasBinding[]
+        private pool_aliases?: PoolAliasBinding[],
+        private terrain_adaptation?: string,
     ){
         if (size > 20){
             console.warn("size > 20 is not supported by vanilla minecraft")
@@ -55,6 +56,10 @@ export class JigsawStructureFeature implements StructureFeature{
 
     public getPoolAliases(): PoolAliasBinding[] {
         return this.pool_aliases
+    }
+
+    public getTerrainAdaptation(): string {
+        return this.terrain_adaptation
     }
 
 }

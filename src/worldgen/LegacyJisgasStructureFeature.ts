@@ -43,4 +43,8 @@ export class LegacyJigsawStructureFeature implements StructureFeature{
         return []
     }
 
+    public getTerrainAdaptation(): string {
+        return "none"
+    }
+
 }
