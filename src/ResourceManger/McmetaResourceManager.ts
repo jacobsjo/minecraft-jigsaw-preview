@@ -1,5 +1,4 @@
 import { BlockDefinition, BlockModel, Identifier, Resources, TextureAtlas, upperPowerOfTwo, UV } from "deepslate";
-import Jimp from "jimp";
 import { getJigsawModel } from "../Util/util";
 import { isOpaque } from "../Util/OpaqueHelper";
 
