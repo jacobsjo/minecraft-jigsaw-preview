@@ -1,4 +1,4 @@
-import { BlockPos } from 'deepslate';
+import { BlockModel, BlockPos } from 'deepslate';
 import { vec3 } from 'gl-matrix'
 
 export function shuffleArray<T>(array: T[]): T[] {
@@ -9,7 +9,7 @@ export function shuffleArray<T>(array: T[]): T[] {
   return array
 }
 
-export function weightedShuffleArray<T>(array: {weight: number, element: T}[]): T[] {
+export function weightedShuffleArray<T>(array: { weight: number, element: T }[]): T[] {
 
   /*
   const result: T[] = []
@@ -32,7 +32,7 @@ export function weightedShuffleArray<T>(array: {weight: number, element: T}[]): 
   return result
   */
 
-  return array.map(a => {return {element: a.element, k: Math.pow(Math.random(), 1/a.weight)}}).sort((a, b) => b.k - a.k).map(a => a.element)
+  return array.map(a => { return { element: a.element, k: Math.pow(Math.random(), 1 / a.weight) } }).sort((a, b) => b.k - a.k).map(a => a.element)
 }
 
 export function getRandomInt(max: number): number {
@@ -44,11 +44,11 @@ export function clamp(a: number, b: number, c: number): number {
   return Math.max(b, Math.min(c, a))
 }
 
-export function lerp (start: number, end: number, amt: number): number{
-  return (1-amt)*start+amt*end
+export function lerp(start: number, end: number, amt: number): number {
+  return (1 - amt) * start + amt * end
 }
 
-export function inv_lerp( start: number, end: number, value: number): number{
+export function inv_lerp(start: number, end: number, value: number): number {
   return (value - start) / (end - start)
 }
 
@@ -108,4 +108,33 @@ export function setVertexAttr(gl: WebGLRenderingContext, shader: WebGLProgram, n
 export function setUniform(gl: WebGLRenderingContext, shader: WebGLProgram, name: string, value: Float32List) {
   const location = gl.getUniformLocation(shader, name)
   gl.uniformMatrix4fv(location, false, value)
+}
+
+export function getJigsawModel() {
+  return BlockModel.fromJson("minecraft:block/jigsaw", {
+    "parent": "block/block",
+    "elements": [
+      {
+        "from": [0, 0, 0],
+        "to": [16, 16, 16],
+        "faces": {
+          "down": { "texture": "#down", "rotation": 180 },
+          "up": { "texture": "#up" },
+          "north": { "texture": "#north" },
+          "south": { "texture": "#south" },
+          "west": { "texture": "#west", "rotation": 270 },
+          "east": { "texture": "#east", "rotation": 90 }
+        }
+      }
+    ],
+    "textures": {
+      "down": "minecraft:block/jigsaw_side",
+      "east": "minecraft:block/jigsaw_side",
+      "north": "minecraft:block/jigsaw_top",
+      "particle": "minecraft:block/jigsaw_top",
+      "south": "minecraft:block/jigsaw_bottom",
+      "up": "minecraft:block/jigsaw_lock",
+      "west": "minecraft:block/jigsaw_side"
+    }
+  })
 }

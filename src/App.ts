@@ -1,5 +1,3 @@
-
-import { ResourceManager } from './ResourceManager'
 import { mat4, vec2, vec3 } from 'gl-matrix'
 import { PieceInfo, JigsawStructure } from "./Jigsaw/JigsawStructure";
 import { clamp, clampVec3, negVec3 } from './Util/util'
@@ -7,7 +5,6 @@ import { BBRenderer } from './Renderer/BoundingBoxRenderer';
 import { BoundingBox } from './Jigsaw/BoundingBox';
 import { JigsawGenerator } from './Jigsaw/JigsawGenerator';
 import { TemplatePool } from './worldgen/TemplatePool';
-import { Heightmap } from './Heightmap/Heightmap';
 import { HeightmapRenderer } from './Renderer/HeightmapRenderer';
 import { StructureFeature } from './worldgen/StructureFeature';
 import { CompositeDatapack, FileListDatapack, ZipDatapack } from 'mc-datapack-loader';
@@ -19,6 +16,8 @@ import { DisplayManager } from './UI/DisplayManager';
 import { OffsetStructure } from './Structure/OffsetStructure';
 import { StructureRenderer } from './Renderer/StructureRenderer';
 import * as d3 from 'd3';
+import { McmetaResourceManager } from './ResourceManger/McmetaResourceManager';
+import { getAnnotationAtlas } from './ResourceManger/AnnotationAtlas';
 
 declare global {
   interface Window {
@@ -39,6 +38,15 @@ const LEGACY_MINECRAFT_VERSIONS: string[] = ["1_16", "1_17", "1_18"]
 const EXPERIMENTAL_MINECRAFT_VERSIONS: string[] = []
 
 const MINECRAFT_VERSIONS: string[] = ["1_16", "1_17", "1_18", "1_19", "1_20", "1_20_3"]
+
+const MINECRAFT_ASSET_VERSIONS: {[key: string]: string | undefined} = {
+  "1_16": "1.16.5",
+  "1_17": "1.17.1",
+  "1_18": "1.18.2",
+  "1_19": "1.19.2",
+  "1_20": "1.20",
+  "1_20_3": undefined
+}
 
 main();
 
@@ -63,8 +71,10 @@ async function main() {
   const vanillaDatapack = await ZipDatapack.fromUrl("zips/data_" + mc_version + ".zip")
   const compositeDatapack = new CompositeDatapack([vanillaDatapack])
 
-  const resources = new ResourceManager()
-  await resources.loadFromZip("/zips/assets_" + mc_version + ".zip")
+  //const resources = new ZipResourceManager()
+  //await resources.loadFromZip("/zips/assets_" + mc_version + ".zip")
+  const resources = await McmetaResourceManager.create(MINECRAFT_ASSET_VERSIONS[mc_version])
+  const annotation_atlas = await getAnnotationAtlas()
 
   const canvas = document.querySelector('#render') as HTMLCanvasElement;
   const gl = canvas.getContext('webgl');
@@ -156,7 +166,7 @@ async function main() {
 
   const renderedTypes = new Set(['entity', 'feature'])
 
-  const annotationRenderer = new AnnotationRenderer(gl, structure, resources)
+  const annotationRenderer = new AnnotationRenderer(gl, structure, annotation_atlas)
   annotationRenderer.setRenderedTypes(Array.from(renderedTypes))
 
   const heightmapRenderer = new HeightmapRenderer(gl, heightmap)

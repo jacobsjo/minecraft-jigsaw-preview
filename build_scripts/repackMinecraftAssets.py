@@ -24,12 +24,7 @@ def extractJar(version: str, version_manifest):
             for file in jar_archive.infolist():
                if file.is_dir():
                   continue
-               if file.filename.startswith('assets/minecraft/blockstates/') \
-                       or file.filename.startswith('assets/minecraft/models/block/') \
-                       or file.filename.startswith('assets/minecraft/textures/block/') \
-                       or file.filename.startswith('assets/minecraft/textures/block/') \
-                       or file.filename.startswith('assets/minecraft/textures/entity/chest/') \
-                       or file.filename.startswith('data/minecraft/structures/pillager_outpost/') \
+               if file.filename.startswith('data/minecraft/structures/pillager_outpost/') \
                        or file.filename.startswith('data/minecraft/structures/village/') \
                        or file.filename.startswith('data/minecraft/structures/bastion/') \
                        or file.filename.startswith('data/minecraft/structures/ancient_city/') \
@@ -72,10 +67,6 @@ def zipdir(path, root_len_delta, ziph):
          ziph.write(os.path.join(root, file), os.path.join(root, file)[pl:])
 
 def createZips(version, zip_version):
-   zf = ZipFile("public/zips/assets_" + zip_version + ".zip", 'w', ZIP_DEFLATED)
-   zipdir("/tmp/minecraft/" + version + "/assets", 0, zf)
-   zf.close()
-
    zf = ZipFile("public/zips/data_" + zip_version + ".zip", 'w', ZIP_DEFLATED)
    zipdir("/tmp/minecraft/" + version + "/data", 4, zf)
    zf.close()

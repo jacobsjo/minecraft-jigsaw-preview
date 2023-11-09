@@ -1,5 +1,6 @@
 import { Identifier, Resources, StructureProvider } from "deepslate";
 import { vec3, mat4 } from "gl-matrix";
+import { ANNOTATION_UVs, getAnnotationAtlas } from "../ResourceManger/AnnotationAtlas";
 import { AnnotationProvider } from "../Structure/AnnotationProvider";
 import { createBuffer, setUniform, setVertexAttr, updateBuffer } from "../Util/util";
 import { ShaderProgram } from "./ShaderProgram";
@@ -46,7 +47,7 @@ export class AnnotationRenderer {
   constructor(
     private gl: WebGLRenderingContext,
     private structure: AnnotationProvider,
-    private resources: Resources
+    private atlas: ImageData
   ) {
     this.shaderProgram = new ShaderProgram(gl, vs, fs).getProgram()
 
@@ -59,7 +60,7 @@ export class AnnotationRenderer {
     positions.push(size, -size, 0)
     this.positionBuffer = createBuffer(this.gl, this.gl.ARRAY_BUFFER, new Float32Array(positions))
     this.indexBuffer = createBuffer(this.gl, this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 2, 1, 0, 3, 2]))
-    this.atlasTexture = this.getBlockTexture()
+    this.atlasTexture = this.getAtlasTexture()
   }
 
   public setStructure(structure: AnnotationProvider) {
@@ -75,10 +76,10 @@ export class AnnotationRenderer {
   }
 
 
-  private getBlockTexture() {
+  private getAtlasTexture() {
     const texture = this.gl.createTexture()!;
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.resources.getTextureAtlas());
+    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.atlas);
     this.gl.generateMipmap(this.gl.TEXTURE_2D);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
     return texture
@@ -96,7 +97,7 @@ export class AnnotationRenderer {
   public update(chunkPositions?: vec3[]): void {
 
     (new Set(this.structure.getAnnotations().map(a => a.annotation))).forEach(annotation => {
-      const uv = this.resources.getTextureUV(new Identifier("jigsaw_previewer", "annotation/" + annotation))
+      const uv = ANNOTATION_UVs[annotation]
 
       const texCoords: number[] = []
       texCoords.push(uv[0], uv[3])

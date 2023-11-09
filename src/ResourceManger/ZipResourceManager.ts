@@ -1,8 +1,9 @@
 import jszip from 'jszip'
 import { BlockDefinition, BlockDefinitionProvider, BlockModel, BlockModelProvider, BlockPropertiesProvider, Identifier, Resources, TextureAtlas } from 'deepslate'
-import { isOpaque } from './Util/OpaqueHelper'
+import { isOpaque } from '../Util/OpaqueHelper'
+import { getJigsawModel } from '../Util/util'
 
-export class ResourceManager implements Resources {
+export class ZipResourceManager implements Resources {
   private blockDefinitions: { [id: string]: BlockDefinition }
   private blockModels: { [id: string]: BlockModel } 
   private blockAtlas: TextureAtlas
@@ -77,32 +78,7 @@ export class ResourceManager implements Resources {
     textures['jigsaw_previewer:annotation/empty'] = await (await fetch("/annotation_icons/empty.png")).blob()
 
     Object.assign(this.blockModels, {
-      "minecraft:block/jigsaw": BlockModel.fromJson("minecraft:block/jigsaw", {
-        "parent": "block/block",
-        "elements": [
-          {
-            "from": [0, 0, 0],
-            "to": [16, 16, 16],
-            "faces": {
-              "down": { "texture": "#down", "rotation": 180 },
-              "up": { "texture": "#up"},
-              "north": { "texture": "#north" },
-              "south": { "texture": "#south" },
-              "west": { "texture": "#west", "rotation": 270 },
-              "east": { "texture": "#east", "rotation": 90 }
-            }
-          }
-        ],
-        "textures": {
-          "down": "minecraft:block/jigsaw_side",
-          "east": "minecraft:block/jigsaw_side",
-          "north": "minecraft:block/jigsaw_top",
-          "particle": "minecraft:block/jigsaw_top",
-          "south": "minecraft:block/jigsaw_bottom",
-          "up": "minecraft:block/jigsaw_lock",
-          "west": "minecraft:block/jigsaw_side"
-        }
-      })
+      "minecraft:block/jigsaw": getJigsawModel()
     })
 
     this.blockAtlas = await TextureAtlas.fromBlobs(textures)
