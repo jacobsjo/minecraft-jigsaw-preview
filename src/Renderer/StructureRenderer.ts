@@ -7,7 +7,7 @@ import { ShaderProgram } from './ShaderProgram'
 const vsTinted = `
   attribute vec4 vertPos;
   attribute vec2 texCoord;
-  attribute vec3 tintColor;
+  attribute vec3 vertColor;
   attribute vec3 normal;
 
   uniform mat4 mView;
@@ -20,7 +20,7 @@ const vsTinted = `
   void main(void) {
     gl_Position = mProj * mView * vertPos;
     vTexCoord = texCoord;
-    vTintColor = tintColor;
+    vTintColor = vertColor;
     vLighting = normal.y * 0.2 + abs(normal.z) * 0.1 + 0.8;
   }
 `
@@ -84,6 +84,7 @@ export class StructureRenderer extends Renderer {
 
 	public drawTintedStructure(viewMatrix: mat4) {
 		this.setShader(this.tintedShaderProgram)
+		this.setTexture(this.atlasTexture)
 		this.prepareDraw(viewMatrix)
 
 		this.chunkBuilder.getMeshes().forEach(mesh => {

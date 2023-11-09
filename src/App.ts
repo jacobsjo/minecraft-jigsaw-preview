@@ -8,12 +8,13 @@ import { TemplatePool } from './worldgen/TemplatePool';
 import { HeightmapRenderer } from './Renderer/HeightmapRenderer';
 import { StructureFeature } from './worldgen/StructureFeature';
 import { CompositeDatapack, FileListDatapack, ZipDatapack } from 'mc-datapack-loader';
-import { BlockPos, Identifier, NbtFile } from 'deepslate';
+import { BlockPos, BlockState, Identifier, NbtCompound, NbtFile, StructureProvider } from 'deepslate';
 import { EntityAnnotatedStructure } from './Structure/EntityAnnotatedStructure';
 import { AnnotationRenderer } from './Renderer/AnnotationRenderer';
 import { ImageHeightmap } from './Heightmap/ImageHeightmap';
 import { DisplayManager } from './UI/DisplayManager';
 import { OffsetStructure } from './Structure/OffsetStructure';
+import { InsetStructure } from './Structure/InsetStructure';
 import { StructureRenderer } from './Renderer/StructureRenderer';
 import * as d3 from 'd3';
 import { McmetaResourceManager } from './ResourceManger/McmetaResourceManager';
@@ -93,6 +94,7 @@ async function main() {
     bb: document.querySelector('.button#bb'),
     info: document.querySelector('.button#info'),
     heightmap: document.querySelector('.button#heightmap'),
+    bury: document.querySelector('.button#bury'),
     icon_empty: document.querySelector('.button#icon-empty'),
     icon_feature: document.querySelector('.button#icon-feature'),
     icon_entity: document.querySelector('.button#icon-entity'),
@@ -162,7 +164,17 @@ async function main() {
 
 
   const renderer = new StructureRenderer(gl, structure, resources)
-  const failedRenderer = new StructureRenderer(gl, structure, resources)
+  const failedRenderer = new StructureRenderer(gl, new class implements StructureProvider{
+    getSize(): BlockPos {
+        return [0,0,0]
+    }
+    getBlocks(): { pos: BlockPos; state: BlockState; nbt?: NbtCompound; }[] {
+        return []
+    }
+    getBlock(pos: BlockPos): { pos: BlockPos; state: BlockState; nbt?: NbtCompound; } {
+        return {pos, state: undefined}
+    }
+  }, resources)
 
   const renderedTypes = new Set(['entity', 'feature'])
 
@@ -209,6 +221,7 @@ async function main() {
           const sfm = JigsawGenerator.fromStructureFeature(compositeDatapack, feature, heightmap)
           await sfm.generate()
           structure = sfm.getWorld()
+          setting_buttons.bury.classList.toggle("selected", structure.burried)
           display = new DisplayManager(structure)
 
           display.lastStep()
@@ -263,7 +276,9 @@ async function main() {
         display.toggleFailedStep(d.nr)
         const bb = structure.getBoundingBoxes(display.getStep() - 1)[0]
         if (display.getFailedStep() >= 0){
-          failedRenderer.setStructure(structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()].piece)
+          var piece = structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()].piece
+          piece = new InsetStructure(piece, structure)
+          failedRenderer.setStructure(piece)
         }
         refreshStructure(bb)
         requestAnimationFrame(render)
@@ -566,6 +581,15 @@ async function main() {
       infoPanel.classList.toggle("hidden", !setting_buttons.info.classList.contains("selected"))
     }
   })
+
+  setting_buttons.bury.addEventListener("click", async () => {
+    structure.burried = !structure.burried
+    renderer.updateStructureBuffers()
+    failedRenderer.updateStructureBuffers()
+    requestAnimationFrame(render)
+    setting_buttons.bury.classList.toggle("selected", structure.burried)
+  })
+
 
   setting_buttons.icon_empty.addEventListener("click", async () => {
     const shown = toggleRenderedType("empty")

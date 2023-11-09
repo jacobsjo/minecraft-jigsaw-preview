@@ -74,7 +74,7 @@ export class JigsawGenerator {
         const startingPieceY = this.startingY === "heightmap" ? this.heightmap.getHeight(0, 0) - 1 : this.startingY
         this.world.setStartingY(startingPieceY)
         this.world.setMaxRadius(this.radius)
-        this.world.setBurried(this.burried)
+        this.world.burried = this.burried
 
         var start_pos: BlockPos = [0, startingPieceY, 0]
 
