@@ -349,22 +349,23 @@ async function main() {
       failedRenderer.drawTintedStructure(viewMatrix)
     }
 
+    annotationRenderer.draw(viewMatrix)
+    heightmapRenderer.draw(viewMatrix)
+
     if (drawBB) {
-      checkBBs.forEach(bb => bbRenderer.drawBB(viewMatrix, bb, 2))
-      bbRenderer.drawBB(viewMatrix, insideBB, 1)
+      bbRenderer.drawBB(viewMatrix, insideBB, 1, true, 1.5, 0.07)
+      if (jigsawPos){
+        bbRenderer.drawBB(viewMatrix, new BoundingBox(jigsawPos, [1,1,1]), 3, false, 3)
+      }
+      checkBBs.forEach(bb => bbRenderer.drawBB(viewMatrix, bb, 2, false))
       if (display.getFailedStep() >= 0){
         const failedPiece = structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()].piece as OffsetStructure
-        bbRenderer.drawBB(viewMatrix, new BoundingBox(failedPiece.getOffset(), failedPiece.getSize()), 0)
+        bbRenderer.drawBB(viewMatrix, new BoundingBox(failedPiece.getOffset(), failedPiece.getSize()), 0, false, 3)
       } else {
-        bbRenderer.drawBB(viewMatrix, ownBB, 0)
-      }
-      if (jigsawPos){
-        bbRenderer.drawBB(viewMatrix, new BoundingBox(jigsawPos, [1,1,1]), 3, 3)
+        bbRenderer.drawBB(viewMatrix, ownBB, 0, false, 3)
       }
     }
 
-    annotationRenderer.draw(viewMatrix)
-    heightmapRenderer.draw(viewMatrix)
   }
   requestAnimationFrame(render);
 

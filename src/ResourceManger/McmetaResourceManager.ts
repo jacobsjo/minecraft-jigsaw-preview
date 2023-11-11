@@ -1,6 +1,6 @@
 import { BlockDefinition, BlockModel, Identifier, Resources, TextureAtlas, upperPowerOfTwo, UV } from "deepslate";
 import { getJigsawModel } from "../Util/util";
-import { isOpaque } from "../Util/OpaqueHelper";
+import { isOpaque, isSelfCulling, isTransparent } from "../Util/OpaqueHelper";
 
 const MCMETA = 'https://raw.githubusercontent.com/misode/mcmeta/'
 const JIGSAW_MODEL_ID = Identifier.create("block/jigsaw")
@@ -30,9 +30,11 @@ export class McmetaResourceManager implements Resources {
         return this.textureAtlas.getTextureUV(texture)
     }
 
-    getBlockFlags(id: Identifier): { opaque?: boolean; } {
+    getBlockFlags(id: Identifier): { opaque?: boolean, transparent?: boolean, self_culling?: boolean } {
         return {
-            opaque: isOpaque(id)
+            opaque: isOpaque(id),
+            transparent: isTransparent(id),
+            self_culling: isSelfCulling(id)
         }
     }
 

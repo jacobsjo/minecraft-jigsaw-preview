@@ -1,7 +1,7 @@
 import { Identifier } from "deepslate"
 
-const opaqueSet = new Set([    
-  'minecraft:acacia_planks',
+const opaqueSet = new Set([
+	'minecraft:acacia_planks',
 	'minecraft:acacia_wood',
 	'minecraft:amethyst_block',
 	'minecraft:ancient_debris',
@@ -338,32 +338,97 @@ const opaqueSet = new Set([
 	'minecraft:yellow_glazed_terracotta',
 	'minecraft:yellow_terracotta',
 	'minecraft:yellow_wool',
-  "minecraft:crafter",
-  "minecraft:chiseled_tuff",
-  "minecraft:chiseled_tuff_bricks",
-  "minecraft:polished_tuff",
-  "minecraft:tuff_bricks",
-  "minecraft:chiseled_copper",
-  "minecraft:weathered_chiseled_copper",
-  "minecraft:exposed_chiseled_copper",
-  "minecraft:oxidized_chiseled_copper",
-  "minecraft:copper_bulb",
-  "minecraft:weathered_copper_bulb",
-  "minecraft:exposed_copper_bulb",
-  "minecraft:oxidized_copper_bulb",
-  "minecraft:waxed_copper_bulb",
-  "minecraft:waxed_weathered_copper_bulb",
-  "minecraft:waxed_exposed_copper_bulb",
-  "minecraft:waxed_oxidized_copper_bulb",
-  "minecraft:waxed_chiseled_copper",
-  "minecraft:waxed_exposed_chiseled_copper",
-  "minecraft:waxed_oxidized_chiseled_copper",
-  "minecraft:waxed_weathered_chiseled_copper",
+	"minecraft:crafter",
+	"minecraft:chiseled_tuff",
+	"minecraft:chiseled_tuff_bricks",
+	"minecraft:polished_tuff",
+	"minecraft:tuff_bricks",
+	"minecraft:chiseled_copper",
+	"minecraft:weathered_chiseled_copper",
+	"minecraft:exposed_chiseled_copper",
+	"minecraft:oxidized_chiseled_copper",
+	"minecraft:copper_bulb",
+	"minecraft:weathered_copper_bulb",
+	"minecraft:exposed_copper_bulb",
+	"minecraft:oxidized_copper_bulb",
+	"minecraft:waxed_copper_bulb",
+	"minecraft:waxed_weathered_copper_bulb",
+	"minecraft:waxed_exposed_copper_bulb",
+	"minecraft:waxed_oxidized_copper_bulb",
+	"minecraft:waxed_chiseled_copper",
+	"minecraft:waxed_exposed_chiseled_copper",
+	"minecraft:waxed_oxidized_chiseled_copper",
+	"minecraft:waxed_weathered_chiseled_copper",
 ])
 
-export function isOpaque(name?: Identifier): boolean{
-    if (!name)
-      return false
-  
-    return opaqueSet.has(name.toString())
-  }
+const transparentSet = new Set([
+	"minecraft:water",
+	"minecraft:flowing_water",
+	"minecraft:white_stained_glass",
+	"minecraft:orange_stained_glass",
+	"minecraft:magenta_stained_glass",
+	"minecraft:light_blue_stained_glass",
+	"minecraft:yellow_stained_glass",
+	"minecraft:lime_stained_glass",
+	"minecraft:pink_stained_glass",
+	"minecraft:gray_stained_glass",
+	"minecraft:light_gray_stained_glass",
+	"minecraft:cyan_stained_glass",
+	"minecraft:purple_stained_glass",
+	"minecraft:blue_stained_glass",
+	"minecraft:brown_stained_glass",
+	"minecraft:green_stained_glass",
+	"minecraft:red_stained_glass",
+	"minecraft:black_stained_glass",
+	"minecraft:white_stained_glass_pane",
+	"minecraft:orange_stained_glass_pane",
+	"minecraft:magenta_stained_glass_pane",
+	"minecraft:light_blue_stained_glass_pane",
+	"minecraft:yellow_stained_glass_pane",
+	"minecraft:lime_stained_glass_pane",
+	"minecraft:pink_stained_glass_pane",
+	"minecraft:gray_stained_glass_pane",
+	"minecraft:light_gray_stained_glass_pane",
+	"minecraft:cyan_stained_glass_pane",
+	"minecraft:purple_stained_glass_pane",
+	"minecraft:blue_stained_glass_pane",
+	"minecraft:brown_stained_glass_pane",
+	"minecraft:green_stained_glass_pane",
+	"minecraft:red_stained_glass_pane",
+	"minecraft:black_stained_glass_pane",
+	"minecraft:tinted_glass"
+])
+
+const nonSelfCullingSet = new Set([
+	"minecraft:oak_leaves",
+	"minecraft:spruce_leaves",
+	"minecraft:birch_leaves",
+	"minecraft:jungle_leaves",
+	"minecraft:acacia_leaves",
+	"minecraft:dark_oak_leaves",
+	"minecraft:mangrove_leaves",
+	"minecraft:cherry_leaves",
+	"minecraft:azalea_leaves",
+	"minecraft:flowering_azalea_leaves"
+])
+
+export function isOpaque(name?: Identifier): boolean {
+	if (!name)
+		return false
+
+	return opaqueSet.has(name.toString())
+}
+
+export function isTransparent(name?: Identifier): boolean {
+	if (!name)
+		return false
+
+	return transparentSet.has(name.toString())
+}
+
+export function isSelfCulling(name?: Identifier): boolean {
+	if (!name)
+		return false
+
+	return !nonSelfCullingSet.has(name.toString())
+}

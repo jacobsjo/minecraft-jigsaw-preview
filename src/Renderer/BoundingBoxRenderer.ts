@@ -8,28 +8,29 @@ const vsGrid = `
 
   uniform mat4 mView;
   uniform mat4 mProj;
+  uniform float alpha;
 
-  varying highp vec3 vColor;
+  varying highp vec4 vColor;
 
   void main(void) {
     gl_Position = mProj * mView * vertPos;
-    vColor = vertColor;
+    vColor = vec4(vertColor, alpha);
   }
 `
 
 const fsGrid = `
   precision highp float;
-  varying highp vec3 vColor;
+  varying highp vec4 vColor;
 
   void main(void) {
-    gl_FragColor = vec4(vColor, 1.0);
+    gl_FragColor = vColor;
   }
 `;
 
 type BBBuffers = {
-  position: WebGLBuffer
+  line_position: WebGLBuffer,
+  triangle_position: WebGLBuffer,
   colors: WebGLBuffer[]
-  length: number
 }
 
 export class BBRenderer {
@@ -67,41 +68,57 @@ export class BBRenderer {
   }
 
   private getBBBuffers(): BBBuffers {
-    const position: number[] = []
+    const line_positions: number[] = []
+    const triangle_positions: number[] = []
     const color1: number[] = []
     const color2: number[] = []
     const color3: number[] = []
     const color4: number[] = []
 
-    position.push(0, 0, 0, 0, 0, 1)
-    position.push(1, 0, 0, 1, 0, 1)
-    position.push(0, 0, 0, 1, 0, 0)
-    position.push(0, 0, 1, 1, 0, 1)
+    line_positions.push(0, 0, 0, 0, 0, 1)
+    line_positions.push(1, 0, 0, 1, 0, 1)
+    line_positions.push(0, 0, 0, 1, 0, 0)
+    line_positions.push(0, 0, 1, 1, 0, 1)
 
-    position.push(0, 0, 0, 0, 1, 0)
-    position.push(1, 0, 0, 1, 1, 0)
-    position.push(0, 0, 1, 0, 1, 1)
-    position.push(1, 0, 1, 1, 1, 1)
+    line_positions.push(0, 0, 0, 0, 1, 0)
+    line_positions.push(1, 0, 0, 1, 1, 0)
+    line_positions.push(0, 0, 1, 0, 1, 1)
+    line_positions.push(1, 0, 1, 1, 1, 1)
 
-    position.push(0, 1, 0, 0, 1, 1)
-    position.push(1, 1, 0, 1, 1, 1)
-    position.push(0, 1, 0, 1, 1, 0)
-    position.push(0, 1, 1, 1, 1, 1)
+    line_positions.push(0, 1, 0, 0, 1, 1)
+    line_positions.push(1, 1, 0, 1, 1, 1)
+    line_positions.push(0, 1, 0, 1, 1, 0)
+    line_positions.push(0, 1, 1, 1, 1, 1)
 
-    for (let i = 0; i < 12; i += 1){
-        color1.push(0,0,1,0,0,1)
-        color2.push(0,1,0,0,1,0)
-        color3.push(1,0,0,1,0,0)
-        color4.push(1,0.5,0.5,1,0.5,0.5)
+    triangle_positions.push(0, 1, 1)
+    triangle_positions.push(1, 1, 1)
+    triangle_positions.push(0, 0, 1)
+    triangle_positions.push(1, 0, 1)
+    triangle_positions.push(1, 0, 0)
+    triangle_positions.push(1, 1, 1)
+    triangle_positions.push(1, 1, 0)
+    triangle_positions.push(0, 1, 1)
+    triangle_positions.push(0, 1, 0)
+    triangle_positions.push(0, 0, 1)
+    triangle_positions.push(0, 0, 0)
+    triangle_positions.push(1, 0, 0)
+    triangle_positions.push(0, 1, 0)
+    triangle_positions.push(1, 1, 0)
+
+    for (let i = 0; i < 24; i += 1){
+        color1.push(255/255, 255/255, 255/255)   //placed piece
+        color2.push(137/255, 218/255, 255/255)    //outer bb
+        color3.push(255/255, 199/255, 79/255)  //colliding bb
+        color4.push(224/255, 117/255, 190/255)    //jigsaw highlight
     }
 
     return {
-      position: this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(position)),
+      line_position: this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(line_positions)),
+      triangle_position: this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(triangle_positions)),
       colors: [this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color1)),
                this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color2)),
                this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color3)),
                this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color4))],
-      length: position.length / 3
     }
   }
 
@@ -113,20 +130,40 @@ export class BBRenderer {
     return buffer
   }
 
-  public drawBB(viewMatrix: mat4, bb: BoundingBox, color: number, lineWidth: number = 1.5): void {
+  public drawBB(viewMatrix: mat4, bb: BoundingBox, color: number, insize_faces: boolean, lineWidth: number = 1.5, alpha: number = 0.3): void {
+    const scale: [number, number, number] = [bb.size[0]+0.02, bb.size[1]+0.002, bb.size[2]+0.002]
+    const translation: [number, number, number] = [bb.min[0]-0.01, bb.min[1]-0.001, bb.min[2]-0.001]
     this.setShader(this.gridShaderProgram)
 
-    this.setVertexAttr('vertPos', 3, this.bbBuffers.position)
+    if (!insize_faces){
+      translation[0] += scale[0]
+      translation[1] += scale[1]
+      translation[2] += scale[2]
+      scale[0] *= -1
+      scale[1] *= -1
+      scale[2] *= -1
+    }
+
     this.setVertexAttr('vertColor', 3, this.bbBuffers.colors[color])
     const translatedMatrix = mat4.create()
     mat4.copy(translatedMatrix, viewMatrix)
-    mat4.scale(translatedMatrix, translatedMatrix, bb.size)
-    mat4.translate(translatedMatrix, translatedMatrix, [bb.min[0]/bb.size[0], bb.min[1]/bb.size[1], bb.min[2]/bb.size[2]])
+    mat4.translate(translatedMatrix, translatedMatrix, translation)
+    mat4.scale(translatedMatrix, translatedMatrix, scale )
     this.setUniform('mView', translatedMatrix)
     this.setUniform('mProj', this.projMatrix)
+    const alphaLocation = this.gl.getUniformLocation(this.activeShader, 'alpha')    
+    this.gl.uniform1f(alphaLocation, 1.0)
 
+    this.setVertexAttr('vertPos', 3, this.bbBuffers.line_position)
     this.gl.lineWidth(lineWidth)
-    this.gl.drawArrays(this.gl.LINES, 0, this.bbBuffers.length)
+    this.gl.drawArrays(this.gl.LINES, 0, 24)
+
+    this.gl.uniform1f(alphaLocation, alpha)
+    this.gl.depthMask(false)
+    this.setVertexAttr('vertPos', 3, this.bbBuffers.triangle_position)
+    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 14)
+    this.gl.depthMask(true)
+
   }
 
   public setViewport(x: number, y: number, width: number, height: number): void {
