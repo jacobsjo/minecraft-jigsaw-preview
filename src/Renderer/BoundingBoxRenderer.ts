@@ -4,17 +4,18 @@ import { ShaderProgram } from "./ShaderProgram";
 
 const vsGrid = `
   attribute vec4 vertPos;
-  attribute vec3 vertColor;
+  //attribute vec3 vertColorAAA;
 
   uniform mat4 mView;
   uniform mat4 mProj;
   uniform float alpha;
+  uniform vec3 color;
 
   varying highp vec4 vColor;
 
   void main(void) {
     gl_Position = mProj * mView * vertPos;
-    vColor = vec4(vertColor, alpha);
+    vColor = vec4(color, alpha);
   }
 `
 
@@ -30,7 +31,6 @@ const fsGrid = `
 type BBBuffers = {
   line_position: WebGLBuffer,
   triangle_position: WebGLBuffer,
-  colors: WebGLBuffer[]
 }
 
 export class BBRenderer {
@@ -70,10 +70,6 @@ export class BBRenderer {
   private getBBBuffers(): BBBuffers {
     const line_positions: number[] = []
     const triangle_positions: number[] = []
-    const color1: number[] = []
-    const color2: number[] = []
-    const color3: number[] = []
-    const color4: number[] = []
 
     line_positions.push(0, 0, 0, 0, 0, 1)
     line_positions.push(1, 0, 0, 1, 0, 1)
@@ -105,20 +101,10 @@ export class BBRenderer {
     triangle_positions.push(0, 1, 0)
     triangle_positions.push(1, 1, 0)
 
-    for (let i = 0; i < 24; i += 1){
-        color1.push(255/255, 255/255, 255/255)   //placed piece
-        color2.push(137/255, 218/255, 255/255)    //outer bb
-        color3.push(255/255, 199/255, 79/255)  //colliding bb
-        color4.push(224/255, 117/255, 190/255)    //jigsaw highlight
-    }
 
     return {
       line_position: this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(line_positions)),
-      triangle_position: this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(triangle_positions)),
-      colors: [this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color1)),
-               this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color2)),
-               this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color3)),
-               this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(color4))],
+      triangle_position: this.createBuffer(this.gl.ARRAY_BUFFER, new Float32Array(triangle_positions))
     }
   }
 
@@ -130,7 +116,7 @@ export class BBRenderer {
     return buffer
   }
 
-  public drawBB(viewMatrix: mat4, bb: BoundingBox, color: number, insize_faces: boolean, lineWidth: number = 1.5, alpha: number = 0.3): void {
+  public drawBB(viewMatrix: mat4, bb: BoundingBox, color: [number, number, number], insize_faces: boolean, lineWidth: number = 1.5, alpha: number = 0.3): void {
     const scale: [number, number, number] = [bb.size[0]+0.02, bb.size[1]+0.002, bb.size[2]+0.002]
     const translation: [number, number, number] = [bb.min[0]-0.01, bb.min[1]-0.001, bb.min[2]-0.001]
     this.setShader(this.gridShaderProgram)
@@ -144,13 +130,17 @@ export class BBRenderer {
       scale[2] *= -1
     }
 
-    this.setVertexAttr('vertColor', 3, this.bbBuffers.colors[color])
+    //this.setVertexAttr('vertColorAAA', 3, this.bbBuffers.colors[color])
+    this.gl.disableVertexAttribArray(1)
     const translatedMatrix = mat4.create()
     mat4.copy(translatedMatrix, viewMatrix)
     mat4.translate(translatedMatrix, translatedMatrix, translation)
     mat4.scale(translatedMatrix, translatedMatrix, scale )
     this.setUniform('mView', translatedMatrix)
     this.setUniform('mProj', this.projMatrix)
+    const colorLocation = this.gl.getUniformLocation(this.activeShader, 'color') 
+    this.gl.uniform3f(colorLocation, ...color)   
+
     const alphaLocation = this.gl.getUniformLocation(this.activeShader, 'alpha')    
     this.gl.uniform1f(alphaLocation, 1.0)
 

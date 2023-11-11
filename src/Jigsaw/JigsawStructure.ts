@@ -102,16 +102,40 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
             pos[2] >= element.pos[2] && pos[2] < element.pos[2] + size[2]
     }
 
-    public getBoundingBoxes(i: number): [BoundingBox, BoundingBox | undefined, BoundingBox[]] {
+    public getBoundingBoxes(i: number): [{bb: BoundingBox, info: PieceInfo}, {bb:BoundingBox, info: PieceInfo}, {bb: BoundingBox, info: PieceInfo}[]] {
         const ownBB = this.getBB(i)
 
         const inside = this.pieces[i].pieceInfo.inside
         const insideBB = this.getBB(inside)
+        const insideInfo = inside ? this.pieces[inside].pieceInfo : {
+            check: [],
+            inside: undefined,
+            pool: undefined,
+            aliased_from: undefined,
+            fallback_from: undefined,
+            element: undefined,
+            element_type: undefined,
+            joint: undefined,
+            joint_type: undefined,
+            depth: -1,
+            jigsaw_pos: [0, 0, 0],
+            selection_priority: 0,
+            placement_priority: 0
+        } as PieceInfo
 
         const check = this.pieces[i].pieceInfo.check
-        const checkBBs = check.map(c => this.getBB(c))
+        const checkPieces = check.map(c => {
+            return {
+                bb: this.getBB(c),
+                info: this.pieces[c].pieceInfo
+            }
+        })
 
-        return [ownBB, insideBB, checkBBs]
+        return [
+            {bb: ownBB, info: this.pieces[i].pieceInfo},
+            {bb: insideBB, info: insideInfo},
+            checkPieces
+        ]
     }
 
     public getPiece(i: number): Piece {
