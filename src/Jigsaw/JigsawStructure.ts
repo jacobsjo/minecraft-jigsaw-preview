@@ -46,7 +46,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
     private minPos: BlockPos = [0, 0, 0]
     private maxPos: BlockPos = [0, 0, 0]
 
-    private lastStep: number | undefined = undefined
+    private lastStep: number = 1
 
     private pools: Set<string> = new Set<string>()
     private poolJoints: Set<string> = new Set<string>()
@@ -56,10 +56,12 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
     public burried = false
 
     private bakedBlocks: Map<string, {
-        pos: BlockPos;
-        state: BlockState;
-        nbt: NbtCompound;
-    }> = new Map()
+        step: number,
+        block: {
+            pos: BlockPos;
+            state: BlockState;
+            nbt: NbtCompound;
+        }}[]> = new Map()
 
     public setStartingY(y: number) {
         this.startingY = y
@@ -76,7 +78,6 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
     public setLastStep(step: number | undefined){
         this.lastStep = step
-        this.bakedBlocks.clear()
     }
 
     public getStepCount(): number {
@@ -201,12 +202,19 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
         const pieceList = this.lastStep ? this.pieces.slice(0, this.lastStep) : this.pieces
 
-        pieceList.forEach(e => e.structure.getBlocks().forEach(b => {
+        pieceList.forEach((e, i) => e.structure.getBlocks().forEach(b => {
             const new_pos: BlockPos = [b.pos[0] + e.pos[0], b.pos[1] + e.pos[1], b.pos[2] + e.pos[2]]
-            this.bakedBlocks.set(`${new_pos[0]}, ${new_pos[1]}, ${new_pos[2]}`, {
-                pos: new_pos,
-                state: b.state,
-                nbt: b.nbt
+            const posKey = `${new_pos[0]}, ${new_pos[1]}, ${new_pos[2]}`
+            if (!this.bakedBlocks.has(posKey))
+                this.bakedBlocks.set(posKey, [])
+
+            this.bakedBlocks.get(posKey).unshift({
+                step: i,
+                block: {
+                    pos: new_pos,
+                    state: b.state,
+                    nbt: b.nbt
+                }
             })
         }))
     }
@@ -217,7 +225,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         nbt?: NbtCompound;
     }[] {
         this.bakeBlocks()
-        return Array.from(this.bakedBlocks.values())
+        return Array.from(this.bakedBlocks.values()).flatMap(bs => bs.find(b => b.step < this.lastStep)?.block ?? [])
     }
 
     public getBlock(pos: BlockPos): {
@@ -226,11 +234,24 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         nbt: NbtCompound;
     } {
         this.bakeBlocks()
-        return this.bakedBlocks.get(`${pos[0]}, ${pos[1]}, ${pos[2]}`) ?? (this.burried ? {
-            pos: pos,
-            state: BlockState.STONE,
-            nbt: undefined
-        } : undefined)
+
+        const posKey = `${pos[0]}, ${pos[1]}, ${pos[2]}`
+
+        const blocksAtPos = this.bakedBlocks.get(posKey)
+        if (blocksAtPos){
+            const result = blocksAtPos.find(b => b.step < this.lastStep)
+            if (result)
+                return result.block
+        }
+
+        if (this.burried)
+            return {
+                pos: pos,
+                state: BlockState.STONE,
+                nbt: undefined
+            }
+
+        return undefined
     }
 
     public addPiece(structure: StructureProvider & AnnotationProvider, pos: BlockPos, annotation: PieceInfo | undefined, failedPieces: {name: string, piece: (StructureProvider & AnnotationProvider)}[]): number {

@@ -117,17 +117,24 @@ export class BBRenderer {
   }
 
   public drawBB(viewMatrix: mat4, bb: BoundingBox, color: [number, number, number], insize_faces: boolean, lineWidth: number = 1.5, alpha: number = 0.3): void {
-    const scale: [number, number, number] = [bb.size[0]+0.02, bb.size[1]+0.002, bb.size[2]+0.002]
-    const translation: [number, number, number] = [bb.min[0]-0.01, bb.min[1]-0.001, bb.min[2]-0.001]
+    const scale: [number, number, number] = [bb.size[0], bb.size[1], bb.size[2]]
+    const translation: [number, number, number] = [bb.min[0], bb.min[1], bb.min[2]]
     this.setShader(this.gridShaderProgram)
 
-    if (!insize_faces){
-      translation[0] += scale[0]
-      translation[1] += scale[1]
-      translation[2] += scale[2]
-      scale[0] *= -1
-      scale[1] *= -1
-      scale[2] *= -1
+    if (insize_faces){
+      translation[0] += 0.003
+      translation[1] += 0.003
+      translation[2] += 0.003
+      scale[0] -= 0.006
+      scale[1] -= 0.006
+      scale[2] -= 0.006
+    } else {
+      translation[0] += scale[0] + 0.003
+      translation[1] += scale[1] + 0.003
+      translation[2] += scale[2] + 0.003
+      scale[0] = -scale[0] - 0.006
+      scale[1] = -scale[1] - 0.006
+      scale[2] = -scale[2] - 0.006
     }
 
     //this.setVertexAttr('vertColorAAA', 3, this.bbBuffers.colors[color])
