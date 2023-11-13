@@ -3,6 +3,7 @@ import { ListStructure } from "../../Structure/ListStructure";
 import { Datapack } from "mc-datapack-loader";
 import { AnnotationProvider } from "../../Structure/AnnotationProvider";
 import { PoolElement } from "./PoolElement";
+import { PoolElements } from "./PoolElements";
 
 
 export class ListPoolElement extends PoolElement {
@@ -18,7 +19,7 @@ export class ListPoolElement extends PoolElement {
         private projection: "rigid" | "terrain_matching"
     ) {
         super();
-        this.pool_elements = elements.map(element => PoolElement.fromElement(datapack, element));
+        this.pool_elements = elements.map(element => PoolElements.fromElement(datapack, element));
         this.structure = new Promise(async (resolve) => {
             resolve(new ListStructure(await Promise.all(this.pool_elements.map(element => element.getStructure()))));
         });

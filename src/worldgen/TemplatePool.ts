@@ -3,6 +3,7 @@ import { Datapack } from 'mc-datapack-loader';
 import * as path from 'path';
 import { shuffleArray, weightedShuffleArray } from '../Util/util'
 import { PoolElement } from './PoolElements/PoolElement';
+import { PoolElements } from './PoolElements/PoolElements';
 
 const EMPTY = new Identifier("minecraft", "empty")
 
@@ -61,7 +62,7 @@ export class TemplatePool{
 
             try {
                 const pool_element = new TemplatePool(Identifier.parse(json.fallback), await Promise.all(json.elements.map(async (e: any) => {
-                    const element = PoolElement.fromElement(datapack, e.element)
+                    const element = PoolElements.fromElement(datapack, e.element)
                     if (doExpansionHack)
                         await element.doExpansionHack()
                     if (e.weight > 150){
