@@ -1,6 +1,6 @@
 import { mat4, vec2, vec3 } from 'gl-matrix'
-import { PieceInfo, JigsawStructure } from "./Jigsaw/JigsawStructure";
-import { clamp, clampVec3, hashCode, negVec3 } from './Util/util'
+import { PieceInfo, JigsawStructure, BoundingBoxInfo } from "./Jigsaw/JigsawStructure";
+import { clamp, clampVec3, hashCode, hsvToRgb, negVec3 } from './Util/util'
 import { BBRenderer } from './Renderer/BoundingBoxRenderer';
 import { BoundingBox } from './Jigsaw/BoundingBox';
 import { JigsawGenerator } from './Jigsaw/JigsawGenerator';
@@ -162,6 +162,7 @@ async function main() {
 
   var heightmap = await ImageHeightmap.fromImage("heightmaps/flat.png")
 
+  var boundingBoxInfos: BoundingBoxInfo[] = []
 
   const renderer = new StructureRenderer(gl, structure, resources)
   const failedRenderer = new StructureRenderer(gl, new class implements StructureProvider{
@@ -185,10 +186,6 @@ async function main() {
   const bbRenderer = new BBRenderer(gl)
 
   let drawBB = true
-
-  let ownPiece: {bb: BoundingBox, info: PieceInfo}
-  let insidePiece: {bb: BoundingBox, info: PieceInfo}
-  let checkPieces: {bb: BoundingBox, info: PieceInfo}[]
   let jigsawPos: BlockPos
 
   refreshDatapacks()
@@ -250,10 +247,7 @@ async function main() {
     const step = display.getStep()
     const failing_step = display.getFailedStep()
 
-    const bbs = structure.getBoundingBoxes(step - 1)
-    ownPiece = bbs[0]
-    insidePiece = bbs[1]
-    checkPieces = bbs[2]
+    boundingBoxInfos = structure.getBoundingBoxes(step - 1)
     jigsawPos = structure.getPiece(step - 1).pieceInfo.jigsaw_pos
 
 
@@ -274,7 +268,7 @@ async function main() {
       .text(d => d.name)
       .on("click", (evt, d) => {
         display.toggleFailedStep(d.nr)
-        const bb = structure.getBoundingBoxes(display.getStep() - 1)[0].bb
+        const bb = structure.getBB(display.getStep() - 1)
         if (display.getFailedStep() >= 0){
           var piece = structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()].piece
           piece = new InsetStructure(piece, structure)
@@ -337,24 +331,48 @@ async function main() {
     return viewMatrix
   }
 
-  function getPieceColor(type: 'own'|'inside'|'colliding', info: PieceInfo): [number, number, number]{
-    switch (type){
-      case 'own':
-        return [1, 1, 1]
-      case 'inside':
+  function getPieceColorByType(info: BoundingBoxInfo): [number, number, number]{
+    if (info.isCurrent)
+      return [1, 1, 1]
+
+    if (info.isOutside){
+      if (info.isRelevant)
         return [137/255, 218/255, 255/255]
-      case 'colliding':
-        return [255/255, 199/255, 79/255]
+      
+      return [143/255, 185/255, 204/255]
     }
 
-    /*
-    const hash = hashCode(info.pool?.toString() ?? "undefined")
-    return [((hash & 0xFF0000) >> 16)/255, ((hash & 0x00FF00) >> 8)/255, (hash & 0x0000FF)/255]
-    */
+    if (info.isRelevant){
+      return [255/255, 199/255, 79/255]
+    }
+
+    return [100/255, 100/255, 100/255]
+  }
+
+  function getPieceColorByPool(info: BoundingBoxInfo): [number, number, number]{
+    var value = 1
+
+    if (info.isCurrent){
+      value = 1
+    } else if (info.isRelevant){
+      value = 0.7
+    } else {
+      value = 0.4
+    }
+
+    //const hash = hashCode(`${info.pieceInfo.pool?.toString()}/${info.pieceInfo.joint}`)
+    //const hue = (hash & 0xFFFFFF)/0xFFFFFF
+    const hue = (info.poolIndex * 3) % 1
+    const saturation = Math.floor(info.poolIndex * 3) / 6 + 0.5
+//    console.log(hue)
+
+    return hsvToRgb(hue, saturation, value)
   }
 
   function render() {
     resize()
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
 
     const viewMatrix = getViewMatrix()
 
@@ -366,18 +384,24 @@ async function main() {
     annotationRenderer.draw(viewMatrix)
     heightmapRenderer.draw(viewMatrix)
 
+    const colorFunction = getPieceColorByType
+
     if (drawBB) {
-      bbRenderer.drawBB(viewMatrix, insidePiece.bb, getPieceColor('inside', insidePiece.info), true, 1.5, 0.07)
       if (jigsawPos){
         bbRenderer.drawBB(viewMatrix, new BoundingBox(jigsawPos, [1,1,1]), [224/255, 117/255, 190/255], false, 3)
       }
-      checkPieces.forEach(piece => bbRenderer.drawBB(viewMatrix, piece.bb, getPieceColor('colliding', piece.info), false))
-      const placedColor: [number, number, number] = [1, 1, 1]
+
+      boundingBoxInfos.forEach(piece => {
+        if (display.getFailedStep() >= 0 && piece.isCurrent)
+          return
+          
+        bbRenderer.drawBB(viewMatrix, piece.bb, colorFunction(piece), piece.isOutside, piece.isCurrent || (piece.isOutside && piece.isRelevant) ? 3 : 1.5)
+      })
+
+      
       if (display.getFailedStep() >= 0){
         const failedPiece = structure.getPiece(display.getStep() - 1).failedPieces[display.getFailedStep()].piece as OffsetStructure
-        bbRenderer.drawBB(viewMatrix, new BoundingBox(failedPiece.getOffset(), failedPiece.getSize()), getPieceColor('own', ownPiece.info), false, 3)
-      } else {
-        bbRenderer.drawBB(viewMatrix, ownPiece.bb, getPieceColor('own', ownPiece.info), false, 3)
+        bbRenderer.drawBB(viewMatrix, new BoundingBox(failedPiece.getOffset(), failedPiece.getSize()), [1, 1, 1], false, 3)
       }
     }
 
@@ -408,7 +432,7 @@ async function main() {
         return
       }
       dragPos = [evt.clientX, evt.clientY]
-      render();
+      requestAnimationFrame(render);
     }
   })
 
@@ -444,7 +468,7 @@ async function main() {
       }
 
       touchPos = [evt.touches[0].clientX, evt.touches[0].clientY]
-      render();
+      requestAnimationFrame(render);
     }
   })
 
@@ -478,7 +502,7 @@ async function main() {
   canvas.addEventListener('wheel', (evt: WheelEvent) => {
     cDist += evt.deltaY > 0 ? 1 : -1
     cDist = Math.max(5, Math.min(100, cDist))
-    render();
+    requestAnimationFrame(render);
   })
 
   canvas.addEventListener('contextmenu', evt => {
@@ -528,19 +552,19 @@ async function main() {
 
     if (display.getFailedStep() >= 0){
       display.successfullStep()
-      const bb = structure.getBoundingBoxes(display.getStep() - 1)[0].bb
+      const bb = structure.getBB(display.getStep() - 1)
       refreshStructure(bb)
     }
 
     display.nextStep()
 
-    const bb = structure.getBoundingBoxes(display.getStep() - 1)[0].bb
+    const bb = structure.getBB(display.getStep() - 1)
     refreshStructure(bb)
     requestAnimationFrame(render)
   }
 
   function prev() {
-    const bb = structure.getBoundingBoxes(display.getStep() - 1)[0].bb
+    const bb = structure.getBB(display.getStep() - 1)
     display.prevStep()
     refreshStructure(bb)
     requestAnimationFrame(render)

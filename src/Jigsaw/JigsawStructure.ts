@@ -9,15 +9,15 @@ import { AnnotationProvider, StructureAnnotation } from "../Structure/Annotation
 
 export type PieceInfo = {
     check: number[],
-    inside: number | undefined,
+    inside?: number | undefined,
 
-    pool: Identifier | undefined,
-    aliased_from: Identifier | undefined
-    fallback_from: Identifier | undefined,
-    element: string | undefined,
-    element_type: string | undefined,
-    joint: string | undefined,
-    joint_type: "alligned" | "rollable" | undefined,
+    pool?: Identifier | undefined,
+    aliased_from?: Identifier | undefined
+    fallback_from?: Identifier | undefined,
+    element?: string | undefined,
+    element_type?: string | undefined,
+    joint?: string | undefined,
+    joint_type?: "alligned" | "rollable" | undefined,
     depth: number,
     jigsaw_pos: BlockPos,
     selection_priority: number,
@@ -31,6 +31,14 @@ type Piece = {
     failedPieces: {name: string, piece: (StructureProvider & AnnotationProvider)}[],
 }
 
+export type BoundingBoxInfo = {
+    bb: BoundingBox,
+    poolIndex: number,
+    poolJointIndex: number
+    isOutside?: boolean,
+    isRelevant?: boolean,
+    isCurrent?: boolean
+}
 
 export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
@@ -39,6 +47,9 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
     private maxPos: BlockPos = [0, 0, 0]
 
     private lastStep: number | undefined = undefined
+
+    private pools: Set<string> = new Set<string>()
+    private poolJoints: Set<string> = new Set<string>()
 
     private startingY = 0
     private maxRadius = 80
@@ -65,6 +76,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
     public setLastStep(step: number | undefined){
         this.lastStep = step
+        this.bakedBlocks.clear()
     }
 
     public getStepCount(): number {
@@ -102,10 +114,49 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
             pos[2] >= element.pos[2] && pos[2] < element.pos[2] + size[2]
     }
 
-    public getBoundingBoxes(i: number): [{bb: BoundingBox, info: PieceInfo}, {bb:BoundingBox, info: PieceInfo}, {bb: BoundingBox, info: PieceInfo}[]] {
-        const ownBB = this.getBB(i)
+    public getBoundingBoxes(maxStep: number): BoundingBoxInfo[] {
+        const currentInfo = this.pieces[maxStep].pieceInfo
 
-        const inside = this.pieces[i].pieceInfo.inside
+        const insides = [currentInfo.inside]
+        while (insides[0] !== undefined){
+            insides.unshift(this.pieces[insides[0]].pieceInfo.inside)
+        }
+
+        const bbs = this.pieces.slice(0, maxStep + 1).map((piece, i) => {
+
+            return {
+                bb: this.getBB(i),
+                pieceInfo: piece.pieceInfo,
+                poolIndex: [...this.pools].indexOf(piece.pieceInfo.pool.toString()) / this.pools.size,
+                poolJointIndex: [...this.poolJoints].indexOf(`${piece.pieceInfo.pool.toString()}${piece.pieceInfo.joint}`) / this.poolJoints.size,
+                isCurrent: i === maxStep,
+                isOutside: insides.includes(i),
+                isRelevant: currentInfo.check.includes(i) || currentInfo.inside === i
+            }
+        })
+
+        bbs.unshift({
+            bb: this.getBB(undefined),
+            isCurrent: false,
+            isOutside: true,
+            isRelevant: currentInfo.inside === undefined,
+            poolIndex: 0,
+            poolJointIndex: 0,
+            pieceInfo: {
+                check: [],
+                depth: -1,
+                jigsaw_pos: [0, 0, 0],
+                placement_priority: 0,
+                selection_priority: 0
+            }
+        })
+
+        return bbs
+
+        /*
+        const ownBB = this.getBB(maxStep)
+
+        const inside = this.pieces[maxStep].pieceInfo.inside
         const insideBB = this.getBB(inside)
         const insideInfo = inside ? this.pieces[inside].pieceInfo : {
             check: [],
@@ -123,7 +174,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
             placement_priority: 0
         } as PieceInfo
 
-        const check = this.pieces[i].pieceInfo.check
+        const check = this.pieces[maxStep].pieceInfo.check
         const checkPieces = check.map(c => {
             return {
                 bb: this.getBB(c),
@@ -132,10 +183,11 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         })
 
         return [
-            {bb: ownBB, info: this.pieces[i].pieceInfo},
+            {bb: ownBB, info: this.pieces[maxStep].pieceInfo},
             {bb: insideBB, info: insideInfo},
             checkPieces
         ]
+        */
     }
 
     public getPiece(i: number): Piece {
@@ -143,7 +195,9 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
     }
 
     public bakeBlocks(): void { 
-        this.bakedBlocks.clear()
+        if (this.bakedBlocks.size > 0)
+            return
+//        this.bakedBlocks.clear()
 
         const pieceList = this.lastStep ? this.pieces.slice(0, this.lastStep) : this.pieces
 
@@ -171,6 +225,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         state: BlockState;
         nbt: NbtCompound;
     } {
+        this.bakeBlocks()
         return this.bakedBlocks.get(`${pos[0]}, ${pos[1]}, ${pos[2]}`) ?? (this.burried ? {
             pos: pos,
             state: BlockState.STONE,
@@ -179,6 +234,9 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
     }
 
     public addPiece(structure: StructureProvider & AnnotationProvider, pos: BlockPos, annotation: PieceInfo | undefined, failedPieces: {name: string, piece: (StructureProvider & AnnotationProvider)}[]): number {
+
+        this.pools.add(annotation.pool.toString())
+        this.poolJoints.add(`${annotation.pool.toString()}${annotation.joint}`)
 
         const size = structure.getSize()
 
