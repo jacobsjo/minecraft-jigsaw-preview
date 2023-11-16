@@ -1,5 +1,5 @@
 import { Identifier, Json } from 'deepslate';
-import { Datapack, DataType } from 'mc-datapack-loader';
+import { AnonymousDatapack, ResourceLocation } from 'mc-datapack-loader';
 import { JigsawStructureFeature } from './JisgasStructureFeature';
 import { LegacyJigsawStructureFeature } from './LegacyJisgasStructureFeature';
 import { PoolAliasBinding } from './PoolAlias';
@@ -19,17 +19,14 @@ export interface StructureFeature {
 }
 
 export namespace StructureFeature {
-    export async function getAll(datapack: Datapack, version: "legacy" | "exp" | "default"): Promise<StructureFeature[]> {
-        console.log(`getting all structures for version ${version}`)
-
-        const type: DataType = version === "default" ? "worldgen/structure" : "worldgen/configured_structure_feature"
-
+    export async function getAll(datapack: AnonymousDatapack, version: "legacy" | "exp" | "default"): Promise<StructureFeature[]> {
+        const location: ResourceLocation = version === "default" ? ResourceLocation.WORLDGEN_STRUCTURE : ResourceLocation.LEGACY_WORLDGEN_CONFIGURED_STRUCTURE_FEATURE
         const features: StructureFeature[] = []
 
-        for (const id of await datapack.getIds(type)) {
+        for (const id of await datapack.getIds(location)) {
 
             try {
-                const json = await datapack.get(type, id) as any
+                const json = await datapack.get(location, id) as any
 
                 if (!json) {
                     continue

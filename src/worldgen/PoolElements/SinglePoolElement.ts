@@ -2,7 +2,7 @@ import { BlockPos, StructureProvider, Identifier, PlacedBlock, NbtFile } from "d
 import { directionRelative, shuffleArray } from "../../Util/util";
 import { BoundingBox } from "../../Jigsaw/BoundingBox";
 import { TemplatePool } from "../TemplatePool";
-import { Datapack } from "mc-datapack-loader";
+import { AnonymousDatapack, Datapack, ResourceLocation } from "mc-datapack-loader";
 import { YExpandedStructure } from "../../Structure/YExpandedStructure";
 import { AnnotationProvider } from "../../Structure/AnnotationProvider";
 import { EntityAnnotatedStructure } from "../../Structure/EntityAnnotatedStructure";
@@ -13,7 +13,7 @@ export class SinglePoolElement extends PoolElement {
     private structure: Promise<StructureProvider & AnnotationProvider>;
     private expansionHackString = "";
     constructor(
-        private datapack: Datapack,
+        private datapack: AnonymousDatapack,
         private id: Identifier,
         private processors: string,
         private projection: "rigid" | "terrain_matching"
@@ -21,7 +21,7 @@ export class SinglePoolElement extends PoolElement {
         super();
         this.structure = new Promise(async (resolve) => {
             try {
-                const arrayBuffer = (await datapack.get("structures", id)) as ArrayBuffer;
+                const arrayBuffer = (await datapack.get(ResourceLocation.STRUCTURE, id)) as ArrayBuffer;
                 const nbt = NbtFile.read(new Uint8Array(arrayBuffer));
                 resolve(EntityAnnotatedStructure.fromNbt(nbt.root));
             } catch (e) {

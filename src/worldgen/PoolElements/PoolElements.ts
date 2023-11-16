@@ -3,11 +3,11 @@ import { ListPoolElement } from "./ListPoolElement";
 import { FeaturePoolElement } from "./FeaturePoolElement";
 import { EmptyPoolElement } from "./EmptyPoolElement";
 import { PoolElement } from "./PoolElement";
-import { Datapack } from "mc-datapack-loader";
+import { AnonymousDatapack, Datapack } from "mc-datapack-loader";
 import { Identifier } from "deepslate";
 
 export namespace PoolElements{
-    export function fromElement(datapack: Datapack, element: {
+    export function fromElement(datapack: AnonymousDatapack, element: {
         element_type: string;
         [key: string]: any;
     }): PoolElement {

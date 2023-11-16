@@ -50,7 +50,7 @@ export class StructureRenderer extends Renderer {
 
 	constructor(
 		gl: WebGLRenderingContext,
-		structure: StructureProvider,
+		structure: StructureProvider | undefined,
 		private readonly resources: Resources,
 	) {
 		super(gl)

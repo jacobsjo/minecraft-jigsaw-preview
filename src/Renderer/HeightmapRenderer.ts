@@ -56,14 +56,6 @@ export class HeightmapRenderer {
     this.setHeightmap(heightmap)
   }
 
-  public toggleRendering(force?: boolean): boolean{
-    if (force === undefined)
-      this.doRender = !this.doRender
-    else (this.doRender = force)
-
-    return this.doRender
-  }
-
   height_to_color(height: number): vec3{
     const color_map = [
       {y: 64, color: vec3.fromValues(0.0, 0.0, 1.0) },
@@ -87,10 +79,6 @@ export class HeightmapRenderer {
 
     return color_map[color_map.length-1].color
 
-  }
-
-  update(_chunkPositions?: vec3[]): void {
-    // do nothing
   }
 
   private getPerspective() {
@@ -144,9 +132,6 @@ export class HeightmapRenderer {
   }
 
   draw(viewMatrix: mat4): void {
-    if (!this.doRender)
-      return 
-
     this.gl.useProgram(this.shaderProgram)
 
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.index_buffer)

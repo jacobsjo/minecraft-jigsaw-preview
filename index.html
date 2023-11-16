@@ -17,88 +17,13 @@
   <meta name="author" content="jacobsjo" />
   <meta name="keywords" content="minecraft, jigsaw, structure, preview, visualization, debug, json" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="HandheldFriendly" content="true" />
-  <script type="module" src="src/App.ts"></script>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="wrapper">
-      <select class="button enabled fullwidth" id="version-select">
-        <option value="1_16">1.16.5</option>
-        <option value="1_17">1.17.1</option>
-        <option value="1_18">1.18.2</option>
-        <option value="1_19">1.19</option>
-        <option value="1_20">1.20</option>
-        <option value="1_20_3">1.20.3</option>
-      </select>
-      <span class="button enabled" id="openzip"> Open Datapack .zip</span>
-      <span class="button enabled" id="openfolder"> Open Datapack Folder</span>
-      <span class="button fullwidth enabled" id="select-heightmap">Select Heightmap</span>
-      <ul class="list" id="features"></ul><br />
-      <p><a class="link" href="https://jacobsjo.eu/about.html" target="_blank">About</a>
-      <a class="link" href="https://github.com/jacobsjo/minecraft-jigsaw-preview" target="_blank">GitHub</a>
-      <a class="link" href="https://github.com/jacobsjo/minecraft-jigsaw-preview/issues" target="_blank">Report Issue</a>
-      <a class="link" href="https://jacobsjo.eu" target="_blank">Other Tools</a>
-      <a class="link" href="OTHER_LICENSES.txt" target="_blank">Licenses</a>
-    </p>
-    </div>
-    <div class="iconbar">
-      <span class="button icon enabled toggle selected" id="bb" title="show bounding boxes"><img src="buttons/bb.png" /></span>
-      <span class="button icon enabled toggle" id="info" title="show piece info"><img src="buttons/info.png" /></span>
-      <span class="button icon enabled toggle" id="heightmap" title="show heightmap"><img src="buttons/heightmap.png" /></span>
-      <span class="button icon enabled toggle" id="bury" title="buried structure (hide outside faces)"><img src="buttons/bury.webp" /></span><br />
-      <span class="button icon enabled toggle" id="icon-empty" title="show placement of empty pieces"><img src="annotation_icons/empty.png" /></span>
-      <span class="button icon enabled toggle selected" id="icon-entity" title="show entity markers"><img src="annotation_icons/entity.png" /></span>
-      <span class="button icon enabled toggle selected" id="icon-feature" title="show placement of feature pieces"><img src="annotation_icons/feature.png" /></span>
-      <!-- <span class="button icon enabled" id="download-image">DL</span>--><br /><br />
-    </div>
-    <!--<div class="closing_x"><p>&times;</p></div>-->
-  </div>
-  <div class="main">
-    <canvas id="render" width="640" height="480"></canvas>
-    <div class=ui>
-      <span class="button" id="first"> |&lt;&lt; </span>
-      <span class="button" id="prev"> &lt; </span>
-      <span class="text" id="step">&nbsp;</span></span>
-      <span class="button" id="next"> &gt; </span>
-      <span class="button" id="last"> &gt;&gt;| </span>&nbsp;&nbsp;&nbsp;&nbsp;
-    </div>
-    <div class="infopanel info hidden">
-      <div class="title" id="templete-pool"></div>
-      <div class="text"><span class="label" id="fallback_from">Fallback from: </span></div>
-      <div class="text"><span class="label" id="aliased_from">Aliased from: </span></div>
-      <div class="text"><pre><code id="element"></code></pre></div>
-      <div class="text"><span class="label">Depth: </span> <span id="depth"></span></div>
-      <div class="text hidden" id="joint-div"><span class="label">Joint: </span> <span class="name" id="joint"></span> <span id="joint_type"></span></div>
-      <div class="text"><span class="label">Selection Priority: </span> <span id="selection_priority"></span></div>
-      <div class="text"><span class="label">Placement Priority: </span> <span id="placement_priority"></span></div>
-      <hr class="dashed">
-      <div class="label" id="failedLabel">Failed prior attemps:</div>
-      <ui class="list" id="failed">
-      </ui>
-    </div>
-    <div class="infopanel heightmap-selector hidden">
-      <div class="title">Select a heightmap to use</div>
-      <ul class="list" id="heightmaps">
-        <!--<li class="item" id="upload">Upload Custom Heightmap Image</li>
-        <li class="gap"></li>-->
-        <li class="item selected" id="flat">Flat</li>
-        <li class="item" id="plains">Plains</li>
-        <li class="item" id="hills">Hills</li>
-        <li class="item" id="mountains">Mountains</li>
-        <li class="item" id="cliff_up">Cliff (Up)</li>
-        <li class="item" id="cliff_down">Cliff (Down)</li>
-        <li class="item" id="river_ns">River (North-South)</li>
-        <li class="item" id="river_we">River (East-West)</li>
-        <li class="item" id="river_offset">River (Offset)</li>
-      </ul>
-    </div>
+  <div id="app"></div>
+  <script type="module" src="src/main.ts"></script>
 
-  </div>
-
-  <div class="loader">
-    <div class="spinner"></div>
-  </div>
+ 
 </body>
 </html>

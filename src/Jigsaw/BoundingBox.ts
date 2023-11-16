@@ -38,6 +38,10 @@ export class BoundingBox{
     }
 
     public getAffectedChunks(chunkSize: number): vec3[]{
+        if (this.size[0] === 0 && this.size[1] === 0 && this.size[2] ===0 ){
+            return []
+        }
+
         const chunkMin = [Math.floor((this.min[0]-1)/chunkSize), Math.floor((this.min[1]-1)/chunkSize), Math.floor((this.min[2]-1)/chunkSize)]
         const chunkMax = [Math.floor((this.max[0]+1)/chunkSize), Math.floor((this.max[1]+1)/chunkSize), Math.floor((this.max[2]+1)/chunkSize)]
 

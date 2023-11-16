@@ -1,6 +1,6 @@
 import { StructureProvider, PlacedBlock } from "deepslate";
 import { ListStructure } from "../../Structure/ListStructure";
-import { Datapack } from "mc-datapack-loader";
+import { AnonymousDatapack, Datapack } from "mc-datapack-loader";
 import { AnnotationProvider } from "../../Structure/AnnotationProvider";
 import { PoolElement } from "./PoolElement";
 import { PoolElements } from "./PoolElements";
@@ -11,7 +11,7 @@ export class ListPoolElement extends PoolElement {
     private structure: Promise<ListStructure>;
 
     constructor(
-        datapack: Datapack,
+        datapack: AnonymousDatapack,
         elements: {
             element_type: string;
             [key: string]: string;

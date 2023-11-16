@@ -1,6 +1,6 @@
 import { NbtCompound, BlockPos, BlockState, StructureProvider, Identifier, StringReader } from "deepslate";
 import { FeatureStructure } from "../../Structure/FeatrueStructure";
-import { Datapack } from "mc-datapack-loader";
+import { AnonymousDatapack, Datapack } from "mc-datapack-loader";
 import { AnnotationProvider } from "../../Structure/AnnotationProvider";
 import { PoolElement } from "./PoolElement";
 
@@ -13,7 +13,7 @@ export class FeaturePoolElement extends PoolElement {
     };
 
     constructor(
-        datapack: Datapack,
+        datapack: AnonymousDatapack,
         private feature: Identifier,
         private projection: "rigid" | "terrain_matching"
     ) {

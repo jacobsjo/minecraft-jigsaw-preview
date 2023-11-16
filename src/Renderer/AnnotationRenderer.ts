@@ -128,7 +128,6 @@ export class AnnotationRenderer {
     types.forEach(a => {
       setVertexAttr(this.gl, this.shaderProgram, 'texCoord', 2, this.texCoordBuffer[a])
       this.structure.getAnnotations().filter(annotation => annotation.annotation === a).forEach(annotation => {
-        //console.log(`rendering ${a} at ${annotation.pos[0]}, ${annotation.pos[1]}, ${annotation.pos[2]}`);
         const translatedMatrix = mat4.create()
         mat4.copy(translatedMatrix, viewMatrix)
         mat4.translate(translatedMatrix, translatedMatrix, annotation.pos)

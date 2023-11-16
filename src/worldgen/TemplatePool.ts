@@ -1,5 +1,5 @@
 import { Identifier } from 'deepslate';
-import { Datapack } from 'mc-datapack-loader';
+import { AnonymousDatapack, Datapack, ResourceLocation } from 'mc-datapack-loader';
 import * as path from 'path';
 import { shuffleArray, weightedShuffleArray } from '../Util/util'
 import { PoolElement } from './PoolElements/PoolElement';
@@ -39,7 +39,7 @@ export class TemplatePool{
         return maxHeight
     }
 
-    public static fromName(datapack: Datapack, id: Identifier, doExpansionHack: boolean): Promise<TemplatePool>{
+    public static fromName(datapack: AnonymousDatapack, id: Identifier, doExpansionHack: boolean): Promise<TemplatePool>{
         if (this.templatePoolMap.has(id + "|" + doExpansionHack)){
             return this.templatePoolMap.get(id + "|" + doExpansionHack)
         }
@@ -47,7 +47,7 @@ export class TemplatePool{
         const promise: Promise<TemplatePool> = new Promise(async (resolve, reject) => {
             var json
             try {
-                json = await datapack.get("worldgen/template_pool", id) as TemplatePoolJson
+                json = await datapack.get(ResourceLocation.WORLDGEN_TEMPLATE_POOL, id) as TemplatePoolJson
             } catch (e){
                 if (e instanceof URIError){
                     reject(new EvalError("Cound not load Template Pool " + id))
@@ -57,7 +57,7 @@ export class TemplatePool{
                     reject(e)
                 }
 
-                json = await datapack.get("worldgen/template_pool", EMPTY) as TemplatePoolJson
+                json = await datapack.get(ResourceLocation.WORLDGEN_TEMPLATE_POOL, EMPTY) as TemplatePoolJson
             } 
 
             try {

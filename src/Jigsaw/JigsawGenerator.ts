@@ -7,7 +7,7 @@ import { BoundingBox } from './BoundingBox';
 import { EmptyPoolElement } from "../worldgen/PoolElements/EmptyPoolElement";
 import { Heightmap } from '../Heightmap/Heightmap';
 import { StructureFeature } from '../worldgen/StructureFeature';
-import { Datapack } from 'mc-datapack-loader';
+import { AnonymousDatapack, Datapack } from 'mc-datapack-loader';
 import { Identifier } from 'deepslate';
 import { Rotation } from '../Util/Rotation';
 import { RotatedStructure } from '../Structure/RotatedStructure';
@@ -24,8 +24,8 @@ const JIGSAW = Identifier.create("jigsaw")
 export class JigsawGenerator {
     private world: JigsawStructure
 
-    constructor(
-        private datapack: Datapack,
+    public constructor(
+        private datapack: AnonymousDatapack,
         private startingPool: Identifier,
         private depth: number,
         private doExpansionHack: boolean,
@@ -38,7 +38,6 @@ export class JigsawGenerator {
     ) {
         this.world = new JigsawStructure()
     }
-
 
     private getRotation(forward1: string, up1: string, forward2: string, up2: string, rollable: boolean): Rotation | undefined {
         if (forward1 === "up" || forward1 === "down") {
@@ -120,7 +119,7 @@ export class JigsawGenerator {
             //getElementBlocks returns blocks rotated and moved correctly
 
             const checkInsideList: number[] = []
-            //TODO!!!
+
             const jigsawBlocks = this.world.getPiece(parent.piece).structure.getBlocks().filter(block => { return block.state.getName().equals(JIGSAW) }).map(block => {
                 return {
                     pos: [block.pos[0] + bb.min[0], block.pos[1] + bb.min[1], block.pos[2] + bb.min[2]] as BlockPos,
@@ -291,7 +290,7 @@ export class JigsawGenerator {
         return this.world
     }
 
-    public static fromStructureFeature(datapack: Datapack, feature: StructureFeature, heightmap: Heightmap) {
+    public static fromStructureFeature(datapack: AnonymousDatapack, feature: StructureFeature, heightmap: Heightmap) {
         return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases(), feature.getTerrainAdaptation() === "bury")
     }
 }

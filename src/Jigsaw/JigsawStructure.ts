@@ -1,8 +1,10 @@
 //import { NamedNbtTag, NbtTag, getTag, getListTag, getOptional } from "@webmc/nbt";
-import { NbtCompound, BlockPos, BlockState, StructureProvider, Structure, Identifier, PlacedBlock } from "deepslate";
+import { NbtCompound, BlockPos, BlockState, StructureProvider, Structure, Identifier, PlacedBlock, NbtFile } from "deepslate";
 //import fs from 'fs';
 import { BoundingBox } from "./BoundingBox"
 import { AnnotationProvider, StructureAnnotation } from "../Structure/AnnotationProvider";
+import { EntityAnnotatedStructure } from "../Structure/EntityAnnotatedStructure";
+import { vec3 } from "gl-matrix";
 
 
 
@@ -28,7 +30,7 @@ type Piece = {
     structure: StructureProvider & AnnotationProvider,
     pos: BlockPos,
     pieceInfo: PieceInfo,
-    failedPieces: {name: string, piece: (StructureProvider & AnnotationProvider)}[],
+    failedPieces: { name: string, piece: (StructureProvider & AnnotationProvider) }[],
 }
 
 export type BoundingBoxInfo = {
@@ -42,11 +44,51 @@ export type BoundingBoxInfo = {
 
 export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
+    public static createDemo() {
+        const demo = new JigsawStructure()
+
+        /*
+        const exampleRes1 = await fetch('example.nbt')
+        const exampleData1 = await exampleRes1.arrayBuffer()
+        const exampleNbt1 = NbtFile.read(new Uint8Array(exampleData1))
+        const structure1 = EntityAnnotatedStructure.fromNbt(exampleNbt1.root)
+        */
+
+        const structure = new EntityAnnotatedStructure([2,2,2], [BlockState.STONE], [
+            {pos: [0, 0, 0], state: 0},
+            {pos: [1, 0, 0], state: 0},
+            {pos: [0, 0, 1], state: 0},
+            {pos: [1, 0, 1], state: 0},
+        ])
+
+        const pieceInfo: PieceInfo = {
+            check: [],
+            inside: undefined,
+            element: "{}",
+            element_type: "",
+            joint: undefined,
+            joint_type: undefined,
+            pool: new Identifier("welcome", "jigsaw"),
+            fallback_from: undefined,
+            aliased_from: undefined,
+            depth: 0,
+            jigsaw_pos: undefined,
+            placement_priority: 0,
+            selection_priority: 0
+        }
+        demo.addPiece(structure, [0, 65, 0], pieceInfo, [])
+        demo.setStartingY(64)
+
+        return demo
+    }
+
     private pieces: Piece[] = []
     private minPos: BlockPos = [0, 0, 0]
     private maxPos: BlockPos = [0, 0, 0]
 
-    private lastStep: number = 1
+    private dirtyChunks = new Map<string, vec3>()
+
+    private lastStep: number = 0
 
     private pools: Set<string> = new Set<string>()
     private poolJoints: Set<string> = new Set<string>()
@@ -61,7 +103,8 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
             pos: BlockPos;
             state: BlockState;
             nbt: NbtCompound;
-        }}[]> = new Map()
+        }
+    }[]> = new Map()
 
     public setStartingY(y: number) {
         this.startingY = y
@@ -76,7 +119,15 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
     }
 
 
-    public setLastStep(step: number | undefined){
+    public setLastStep(step: number | undefined) {
+        if (step < 0 || step >= this.pieces.length ){
+            console.warn('trying to place step outside range')
+        }
+
+        for (var s = Math.min(step, this.lastStep) + 1; s <= Math.max(step, this.lastStep); s++ ){
+            this.getBB(s).getAffectedChunks(8).forEach(p => this.dirtyChunks.set(`${p[0]}, ${p[1]}, ${p[2]}`, p))
+        }
+
         this.lastStep = step
     }
 
@@ -87,6 +138,12 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
     public getSize(): BlockPos {
         const [minPos, maxPos] = this.getBounds()
         return [maxPos[0] - minPos[0] + 1, maxPos[1] - minPos[1] + 1, maxPos[2] - minPos[2] + 1]
+    }
+
+    public getChunksToUpdate(){
+        const chunks = [...this.dirtyChunks.values()]
+        this.dirtyChunks.clear()
+        return chunks
     }
 
     public getBB(nr: number | undefined): BoundingBox {
@@ -115,22 +172,22 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
             pos[2] >= element.pos[2] && pos[2] < element.pos[2] + size[2]
     }
 
-    public getBoundingBoxes(maxStep: number): BoundingBoxInfo[] {
-        const currentInfo = this.pieces[maxStep].pieceInfo
+    public getBoundingBoxes(): BoundingBoxInfo[] {
+        const currentInfo = this.pieces[this.lastStep].pieceInfo
 
         const insides = [currentInfo.inside]
-        while (insides[0] !== undefined){
+        while (insides[0] !== undefined) {
             insides.unshift(this.pieces[insides[0]].pieceInfo.inside)
         }
 
-        const bbs = this.pieces.slice(0, maxStep + 1).map((piece, i) => {
+        const bbs = this.pieces.slice(0, this.lastStep + 1).map((piece, i) => {
 
             return {
                 bb: this.getBB(i),
                 pieceInfo: piece.pieceInfo,
                 poolIndex: [...this.pools].indexOf(piece.pieceInfo.pool.toString()) / this.pools.size,
                 poolJointIndex: [...this.poolJoints].indexOf(`${piece.pieceInfo.pool.toString()}${piece.pieceInfo.joint}`) / this.poolJoints.size,
-                isCurrent: i === maxStep,
+                isCurrent: i === this.lastStep,
                 isOutside: insides.includes(i),
                 isRelevant: currentInfo.check.includes(i) || currentInfo.inside === i
             }
@@ -195,14 +252,14 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         return this.pieces[i]
     }
 
-    public bakeBlocks(): void { 
+    public bakeBlocks(): void {
         if (this.bakedBlocks.size > 0)
             return
-//        this.bakedBlocks.clear()
+        //        this.bakedBlocks.clear()
 
-        const pieceList = this.lastStep ? this.pieces.slice(0, this.lastStep) : this.pieces
+        //const pieceList = this.lastStep ? this.pieces.slice(0, this.lastStep) : this.pieces
 
-        pieceList.forEach((e, i) => e.structure.getBlocks().forEach(b => {
+        this.pieces.forEach((e, i) => e.structure.getBlocks().forEach(b => {
             const new_pos: BlockPos = [b.pos[0] + e.pos[0], b.pos[1] + e.pos[1], b.pos[2] + e.pos[2]]
             const posKey = `${new_pos[0]}, ${new_pos[1]}, ${new_pos[2]}`
             if (!this.bakedBlocks.has(posKey))
@@ -225,7 +282,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         nbt?: NbtCompound;
     }[] {
         this.bakeBlocks()
-        return Array.from(this.bakedBlocks.values()).flatMap(bs => bs.find(b => b.step < this.lastStep)?.block ?? [])
+        return Array.from(this.bakedBlocks.values()).flatMap(bs => bs.find(b => b.step <= this.lastStep)?.block ?? [])
     }
 
     public getBlock(pos: BlockPos): {
@@ -238,8 +295,8 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         const posKey = `${pos[0]}, ${pos[1]}, ${pos[2]}`
 
         const blocksAtPos = this.bakedBlocks.get(posKey)
-        if (blocksAtPos){
-            const result = blocksAtPos.find(b => b.step < this.lastStep)
+        if (blocksAtPos) {
+            const result = blocksAtPos.find(b => b.step <= this.lastStep)
             if (result)
                 return result.block
         }
@@ -254,7 +311,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         return undefined
     }
 
-    public addPiece(structure: StructureProvider & AnnotationProvider, pos: BlockPos, annotation: PieceInfo | undefined, failedPieces: {name: string, piece: (StructureProvider & AnnotationProvider)}[]): number {
+    public addPiece(structure: StructureProvider & AnnotationProvider, pos: BlockPos, annotation: PieceInfo | undefined, failedPieces: { name: string, piece: (StructureProvider & AnnotationProvider) }[]): number {
 
         this.pools.add(annotation.pool.toString())
         this.poolJoints.add(`${annotation.pool.toString()}${annotation.joint}`)
@@ -288,7 +345,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
 
     getAnnotations(): StructureAnnotation[] {
-        const pieceList = this.lastStep ? this.pieces.slice(0, this.lastStep) : this.pieces
+        const pieceList = this.pieces.slice(0, this.lastStep + 1)
 
         return pieceList.flatMap(e => e.structure.getAnnotations().map(a => {
             return {
