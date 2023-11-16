@@ -36,6 +36,7 @@
     "deepslate": "^0.17.4",
     "gl-matrix": "^3.4.3",
     "jszip": "^3.10.1",
+    "mc-datapack-loader": "^0.3.2",
     "path": "^0.12.7",
     "pinia": "^2.1.7",
     "primevue": "^3.40.1",

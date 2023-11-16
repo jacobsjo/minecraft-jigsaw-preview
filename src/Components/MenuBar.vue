@@ -65,7 +65,9 @@ function pd(evt: Event) {
         <Button @press="openZipDatapack" title="Open zip datapack"><font-awesome-icon icon="fa-file-zipper" /></Button>
         <Button @press="openFolderDatapack" title="Open folder datapack"><font-awesome-icon
                 icon="fa-folder-open" /></Button>
-        <select class="dropdown" id="structure" aria-label="Structure" v-model="appState.selectedStructure" @keydown.down="pd" @keydown.left="pd" @keydown.right="pd" @keydown.up="pd">
+        <select required class="dropdown" id="structure" aria-label="Structure" v-model="appState.selectedStructure" @keydown.down="pd"
+            @keydown.left="pd" @keydown.right="pd" @keydown.up="pd" >
+            <option value="" disabled selected hidden>Select structure</option>
             <option v-for="structure in appState.structures" :value="structure.getIdentifier().toString()">{{
                 structure.getIdentifier().toString() }}</option>
         </select>
@@ -124,6 +126,7 @@ function pd(evt: Event) {
     flex-wrap: wrap;
 }
 
+
 .menuBar .group {
     display: flex;
     align-items: center;
@@ -174,6 +177,10 @@ input {
 
 .dropdown:hover {
     background-color: rgb(87, 87, 87);
+}
+
+.dropdown:invalid {
+    color: rgb(204, 204, 204);
 }
 
 .button {

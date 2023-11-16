@@ -19,6 +19,7 @@ import { TimelineStore } from '../Stores/TilelineStore';
 import { MetaStore } from '../Stores/MetaStore';
 import { AppStateStore } from '../Stores/AppStateStore';
 import { InsetStructure } from '../Structure/InsetStructure';
+import { EmptyStructure } from '../Structure/EmptyStructure';
 
 const settings = SettingsStore()
 const timeline = TimelineStore()
@@ -121,7 +122,7 @@ onMounted(async () => {
 
     structureRenderer = new StructureRenderer(gl, world, resources)
 
-    failedStructureRenderer = new StructureRenderer(gl, undefined, resources)
+    failedStructureRenderer = new StructureRenderer(gl, new EmptyStructure(), resources)
 
     annotationRenderer = new AnnotationRenderer(gl, world, annotation_atlas)
     annotationRenderer.setRenderedTypes(['entity', 'feature'])
@@ -136,7 +137,7 @@ onMounted(async () => {
 async function reloadResources() {
     resources = await McmetaResourceManager.create(Constants.MINECRAFT_ASSET_VERSIONS[meta.mcVersion])
     structureRenderer = new StructureRenderer(gl, world, resources)
-    failedStructureRenderer = new StructureRenderer(gl, undefined, resources)
+    failedStructureRenderer = new StructureRenderer(gl, new EmptyStructure(), resources)
 }
 
 onUnmounted(() => {

@@ -10,6 +10,6 @@ export default defineConfig({
     sourcemap: true
   },
   optimizeDeps: {
-    include: ['deepslate', 'mc-datapack-loader'],
+
   },
 })

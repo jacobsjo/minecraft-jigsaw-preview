@@ -1,6 +1,4 @@
-import { Identifier } from "deepslate"
-
-const opaqueSet = new Set([
+export const opaqueSet = new Set([
 	'minecraft:acacia_planks',
 	'minecraft:acacia_wood',
 	'minecraft:amethyst_block',
@@ -361,7 +359,7 @@ const opaqueSet = new Set([
 	"minecraft:waxed_weathered_chiseled_copper",
 ])
 
-const transparentSet = new Set([
+export const transparentSet = new Set([
 	"minecraft:water",
 	"minecraft:flowing_water",
 	"minecraft:white_stained_glass",
@@ -399,7 +397,7 @@ const transparentSet = new Set([
 	"minecraft:tinted_glass"
 ])
 
-const nonSelfCullingSet = new Set([
+export const nonSelfCullingSet = new Set([
 	"minecraft:oak_leaves",
 	"minecraft:spruce_leaves",
 	"minecraft:birch_leaves",
@@ -411,24 +409,3 @@ const nonSelfCullingSet = new Set([
 	"minecraft:azalea_leaves",
 	"minecraft:flowering_azalea_leaves"
 ])
-
-export function isOpaque(name?: Identifier): boolean {
-	if (!name)
-		return false
-
-	return opaqueSet.has(name.toString())
-}
-
-export function isTransparent(name?: Identifier): boolean {
-	if (!name)
-		return false
-
-	return transparentSet.has(name.toString())
-}
-
-export function isSelfCulling(name?: Identifier): boolean {
-	if (!name)
-		return false
-
-	return !nonSelfCullingSet.has(name.toString())
-}

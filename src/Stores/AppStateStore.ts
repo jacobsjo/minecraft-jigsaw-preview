@@ -71,6 +71,7 @@ export const AppStateStore = defineStore('appState', () => {
 
     meta.$subscribe(() => {
         world = JigsawStructure.createDemo()
+        selectedStructure.value = ""
         timeline.step = 0
         updateCounter.value++;
         updateVanilla()

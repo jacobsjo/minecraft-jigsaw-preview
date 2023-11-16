@@ -1,17 +1,29 @@
 import { BlockDefinition, BlockModel, Identifier, Resources, TextureAtlas, upperPowerOfTwo, UV } from "deepslate";
 import { getJigsawModel } from "../Util/util";
-import { isOpaque, isSelfCulling, isTransparent } from "../Util/OpaqueHelper";
+import { nonSelfCullingSet, opaqueSet, transparentSet } from "../Util/OpaqueHelper";
 
 const MCMETA = 'https://raw.githubusercontent.com/misode/mcmeta/'
 const JIGSAW_MODEL_ID = Identifier.create("block/jigsaw")
 
+
+type BlockFlags = {
+	opaque?: boolean,
+	transparent?: boolean,
+	self_culling?: boolean,
+}
+
 export class McmetaResourceManager implements Resources {
+
+    private DEFUALT_FLAGS = {self_culling: true}
 
     private constructor(
         private blockDefinitions: { [key: string]: BlockDefinition },
         private blockModels: { [key: string]: BlockModel },
-        private textureAtlas: TextureAtlas
-    ) { }
+        private textureAtlas: TextureAtlas,
+        private blockFlags: { [key: string]: BlockFlags}
+    ) { 
+
+    }
 
     getBlockDefinition(id: Identifier): BlockDefinition {
         return this.blockDefinitions[id.toString()] 
@@ -30,12 +42,8 @@ export class McmetaResourceManager implements Resources {
         return this.textureAtlas.getTextureUV(texture)
     }
 
-    getBlockFlags(id: Identifier): { opaque?: boolean, transparent?: boolean, self_culling?: boolean } {
-        return {
-            opaque: isOpaque(id),
-            transparent: isTransparent(id),
-            self_culling: isSelfCulling(id)
-        }
+    getBlockFlags(id: Identifier): BlockFlags {
+        return this.blockFlags[id.toString()] ?? this.DEFUALT_FLAGS
     }
 
     getBlockProperties(id: Identifier): Record<string, string[]> {
@@ -89,7 +97,22 @@ export class McmetaResourceManager implements Resources {
         })
         const textureAtlas = new TextureAtlas(atlasData, idMap)
 
-        return new McmetaResourceManager(blockDefinitions, blockModels, textureAtlas)
+        const blockFlags: { [key: string]: BlockFlags} = {}
+
+        opaqueSet.forEach(o => blockFlags[o] = {opaque: true, self_culling: true})
+        transparentSet.forEach(t => {
+            const f = blockFlags[t] ?? {self_culling: true}
+            f.transparent = true
+            blockFlags[t] = f
+        })
+
+        nonSelfCullingSet.forEach(c => {
+            const f = blockFlags[c] ?? {}
+            f.self_culling = false
+            blockFlags[c] = f
+        })
+
+        return new McmetaResourceManager(blockDefinitions, blockModels, textureAtlas, blockFlags)
     }
 
 
