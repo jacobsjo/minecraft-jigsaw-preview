@@ -68,8 +68,8 @@ function pd(evt: Event) {
         <select required class="dropdown" id="structure" aria-label="Structure" v-model="appState.selectedStructure" @keydown.down="pd"
             @keydown.left="pd" @keydown.right="pd" @keydown.up="pd" >
             <option value="" disabled selected hidden>Select structure</option>
-            <option v-for="structure in appState.structures" :value="structure.getIdentifier().toString()">{{
-                structure.getIdentifier().toString() }}</option>
+            <option v-for="structure in appState.structures.map(s => s.getIdentifier().toString()).sort() " :value="structure">{{
+                structure }}</option>
         </select>
         <Button @press="appState.regenerate()" title="Regenerate"><font-awesome-icon icon="fa-rotate-right" /></Button>
         <div class="seperator"></div>
