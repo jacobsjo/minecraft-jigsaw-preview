@@ -3,11 +3,10 @@ This tool lets you preview and debug minecraft jigsaw structures.
 
 Use at [https://jigsaw.jacobsjo.eu](http://jigsaw.jacobsjo.eu)
 
-![](docs/TitleImage.jpg)
+![](docs/TitleImage.png)
 
 ## Bounding Boxes
-- Blue: Currently generated structure
-- Green: Generating inside of this structure
-- Red: Other structures that can't intersect
-
-Note that "inside" is defined loosly in y axis for villages.
+- White: Currently generated structure
+- Blue: Generating inside of this structure
+- Yellow: Other structures that can't intersect
+- Gray: Other structures that are irrelevant to the current generation
