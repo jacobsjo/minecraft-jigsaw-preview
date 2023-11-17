@@ -90,7 +90,6 @@ watch(() => appState.minorUpdateCounter, () => {
 })
 
 watch(() => appState.heightmap, async () => {
-    console.log('heightmap changed')
     heightmapRenderer.setHeightmap(await appState.heightmap)
     requestAnimationFrame(render)
 })

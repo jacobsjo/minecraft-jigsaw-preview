@@ -48,8 +48,10 @@ export const AppStateStore = defineStore('appState', () => {
     })
 
     watch(() => settings.burried, () => {
-        world.burried = settings.burried
-        updateCounter.value++
+        if (world.burried !== settings.burried){
+            world.burried = settings.burried
+            updateCounter.value++
+        }
     })
 
     timeline.$subscribe(() => {
@@ -61,7 +63,6 @@ export const AppStateStore = defineStore('appState', () => {
 
     async function reloadDatapacks(){
         TemplatePool.reload()
-        structures.value = []
         structures.value = await StructureFeature.getAll(compositeDatapack(), Constants.LEGACY_MINECRAFT_VERSIONS.includes(meta.mcVersion) ? 'legacy' : 'default')        
     }
 
@@ -84,6 +85,7 @@ export const AppStateStore = defineStore('appState', () => {
     }
 
     async function regenerate(){
+        await reloadDatapacks()
         const sfm = JigsawGenerator.fromStructureFeature(compositeDatapack(), structures.value.find(s => s.getIdentifier().toString() === selectedStructure.value), await heightmap.value)
         await sfm.generate()
         world = sfm.getWorld()

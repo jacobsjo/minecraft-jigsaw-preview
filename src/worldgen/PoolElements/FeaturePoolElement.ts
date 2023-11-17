@@ -33,7 +33,6 @@ export class FeaturePoolElement extends PoolElement {
     }
 
     public async getShuffledJigsawBlocks(): Promise<{ pos: BlockPos; state: BlockState; nbt: NbtCompound; }[]> {
-        console.log("getting feature jigsaws")
         return [FeaturePoolElement.JIGSAW];
     }
 
