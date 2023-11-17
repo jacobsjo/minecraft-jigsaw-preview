@@ -1,7 +1,7 @@
 import { Identifier, Json } from 'deepslate';
 import { AnonymousDatapack, ResourceLocation } from 'mc-datapack-loader';
-import { JigsawStructureFeature } from './JisgasStructureFeature';
-import { LegacyJigsawStructureFeature } from './LegacyJisgasStructureFeature';
+import { JigsawStructureFeature } from './JisgawStructureFeature';
+import { LegacyJigsawStructureFeature } from './LegacyJisgawStructureFeature';
 import { PoolAliasBinding } from './PoolAlias';
 
 const LEGACY_STRUCUTE_TYPES = ['minecraft:village', 'minecraft:pillager_outpost', 'minecraft:bastion_remnant']
