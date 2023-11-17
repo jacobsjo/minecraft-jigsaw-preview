@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Constants } from '../Util/Constants';
 import { SettingsStore } from '../Stores/SettingsStore';
 import Button from './Button.vue';
 import { MetaStore } from '../Stores/MetaStore';
@@ -18,32 +17,76 @@ const timeline = TimelineStore()
 const showAboutMenu = ref(false)
 
 async function openZipDatapack() {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.zip'
 
-    input.onchange = async () => {
-        if (input.files.length === 0) {
-            alert("No file selected")
+    if ("showOpenFilePicker" in window){
+        let fileHandle
+        try {
+            [fileHandle] = await window.showOpenFilePicker({
+                types: [
+                    {
+                        description: "Datapack or Mod",
+                        accept: {
+                            "application/zip": [".zip"],
+                            "application/java-archive": [".jar"]
+                        }
+                    },
+                    {
+                        description: "Datapack",
+                        accept: {
+                            "application/zip": [".zip"],
+                        }
+                    },
+                    {
+                        description: "Mod",
+                        accept: {
+                            "application/java-archive": [".jar"]
+                        }
+                    }
+                ]
+            })
+        } catch (e) {
+        } finally {
+            if (fileHandle !== undefined) {
+                const file = await fileHandle.getFile()
+                appState.setLoadedDatapack(Datapack.fromFileList(file, 20))
+            }
         }
-        if (!input.files[0].name.toLowerCase().endsWith('.zip')) {
-            alert("Please select a .zip file")
-        }
+    } else {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = '.zip,.jar'
 
-        appState.setLoadedDatapack(Datapack.fromZipFile(input.files[0], 20))
+        input.onchange = async () => {
+            if (input.files.length === 0) {
+                alert("No file selected")
+            }
+            if (!input.files[0].name.toLowerCase().endsWith('.zip')) {
+                alert("Please select a .zip file")
+            }
+
+            appState.setLoadedDatapack(Datapack.fromZipFile(input.files[0], 20))
+        }
+        input.click()
     }
-    input.click()
 }
 
 async function openFolderDatapack() {
-    const input: any = document.createElement('input')
-    input.type = 'file'
-    input.webkitdirectory = true
+    if ("showDirectoryPicker" in window) {
+        try {
+            const handle = await window.showDirectoryPicker()
+            appState.setLoadedDatapack(Datapack.fromFileSystemDirectoryHandle(handle, 20))
+        } catch (e) {
+        }
+    } else {
+        const input: any = document.createElement('input')
+        input.type = 'file'
+        input.webkitdirectory = true
 
-    input.onchange = async () => {
-        appState.setLoadedDatapack(Datapack.fromFileList(Array.from(input.files), 20))
+        input.onchange = async () => {
+            appState.setLoadedDatapack(Datapack.fromFileList(Array.from(input.files), 20))
+        }
+        input.click()
     }
-    input.click()
 }
 
 function pd(evt: Event) {
@@ -59,7 +102,7 @@ function pd(evt: Event) {
             <option value="1_17">1.17.1</option>
             <option value="1_18">1.18.2</option>
             <option value="1_19">1.19</option>
-            <option value="1_20">1.20</option>
+            <option value="1_20">1.20.2</option>
             <option value="1_20_3">1.20.3</option>
         </select>
         <Button @press="openZipDatapack" title="Open zip datapack"><font-awesome-icon icon="fa-file-zipper" /></Button>

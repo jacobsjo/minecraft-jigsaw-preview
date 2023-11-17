@@ -67,20 +67,22 @@ export const AppStateStore = defineStore('appState', () => {
     }
 
     function updateVanilla(){
-        vanillaDatapack = Datapack.fromZipUrl("zips/data_" + meta.mcVersion + ".zip", 20 /* TODO */)
+        vanillaDatapack = Datapack.fromZipUrl("zips/data_" + meta.mcVersion + ".zip", Constants.MINECRAFT_DATAPACK_VERSION[meta.mcVersion])
     }
 
     meta.$subscribe(() => {
         world = JigsawStructure.createDemo()
         selectedStructure.value = ""
         timeline.step = 0
-        updateCounter.value++;
         updateVanilla()
+        loadedDatapack?.setPackVersion(Constants.MINECRAFT_DATAPACK_VERSION[meta.mcVersion])
         reloadDatapacks()
+        updateCounter.value++;
     })
 
     function setLoadedDatapack(datapack: Datapack){
         loadedDatapack = datapack
+        loadedDatapack.setPackVersion(Constants.MINECRAFT_DATAPACK_VERSION[meta.mcVersion])
         reloadDatapacks()
     }
 
