@@ -19,7 +19,7 @@ defineEmits(['close'])
 .menu {
     position: absolute;
     right: 0;
-    top: 2.6rem;
+    top: 2.2rem;
     width: 10rem;
     height: auto;
     z-index: 10;

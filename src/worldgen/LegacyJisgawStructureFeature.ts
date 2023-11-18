@@ -1,4 +1,4 @@
-import { Identifier } from 'deepslate';
+import { HeightProvider, Heightmap, Identifier, VerticalAnchor } from 'deepslate';
 import * as path from 'path';
 import { PoolAliasBinding } from './PoolAlias';
 import { StructureFeature } from './StructureFeature';
@@ -23,8 +23,12 @@ export class LegacyJigsawStructureFeature implements StructureFeature{
         return this.depth
     }
 
-    public getStaringY(): number | "heightmap"{
-        return (this.type === "minecraft:village" || this.type === "minecraft:pillager_outpost") ? "heightmap" : 30
+    public getStartHeight(): HeightProvider {
+        return HeightProvider.constant(VerticalAnchor.absolute((this.type === "minecraft:village" || this.type === "minecraft:pillager_outpost") ? 0 : 30))
+    }
+    
+    public getHeightmap(): Heightmap {
+        return (this.type === "minecraft:village" || this.type === "minecraft:pillager_outpost") ? "WORLD_SURFACE_WG" : undefined
     }
 
     public doExpansionHack(): boolean{

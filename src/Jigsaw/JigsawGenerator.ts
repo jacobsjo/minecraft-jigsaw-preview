@@ -1,5 +1,6 @@
 
-import { BlockPos, LegacyRandom, StructureProvider } from 'deepslate';
+import { BlockPos, HeightProvider, LegacyRandom, StructureProvider } from 'deepslate';
+import { Heightmap as HeightmapReference } from 'deepslate'
 import { PieceInfo, JigsawStructure } from './JigsawStructure';
 import { TemplatePool } from '../worldgen/TemplatePool';
 import { shuffleArray, getRandomInt, directionRelative } from '../Util/util'
@@ -29,7 +30,8 @@ export class JigsawGenerator {
         private startingPool: Identifier,
         private depth: number,
         private doExpansionHack: boolean,
-        private startingY: number | "heightmap",
+        private startHeight: HeightProvider,
+        private startHeightmap: HeightmapReference | undefined,
         private radius: number,
         private heightmap: Heightmap,
         private startJisawName: string | undefined,
@@ -61,7 +63,8 @@ export class JigsawGenerator {
     }
 
     public async generate(): Promise<void> {
-        const aliasLookup = PoolAliasLookup.build(this.poolAliases, new LegacyRandom(BigInt(Date.now())))
+        const random = new LegacyRandom(BigInt(Date.now()))
+        const aliasLookup = PoolAliasLookup.build(this.poolAliases, random.fork())
 
         const pool = await TemplatePool.fromName(this.datapack, this.startingPool, false) // starting pool has no expansion hack; and no pool aliasing (MC-265908)
         const poolElement = pool.getShuffeledElements()[0]
@@ -70,7 +73,7 @@ export class JigsawGenerator {
 
         const startingPiece = new RotatedStructure(await poolElement.getStructure(), startRotation)
 
-        const startingPieceY = this.startingY === "heightmap" ? this.heightmap.getHeight(0, 0) - 1 : this.startingY
+        const startingPieceY = this.startHeight(random.fork(), {minY: -64, height: 384, xzSize: 1, ySize: 2}) + (this.startHeightmap !== undefined ? this.heightmap.getHeight(0, 0) - 1: 0)
         this.world.setStartingY(startingPieceY)
         this.world.setMaxRadius(this.radius)
         this.world.burried = this.burried
@@ -291,6 +294,6 @@ export class JigsawGenerator {
     }
 
     public static fromStructureFeature(datapack: AnonymousDatapack, feature: StructureFeature, heightmap: Heightmap) {
-        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStaringY(), feature.getRadius(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases(), feature.getTerrainAdaptation() === "bury")
+        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStartHeight(), feature.getHeightmap(), feature.getRadius(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases(), feature.getTerrainAdaptation() === "bury")
     }
 }

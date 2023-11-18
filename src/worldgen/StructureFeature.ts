@@ -1,4 +1,4 @@
-import { Identifier, Json } from 'deepslate';
+import { HeightProvider, Heightmap, Identifier, Json } from 'deepslate';
 import { AnonymousDatapack, ResourceLocation } from 'mc-datapack-loader';
 import { JigsawStructureFeature } from './JisgawStructureFeature';
 import { LegacyJigsawStructureFeature } from './LegacyJisgawStructureFeature';
@@ -10,7 +10,8 @@ export interface StructureFeature {
     getIdentifier(): Identifier
     getStartPool(): Identifier
     getDepth(): number
-    getStaringY(): number | "heightmap"
+    getStartHeight(): HeightProvider
+    getHeightmap(): Heightmap | undefined
     doExpansionHack(): boolean
     getRadius(): number
     getStartJigsawName(): string | undefined
@@ -48,12 +49,9 @@ export namespace StructureFeature {
                         continue;
                     }
 
-                    //TODO read height provider
-                    var start_height = 30
-
                     features.push(new JigsawStructureFeature(
                         id,
-                        start_height,
+                        HeightProvider.fromJson(json.start_height),
                         json.use_expansion_hack,
                         Identifier.parse(json.start_pool),
                         json.size,

@@ -1,4 +1,4 @@
-import { Identifier } from 'deepslate';
+import { HeightProvider, Heightmap, Identifier } from 'deepslate';
 import * as path from 'path';
 import { PoolAliasBinding } from './PoolAlias';
 import { StructureFeature } from './StructureFeature';
@@ -6,12 +6,12 @@ import { StructureFeature } from './StructureFeature';
 export class JigsawStructureFeature implements StructureFeature{
     constructor(
         private id: Identifier,
-        private start_height: number,
+        private start_height: HeightProvider,
         private use_expansion_hack: boolean,
         private start_pool: Identifier,
         private size: number,
         private radius: number,
-        private project_start_to_heightmap?: string,
+        private project_start_to_heightmap?: Heightmap,
         private start_jigsaw_name?: string,
         private pool_aliases?: PoolAliasBinding[],
         private terrain_adaptation?: string,
@@ -38,8 +38,12 @@ export class JigsawStructureFeature implements StructureFeature{
         return this.size
     }
 
-    public getStaringY(): number | "heightmap"{
-        return this.project_start_to_heightmap ? "heightmap" : this.start_height
+    public getStartHeight(): HeightProvider{
+        return this.start_height
+    }
+
+    public getHeightmap(): Heightmap | undefined {
+        return this.project_start_to_heightmap
     }
 
     public doExpansionHack(): boolean{
