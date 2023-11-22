@@ -89,6 +89,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
     private dirtyChunks = new Map<string, vec3>()
 
     private lastStep: number = 0
+    private hideCurrent: boolean = false
 
     private pools: Set<string> = new Set<string>()
     private poolJoints: Set<string> = new Set<string>()
@@ -121,7 +122,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
     public setLastStep(step: number | undefined) {
         if (step < 0 || step >= this.pieces.length ){
-            console.warn('trying to place step outside range')
+            console.warn('trying to set step outside range')
         }
 
         for (var s = Math.min(step, this.lastStep) + 1; s <= Math.max(step, this.lastStep); s++ ){
@@ -129,6 +130,12 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         }
 
         this.lastStep = step
+        this.hideCurrent = false
+    }
+
+    public setHideCurrent(b: boolean){
+        this.getBB(this.lastStep).getAffectedChunks(8).forEach(p => this.dirtyChunks.set(`${p[0]}, ${p[1]}, ${p[2]}`, p))
+        this.hideCurrent = b
     }
 
     public getStepCount(): number {
@@ -180,8 +187,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
             insides.unshift(this.pieces[insides[0]].pieceInfo.inside)
         }
 
-        const bbs = this.pieces.slice(0, this.lastStep + 1).map((piece, i) => {
-
+        const bbs = this.pieces.slice(0, this.lastStep + (this.hideCurrent ? 0 : 1) ).map((piece, i) => {
             return {
                 bb: this.getBB(i),
                 pieceInfo: piece.pieceInfo,
@@ -211,41 +217,6 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
         return bbs
 
-        /*
-        const ownBB = this.getBB(maxStep)
-
-        const inside = this.pieces[maxStep].pieceInfo.inside
-        const insideBB = this.getBB(inside)
-        const insideInfo = inside ? this.pieces[inside].pieceInfo : {
-            check: [],
-            inside: undefined,
-            pool: undefined,
-            aliased_from: undefined,
-            fallback_from: undefined,
-            element: undefined,
-            element_type: undefined,
-            joint: undefined,
-            joint_type: undefined,
-            depth: -1,
-            jigsaw_pos: [0, 0, 0],
-            selection_priority: 0,
-            placement_priority: 0
-        } as PieceInfo
-
-        const check = this.pieces[maxStep].pieceInfo.check
-        const checkPieces = check.map(c => {
-            return {
-                bb: this.getBB(c),
-                info: this.pieces[c].pieceInfo
-            }
-        })
-
-        return [
-            {bb: ownBB, info: this.pieces[maxStep].pieceInfo},
-            {bb: insideBB, info: insideInfo},
-            checkPieces
-        ]
-        */
     }
 
     public getPiece(i: number): Piece {
@@ -282,7 +253,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         nbt?: NbtCompound;
     }[] {
         this.bakeBlocks()
-        return Array.from(this.bakedBlocks.values()).flatMap(bs => bs.find(b => b.step <= this.lastStep)?.block ?? [])
+        return Array.from(this.bakedBlocks.values()).flatMap(bs => bs.find(b => b.step < this.lastStep + (this.hideCurrent ? 0 : 1) )?.block ?? [])
     }
 
     public getBlock(pos: BlockPos): {
@@ -296,7 +267,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
         const blocksAtPos = this.bakedBlocks.get(posKey)
         if (blocksAtPos) {
-            const result = blocksAtPos.find(b => b.step <= this.lastStep)
+            const result = blocksAtPos.find(b => b.step < this.lastStep + (this.hideCurrent ? 0 : 1))
             if (result)
                 return result.block
         }

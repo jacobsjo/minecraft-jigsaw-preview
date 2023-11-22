@@ -55,7 +55,8 @@ export const AppStateStore = defineStore('appState', () => {
     })
 
     timeline.$subscribe(() => {
-        world.setLastStep(timeline.step - (timeline.failedStep >= 0 ? 1 : 0) )
+        world.setLastStep(timeline.step)
+        world.setHideCurrent(timeline.failedStep >= 0)
         minorUpdateCounter.value++
     })
 
