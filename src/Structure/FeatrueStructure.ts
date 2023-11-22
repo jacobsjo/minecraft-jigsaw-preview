@@ -7,7 +7,7 @@ export class FeatureStructure implements StructureProvider, AnnotationProvider{
     ){}
 
     getSize(): BlockPos {
-        return [0,0,0]
+        return [1,1,1]
     }
 
     getBlocks(): { pos: BlockPos; state: BlockState; nbt: NbtCompound; }[] {
