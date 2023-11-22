@@ -88,12 +88,12 @@ export class McmetaResourceManager implements Resources {
         atlasCtx.drawImage(atlas, 0, 0)
         const atlasData = atlasCtx.getImageData(0, 0, atlasSize, atlasSize)
 
-        const part = 16 / atlasData.width
         const idMap: { [key: string]: [number, number, number, number] } = {}
         Object.keys(uvMap).forEach(id => {
-            const u = uvMap[id][0] / atlasSize
-            const v = uvMap[id][1] / atlasSize
-            idMap['minecraft:' + id] = [u, v, u + part, v + part]
+            var [u, v, du, dv] = uvMap[id]
+            if (du !== dv && id.startsWith('block/'))
+                dv = du
+            idMap[Identifier.create(id).toString()] = [u / atlasSize, v / atlasSize, (u + du) / atlasSize, (v + dv) / atlasSize]
         })
         const textureAtlas = new TextureAtlas(atlasData, idMap)
 
