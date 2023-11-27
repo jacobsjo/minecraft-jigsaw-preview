@@ -8,7 +8,7 @@ const JIGSAW_MODEL_ID = Identifier.create("block/jigsaw")
 
 type BlockFlags = {
 	opaque?: boolean,
-	transparent?: boolean,
+	semi_transparent?: boolean,
 	self_culling?: boolean,
 }
 
@@ -102,7 +102,7 @@ export class McmetaResourceManager implements Resources {
         opaqueSet.forEach(o => blockFlags[o] = {opaque: true, self_culling: true})
         transparentSet.forEach(t => {
             const f = blockFlags[t] ?? {self_culling: true}
-            f.transparent = true
+            f.semi_transparent = true
             blockFlags[t] = f
         })
 
