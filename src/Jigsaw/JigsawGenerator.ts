@@ -66,7 +66,7 @@ export class JigsawGenerator {
         const random = new LegacyRandom(BigInt(Date.now()))
         const aliasLookup = PoolAliasLookup.build(this.poolAliases, random.fork())
 
-        const pool = await TemplatePool.fromName(this.datapack, this.startingPool, false) // starting pool has no expansion hack; and no pool aliasing (MC-265908)
+        const pool = await TemplatePool.fromName(this.datapack, aliasLookup.lookup(this.startingPool), false) // starting pool has no expansion hack; and no pool aliasing (MC-265908)
         const poolElement = pool.getShuffeledElements()[0]
         
         const startRotation = getRandomInt(4) as Rotation
