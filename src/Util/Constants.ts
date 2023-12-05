@@ -11,7 +11,7 @@ export namespace Constants {
         "1_18": "1.18.2",
         "1_19": "1.19.2",
         "1_20": "1.20.2",
-        "1_20_3": undefined
+        "1_20_3": "1.20.3"
     }
 
     export const MINECRAFT_DATAPACK_VERSION: {[key: string]: number} = {
@@ -20,6 +20,6 @@ export namespace Constants {
         "1_18": 9,
         "1_19": 10,
         "1_20": 18,
-        "1_20_3": 25
+        "1_20_3": 26
     }
 }
