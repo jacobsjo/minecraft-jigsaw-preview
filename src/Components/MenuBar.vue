@@ -103,7 +103,8 @@ function pd(evt: Event) {
             <option value="1_18">1.18.2</option>
             <option value="1_19">1.19.2</option>
             <option value="1_20">1.20.2</option>
-            <option value="1_20_3">1.20.3</option>
+            <option value="1_20_4">1.20.4</option>
+            <option value="24w05a">24w05a</option>
         </select>
         <Button @press="openZipDatapack" title="Open zip datapack"><font-awesome-icon icon="fa-file-zipper" /></Button>
         <Button @press="openFolderDatapack" title="Open folder datapack"><font-awesome-icon
@@ -210,7 +211,7 @@ input {
 }
 
 .dropdown#version {
-    width: 4.3rem;
+    width: 4.5rem;
 }
 
 .dropdown option {
