@@ -8,6 +8,7 @@ import { TimelineStore } from '../Stores/TilelineStore';
 import AboutMenu from './AboutMenu.vue';
 import { ref } from 'vue';
 import { vOnClickOutside } from '@vueuse/components';
+import { Constants } from '../Util/Constants';
 
 const settings = SettingsStore()
 const meta = MetaStore()
@@ -98,13 +99,7 @@ function pd(evt: Event) {
 <template>
     <div class=menuBar>
         <select class="dropdown" id="version" v-model="meta.mcVersion" aria-label="Minecraft Version">
-            <option value="1_16">1.16.5</option>
-            <option value="1_17">1.17.1</option>
-            <option value="1_18">1.18.2</option>
-            <option value="1_19">1.19.2</option>
-            <option value="1_20">1.20.2</option>
-            <option value="1_20_4">1.20.4</option>
-            <option value="24w05a">24w05a</option>
+            <option v-for="version in Object.entries(Constants.MINECRAFT_ASSET_VERSIONS)" :value="version[0]">{{ version[1] }}</option>
         </select>
         <Button @press="openZipDatapack" title="Open zip datapack"><font-awesome-icon icon="fa-file-zipper" /></Button>
         <Button @press="openFolderDatapack" title="Open folder datapack"><font-awesome-icon
