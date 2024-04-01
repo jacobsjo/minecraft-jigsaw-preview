@@ -30,6 +30,7 @@ def extractJar(version: str, version_manifest):
                        or file.filename.startswith('data/minecraft/structures/ancient_city/') \
                        or file.filename.startswith('data/minecraft/structures/trail_ruins/') \
                        or file.filename.startswith('data/minecraft/structures/trial_chambers/') \
+                       or file.filename.startswith('data/minecraft/structures/colosseum/') \
                        or file.filename.startswith('data/minecraft/worldgen/'):
                   jar_archive.extract(file, "/tmp/minecraft/" + version + "/")
                if file.filename.startswith('data/minecraft/datapacks/update_1_21/data/minecraft/worldgen/'):
@@ -93,6 +94,7 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    extractJar("1.20.2", version_manifest)
    extractJar("1.20.4", version_manifest)
    extractJar("24w13a", version_manifest)
+   extractJar("24w14potato", version_manifest)
 
    createZips("1.16.5", "1_16")
    createZips("1.17.1", "1_17")
@@ -101,3 +103,4 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    createZips("1.20.2", "1_20")
    createZips("1.20.4", "1_20_4")
    createZips("24w13a", "24w13a")
+   createZips("24w14potato", "24w14potato")

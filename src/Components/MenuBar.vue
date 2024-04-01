@@ -99,7 +99,7 @@ function pd(evt: Event) {
 <template>
     <div class=menuBar>
         <select class="dropdown" id="version" v-model="meta.mcVersion" aria-label="Minecraft Version">
-            <option v-for="version in Object.entries(Constants.MINECRAFT_ASSET_VERSIONS)" :value="version[0]">{{ version[1] }}</option>
+            <option v-for="version in Object.entries(Constants.MINECRAFT_ASSET_VERSIONS).filter(a => !Constants.HIDDEN_VERSIONS.includes(a[0]))" :value="version[0]">{{ version[1] }}</option>
         </select>
         <Button @press="openZipDatapack" title="Open zip datapack"><font-awesome-icon icon="fa-file-zipper" /></Button>
         <Button @press="openFolderDatapack" title="Open folder datapack"><font-awesome-icon
