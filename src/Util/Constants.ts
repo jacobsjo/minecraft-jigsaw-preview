@@ -3,7 +3,7 @@ export namespace Constants {
     export const LEGACY_MINECRAFT_VERSIONS: string[] = ["1_16", "1_17", "1_18"]
     export const EXPERIMENTAL_MINECRAFT_VERSIONS: string[] = []
 
-    export const MINECRAFT_VERSIONS: string[] = ["1_16", "1_17", "1_18", "1_19", "1_20", "1_20_4", "24w13a", "24w14potato"]
+    export const MINECRAFT_VERSIONS: string[] = ["1_16", "1_17", "1_18", "1_19", "1_20", "1_20_4", "24w14potato", "1_20_5"]
 
     export const MINECRAFT_ASSET_VERSIONS: {[key: string]: string | undefined} = {
         "1_16": "1.16.5",
@@ -12,8 +12,8 @@ export namespace Constants {
         "1_19": "1.19.2",
         "1_20": "1.20.2",
         "1_20_4": "1.20.4",
-        "24w13a": "24w13a",
-        "24w14potato": "24w14potato"
+        "24w14potato": "24w14potato",
+        "1_20_5": "1.20.5-pre1"
     }
 
     export const HIDDEN_VERSIONS = ["24w14potato"]
@@ -25,7 +25,7 @@ export namespace Constants {
         "1_19": 10,
         "1_20": 18,
         "1_20_4": 26,
-        "24w13a": 37,
-        "24w14potato": 36
+        "24w14potato": 36,
+        "1_20_5": 39
     }
 }

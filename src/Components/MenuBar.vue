@@ -206,7 +206,7 @@ input {
 }
 
 .dropdown#version {
-    width: 4.5rem;
+    width: 5.6rem;
 }
 
 .dropdown option {

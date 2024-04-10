@@ -294,6 +294,7 @@ export class JigsawGenerator {
     }
 
     public static fromStructureFeature(datapack: AnonymousDatapack, feature: StructureFeature, heightmap: Heightmap) {
-        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStartHeight(), feature.getHeightmap(), feature.getRadius(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases(), feature.getTerrainAdaptation() === "bury")
+        const bury = feature.getTerrainAdaptation() === "bury" || feature.getTerrainAdaptation() === "encapsulate"
+        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStartHeight(), feature.getHeightmap(), feature.getRadius(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases(), bury)
     }
 }
