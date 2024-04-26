@@ -1,10 +1,11 @@
 import { BlockDefinition, BlockModel, Identifier, Resources, TextureAtlas, upperPowerOfTwo, UV } from "deepslate";
-import { getJigsawModel } from "../Util/util";
-import { nonSelfCullingSet, opaqueSet, transparentSet } from "../Util/OpaqueHelper";
+import { getJigsawModel, getUnkownModel } from "../Util/util";
+import { opaqueSet, selfCullingSet, transparentSet } from "../Util/OpaqueHelper";
 
 const MCMETA = 'https://raw.githubusercontent.com/misode/mcmeta/'
 const JIGSAW_MODEL_ID = Identifier.create("block/jigsaw")
-
+const UNKNOWN_MODEL_ID = new Identifier("jacobsjo","unkown")
+const UNKNOWN_BLOCK_DEFINITION = new BlockDefinition(Identifier.parse("jacobsjo:unkown"), {"": {"model": UNKNOWN_MODEL_ID.toString()}}, [])
 
 type BlockFlags = {
 	opaque?: boolean,
@@ -14,7 +15,6 @@ type BlockFlags = {
 
 export class McmetaResourceManager implements Resources {
 
-    private DEFUALT_FLAGS = {self_culling: true}
 
     private constructor(
         private blockDefinitions: { [key: string]: BlockDefinition },
@@ -26,13 +26,9 @@ export class McmetaResourceManager implements Resources {
     }
 
     getBlockDefinition(id: Identifier): BlockDefinition {
-        return this.blockDefinitions[id.toString()] 
+        return this.blockDefinitions[id.toString()] ?? UNKNOWN_BLOCK_DEFINITION; 
     }
     getBlockModel(id: Identifier): BlockModel {
-        if (id.equals(JIGSAW_MODEL_ID)){
-            return getJigsawModel()
-        }
-
         return this.blockModels[id.toString()];
     }
     getTextureAtlas(): ImageData {
@@ -43,7 +39,11 @@ export class McmetaResourceManager implements Resources {
     }
 
     getBlockFlags(id: Identifier): BlockFlags {
-        return this.blockFlags[id.toString()] ?? this.DEFUALT_FLAGS
+        if (id.toString() in this.blockDefinitions) {
+            return this.blockFlags[id.toString()]
+        } else {
+            return {opaque: true}
+        }
     }
 
     getBlockProperties(id: Identifier): Record<string, string[]> {
@@ -106,11 +106,14 @@ export class McmetaResourceManager implements Resources {
             blockFlags[t] = f
         })
 
-        nonSelfCullingSet.forEach(c => {
+        selfCullingSet.forEach(c => {
             const f = blockFlags[c] ?? {}
-            f.self_culling = false
+            f.self_culling = true
             blockFlags[c] = f
         })
+
+        blockModels[JIGSAW_MODEL_ID.toString()] = getJigsawModel()
+        blockModels[UNKNOWN_MODEL_ID.toString()] = getUnkownModel()
 
         return new McmetaResourceManager(blockDefinitions, blockModels, textureAtlas, blockFlags)
     }

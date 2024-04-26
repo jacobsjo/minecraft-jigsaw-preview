@@ -139,6 +139,29 @@ export function getJigsawModel() {
   })
 }
 
+export function getUnkownModel() {
+  return BlockModel.fromJson("unknown", {
+    "parent": "block/block",
+    "elements": [
+      {
+        "from": [0, 0, 0],
+        "to": [16, 16, 16],
+        "faces": {
+          "down":  { "texture": "#all", "cullface": "down" },
+          "up":    { "texture": "#all", "cullface": "up" },
+          "north": { "texture": "#all", "cullface": "north" },
+          "south": { "texture": "#all", "cullface": "south" },
+          "west":  { "texture": "#all", "cullface": "west" },
+          "east":  { "texture": "#all", "cullface": "east" }
+        }
+      }
+    ],
+    "textures": {
+      "all": "block/purple_shulker_box"
+    }
+  })
+}
+
 export function hashCode(str: string) {
 	let hash = 0;
 	for (let i = 0, len = str.length; i < len; i++) {
