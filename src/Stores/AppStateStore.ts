@@ -64,7 +64,7 @@ export const AppStateStore = defineStore('appState', () => {
 
     async function reloadDatapacks(){
         TemplatePool.reload()
-        structures.value = await StructureFeature.getAll(compositeDatapack(), Constants.LEGACY_MINECRAFT_VERSIONS.includes(meta.mcVersion) ? 'legacy' : 'default')        
+        structures.value = await StructureFeature.getAll(compositeDatapack(), Constants.LEGACY_STRUCTURE_FEATURE_MINECRAFT_VERSIONS.includes(meta.mcVersion) ? 'legacy' : 'default')        
     }
 
     function updateVanilla(){
@@ -89,7 +89,7 @@ export const AppStateStore = defineStore('appState', () => {
 
     async function regenerate(){
         await reloadDatapacks()
-        const sfm = JigsawGenerator.fromStructureFeature(compositeDatapack(), structures.value.find(s => s.getIdentifier().toString() === selectedStructure.value), await heightmap.value)
+        const sfm = JigsawGenerator.fromStructureFeature(compositeDatapack(), structures.value.find(s => s.getIdentifier().toString() === selectedStructure.value), await heightmap.value, Constants.LEGACY_STRUCTURES_MINECRAFT_VERSIONS.includes(meta.mcVersion))
         await sfm.generate()
         world = sfm.getWorld()
 

@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import os
+import re
 
 
 def extractJar(version: str, version_manifest):
@@ -16,6 +17,9 @@ def extractJar(version: str, version_manifest):
    print("Extracting Minecraft Jar Version " + version_name)
    version_url = next(
        filter(lambda v: v['id'] == version_name, version_manifest['versions']))['url']
+
+   pattern = re.compile("^data\/minecraft\/(structures?\/(pillager_outpost|village|bastion|ancient_city|trail_ruins|trial_chambers|colosseum)|worldgen)\/.*$")
+
    with urlopen(version_url) as version_data:
       version_json = json.loads(version_data.read().decode())
       jar_url = version_json['downloads']['client']['url']
@@ -24,14 +28,7 @@ def extractJar(version: str, version_manifest):
             for file in jar_archive.infolist():
                if file.is_dir():
                   continue
-               if file.filename.startswith('data/minecraft/structures/pillager_outpost/') \
-                       or file.filename.startswith('data/minecraft/structures/village/') \
-                       or file.filename.startswith('data/minecraft/structures/bastion/') \
-                       or file.filename.startswith('data/minecraft/structures/ancient_city/') \
-                       or file.filename.startswith('data/minecraft/structures/trail_ruins/') \
-                       or file.filename.startswith('data/minecraft/structures/trial_chambers/') \
-                       or file.filename.startswith('data/minecraft/structures/colosseum/') \
-                       or file.filename.startswith('data/minecraft/worldgen/'):
+               if pattern.match(file.filename):
                   jar_archive.extract(file, "/tmp/minecraft/" + version + "/")
                if file.filename.startswith('data/minecraft/datapacks/update_1_21/data/minecraft/worldgen/'):
                   file.filename = file.filename[37:] 
@@ -95,7 +92,7 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    extractJar("1.20.4", version_manifest)
    extractJar("24w14potato", version_manifest)
    extractJar("1.20.6", version_manifest)
-   extractJar("24w18a", version_manifest)
+   extractJar("24w21b", version_manifest)
 
    createZips("1.16.5", "1_16")
    createZips("1.17.1", "1_17")
@@ -105,4 +102,4 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    createZips("1.20.4", "1_20_4")
    createZips("24w14potato", "24w14potato")
    createZips("1.20.6", "1_20_6")
-   createZips("24w18a", "1_21")
+   createZips("24w21b", "1_21")

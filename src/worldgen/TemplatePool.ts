@@ -39,7 +39,7 @@ export class TemplatePool{
         return maxHeight
     }
 
-    public static fromName(datapack: AnonymousDatapack, id: Identifier, doExpansionHack: boolean): Promise<TemplatePool>{
+    public static fromName(datapack: AnonymousDatapack, id: Identifier, doExpansionHack: boolean, useLegacyStructuresFolder: boolean): Promise<TemplatePool>{
         if (this.templatePoolMap.has(id + "|" + doExpansionHack)){
             return this.templatePoolMap.get(id + "|" + doExpansionHack)
         }
@@ -62,7 +62,7 @@ export class TemplatePool{
 
             try {
                 const pool_element = new TemplatePool(Identifier.parse(json.fallback), await Promise.all(json.elements.map(async (e: any) => {
-                    const element = PoolElements.fromElement(datapack, e.element)
+                    const element = PoolElements.fromElement(datapack, e.element, useLegacyStructuresFolder)
                     if (doExpansionHack)
                         await element.doExpansionHack()
                     if (e.weight > 150){

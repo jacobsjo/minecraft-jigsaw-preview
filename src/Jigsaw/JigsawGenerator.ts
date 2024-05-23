@@ -36,7 +36,8 @@ export class JigsawGenerator {
         private heightmap: Heightmap,
         private startJisawName: string | undefined,
         private poolAliases: PoolAliasBinding[],
-        private burried: boolean
+        private burried: boolean,
+        private useLegacyStructuresFolder: boolean = false
     ) {
         this.world = new JigsawStructure()
     }
@@ -66,7 +67,7 @@ export class JigsawGenerator {
         const random = new LegacyRandom(BigInt(Date.now()))
         const aliasLookup = PoolAliasLookup.build(this.poolAliases, random.fork())
 
-        const pool = await TemplatePool.fromName(this.datapack, aliasLookup.lookup(this.startingPool), false) // starting pool has no expansion hack; and no pool aliasing (MC-265908)
+        const pool = await TemplatePool.fromName(this.datapack, aliasLookup.lookup(this.startingPool), false, this.useLegacyStructuresFolder) // starting pool has no expansion hack; and no pool aliasing (MC-265908)
         const poolElement = pool.getShuffeledElements()[0]
         
         const startRotation = getRandomInt(4) as Rotation
@@ -163,8 +164,8 @@ export class JigsawGenerator {
 
                     const poolAlias = Identifier.parse(block.nbt.getString("pool"))
                     const poolId = aliasLookup.lookup(poolAlias)
-                    const pool: TemplatePool = await TemplatePool.fromName(this.datapack, poolId, this.doExpansionHack);
-                    const fallbackPool: TemplatePool = await TemplatePool.fromName(this.datapack, pool.fallback, this.doExpansionHack);
+                    const pool: TemplatePool = await TemplatePool.fromName(this.datapack, poolId, this.doExpansionHack, this.useLegacyStructuresFolder);
+                    const fallbackPool: TemplatePool = await TemplatePool.fromName(this.datapack, pool.fallback, this.doExpansionHack, this.useLegacyStructuresFolder);
 
                     const poolElements = (parent.depth > 0 ? pool.getShuffeledElements() : [])
                         .concat([undefined])
@@ -293,8 +294,8 @@ export class JigsawGenerator {
         return this.world
     }
 
-    public static fromStructureFeature(datapack: AnonymousDatapack, feature: StructureFeature, heightmap: Heightmap) {
+    public static fromStructureFeature(datapack: AnonymousDatapack, feature: StructureFeature, heightmap: Heightmap, useLegacyStructuresFolder: boolean = false) {
         const bury = feature.getTerrainAdaptation() === "bury" || feature.getTerrainAdaptation() === "encapsulate"
-        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStartHeight(), feature.getHeightmap(), feature.getRadius(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases(), bury)
+        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStartHeight(), feature.getHeightmap(), feature.getRadius(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases(), bury, useLegacyStructuresFolder)
     }
 }

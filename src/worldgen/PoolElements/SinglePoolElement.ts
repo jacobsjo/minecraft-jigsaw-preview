@@ -16,12 +16,13 @@ export class SinglePoolElement extends PoolElement {
         private datapack: AnonymousDatapack,
         private id: Identifier,
         private processors: string,
-        private projection: "rigid" | "terrain_matching"
+        private projection: "rigid" | "terrain_matching",
+        private useLegacyStructuresFolder: boolean
     ) {
         super();
         this.structure = new Promise(async (resolve) => {
             try {
-                const arrayBuffer = (await datapack.get(ResourceLocation.STRUCTURE, id)) as ArrayBuffer;
+                const arrayBuffer = (await datapack.get(this.useLegacyStructuresFolder ? ResourceLocation.LEGACY_STRUCTURE : ResourceLocation.STRUCTURE, id)) as ArrayBuffer;
                 const nbt = NbtFile.read(new Uint8Array(arrayBuffer));
                 resolve(EntityAnnotatedStructure.fromNbt(nbt.root));
             } catch (e) {
@@ -48,8 +49,8 @@ export class SinglePoolElement extends PoolElement {
                 if (!isInside)
                     continue;
 
-                const pool: TemplatePool = await TemplatePool.fromName(this.datapack, Identifier.parse(jigsaw.nbt.getString("pool")), false);
-                const fallbackPool: TemplatePool = await TemplatePool.fromName(this.datapack, pool.fallback, false);
+                const pool: TemplatePool = await TemplatePool.fromName(this.datapack, Identifier.parse(jigsaw.nbt.getString("pool")), false, this.useLegacyStructuresFolder);
+                const fallbackPool: TemplatePool = await TemplatePool.fromName(this.datapack, pool.fallback, false, this.useLegacyStructuresFolder);
 
                 const maxHeight = await pool.getMaxHeight();
                 const maxHeightFallback = await fallbackPool.getMaxHeight();

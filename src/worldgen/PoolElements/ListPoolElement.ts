@@ -16,10 +16,11 @@ export class ListPoolElement extends PoolElement {
             element_type: string;
             [key: string]: string;
         }[],
-        private projection: "rigid" | "terrain_matching"
+        private projection: "rigid" | "terrain_matching",
+        useLegacyStructuresFolder: boolean
     ) {
         super();
-        this.pool_elements = elements.map(element => PoolElements.fromElement(datapack, element));
+        this.pool_elements = elements.map(element => PoolElements.fromElement(datapack, element, useLegacyStructuresFolder));
         this.structure = new Promise(async (resolve) => {
             resolve(new ListStructure(await Promise.all(this.pool_elements.map(element => element.getStructure()))));
         });
