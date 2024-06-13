@@ -14,7 +14,7 @@ export namespace Constants {
         "1_20_4": "1.20.4",
         "24w14potato": "24w14potato",
         "1_20_6": "1.20.6",
-        "1_21": "24w21a"
+        "1_21": "1.21"
     }
 
     export const HIDDEN_VERSIONS = ["24w14potato"]
@@ -28,6 +28,6 @@ export namespace Constants {
         "1_20_4": 26,
         "24w14potato": 36,
         "1_20_6": 41,
-        "1_21": 45
+        "1_21": 48
     }
 }
