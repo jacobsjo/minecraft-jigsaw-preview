@@ -6,7 +6,7 @@ import { Constants } from '../Util/Constants';
 export const MetaStore = defineStore('meta', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlVersion = urlParams.get('version')
-    const mcVersion = ref(Constants.MINECRAFT_VERSIONS.includes(urlVersion) ? urlVersion : '1_21')
+    const mcVersion = ref(Constants.MINECRAFT_VERSIONS.includes(urlVersion) ? urlVersion : '1_21_3')
     updateUrl()
 
     watch(mcVersion, () => {

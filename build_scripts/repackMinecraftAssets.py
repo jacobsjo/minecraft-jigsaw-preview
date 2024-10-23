@@ -93,7 +93,8 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    extractJar("24w14potato", version_manifest)
    extractJar("1.20.6", version_manifest)
    extractJar("1.21", version_manifest)
-   extractJar("snapshot", version_manifest)
+   extractJar("1.21.3", version_manifest)
+   #extractJar("snapshot", version_manifest)
 
    createZips("1.16.5", "1_16")
    createZips("1.17.1", "1_17")
@@ -104,4 +105,5 @@ with urlopen('https://launchermeta.mojang.com/mc/game/version_manifest.json') as
    createZips("24w14potato", "24w14potato")
    createZips("1.20.6", "1_20_6")
    createZips("1.21", "1_21")
-   createZips("snapshot", "1_21_2")
+   createZips("1.21.3", "1_21_3")
+   #createZips("snapshot", "1_21_2")
