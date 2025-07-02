@@ -5,7 +5,7 @@ import { opaqueSet, selfCullingSet, transparentSet } from "../Util/OpaqueHelper"
 const MCMETA = 'https://raw.githubusercontent.com/misode/mcmeta/'
 const JIGSAW_MODEL_ID = Identifier.create("block/jigsaw")
 const UNKNOWN_MODEL_ID = new Identifier("jacobsjo","unkown")
-const UNKNOWN_BLOCK_DEFINITION = new BlockDefinition(Identifier.parse("jacobsjo:unkown"), {"": {"model": UNKNOWN_MODEL_ID.toString()}}, [])
+const UNKNOWN_BLOCK_DEFINITION = new BlockDefinition({"": {"model": UNKNOWN_MODEL_ID.toString()}}, [])
 
 type BlockFlags = {
 	opaque?: boolean,
@@ -69,12 +69,12 @@ export class McmetaResourceManager implements Resources {
         ])
         const blockDefinitions: { [key: string]: BlockDefinition } = {}
         Object.keys(blockstates).forEach(id => {
-            blockDefinitions['minecraft:' + id] = BlockDefinition.fromJson(id, blockstates[id])
+            blockDefinitions['minecraft:' + id] = BlockDefinition.fromJson(blockstates[id])
         })
 
         const blockModels: { [key: string]: BlockModel } = {}
         Object.keys(models).forEach(id => {
-            blockModels['minecraft:' + id] = BlockModel.fromJson(id, models[id])
+            blockModels['minecraft:' + id] = BlockModel.fromJson(models[id])
         })
 
         Object.values(blockModels).forEach((m) => m.flatten({ getBlockModel: (id) => blockModels[id.toString()] }))
