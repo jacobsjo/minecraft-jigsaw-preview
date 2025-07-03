@@ -111,7 +111,7 @@ export function setUniform(gl: WebGLRenderingContext, shader: WebGLProgram, name
 }
 
 export function getJigsawModel() {
-  return BlockModel.fromJson("minecraft:block/jigsaw", {
+  return BlockModel.fromJson({
     "parent": "block/block",
     "elements": [
       {
@@ -140,7 +140,7 @@ export function getJigsawModel() {
 }
 
 export function getUnkownModel() {
-  return BlockModel.fromJson("unknown", {
+  return BlockModel.fromJson({
     "parent": "block/block",
     "elements": [
       {
