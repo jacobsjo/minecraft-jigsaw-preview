@@ -37,6 +37,9 @@ export class McmetaResourceManager implements Resources {
     getTextureUV(texture: Identifier): UV {
         return this.textureAtlas.getTextureUV(texture)
     }
+    getPixelSize(): number {
+        return this.textureAtlas.getPixelSize()
+    }
 
     getBlockFlags(id: Identifier): BlockFlags {
         if (id.toString() in this.blockDefinitions) {
