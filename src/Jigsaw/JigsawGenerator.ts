@@ -33,6 +33,7 @@ export class JigsawGenerator {
         private startHeight: HeightProvider,
         private startHeightmap: HeightmapReference | undefined,
         private radius: number,
+        private height: number,
         private heightmap: Heightmap,
         private startJisawName: string | undefined,
         private poolAliases: PoolAliasBinding[],
@@ -76,7 +77,7 @@ export class JigsawGenerator {
 
         const startingPieceY = this.startHeight(random.fork(), {minY: -64, height: 384, xzSize: 1, ySize: 2}) + (this.startHeightmap !== undefined ? this.heightmap.getHeight(0, 0) - 1: 0)
         this.world.setStartingY(startingPieceY)
-        this.world.setMaxRadius(this.radius)
+        this.world.setMaxRadiusAndHeight(this.radius, this.height)
         this.world.burried = this.burried
 
         var start_pos: BlockPos = [0, startingPieceY, 0]
@@ -296,6 +297,6 @@ export class JigsawGenerator {
 
     public static fromStructureFeature(datapack: AnonymousDatapack, feature: StructureFeature, heightmap: Heightmap, useLegacyStructuresFolder: boolean = false) {
         const bury = feature.getTerrainAdaptation() === "bury" || feature.getTerrainAdaptation() === "encapsulate"
-        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStartHeight(), feature.getHeightmap(), feature.getRadius(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases(), bury, useLegacyStructuresFolder)
+        return new JigsawGenerator(datapack, feature.getStartPool(), feature.getDepth(), feature.doExpansionHack(), feature.getStartHeight(), feature.getHeightmap(), feature.getRadius(), feature.getHeight(), heightmap, feature.getStartJigsawName(), feature.getPoolAliases(), bury, useLegacyStructuresFolder)
     }
 }

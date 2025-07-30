@@ -14,6 +14,7 @@ export interface StructureFeature {
     getHeightmap(): Heightmap | undefined
     doExpansionHack(): boolean
     getRadius(): number
+    getHeight(): number
     getStartJigsawName(): string | undefined
     getPoolAliases(): PoolAliasBinding[]
     getTerrainAdaptation(): string
@@ -55,7 +56,8 @@ export namespace StructureFeature {
                         json.use_expansion_hack,
                         Identifier.parse(json.start_pool),
                         json.size,
-                        json.max_distance_from_center,
+                        (typeof json.max_distance_from_center === 'number') ? json.max_distance_from_center : json.max_distance_from_center.horizontal,
+                        (typeof json.max_distance_from_center === 'number') ? json.max_distance_from_center : json.max_distance_from_center.vertical,
                         json.project_start_to_heightmap,
                         json.start_jigsaw_name,
                         json.pool_aliases ? Json.readArray(json.pool_aliases, PoolAliasBinding.fromJson) : [],

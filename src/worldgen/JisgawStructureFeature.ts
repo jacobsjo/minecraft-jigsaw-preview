@@ -11,6 +11,7 @@ export class JigsawStructureFeature implements StructureFeature{
         private start_pool: Identifier,
         private size: number,
         private radius: number,
+        private height: number,
         private project_start_to_heightmap?: Heightmap,
         private start_jigsaw_name?: string,
         private pool_aliases?: PoolAliasBinding[],
@@ -52,6 +53,10 @@ export class JigsawStructureFeature implements StructureFeature{
 
     public getRadius(): number{
         return this.radius
+    }
+
+    public getHeight(): number{
+        return this.height
     }
 
     public getStartJigsawName(): string | undefined{

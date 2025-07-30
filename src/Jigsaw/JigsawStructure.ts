@@ -96,6 +96,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
     private startingY = 0
     private maxRadius = 80
+    private maxHeight = 80
     public burried = false
 
     private bakedBlocks: Map<string, {
@@ -111,8 +112,9 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
         this.startingY = y
     }
 
-    public setMaxRadius(radius: number) {
+    public setMaxRadiusAndHeight(radius: number, height: number) {
         this.maxRadius = radius
+        this.maxHeight = height
     }
 
     public getBounds(): [BlockPos, BlockPos] {
@@ -155,7 +157,7 @@ export class JigsawStructure implements StructureProvider, AnnotationProvider {
 
     public getBB(nr: number | undefined): BoundingBox {
         if (nr === undefined) {
-            return new BoundingBox([-this.maxRadius, -this.maxRadius + this.startingY, -this.maxRadius], [2 * this.maxRadius + 2, 2 * this.maxRadius + 2, 2 * this.maxRadius + 2])
+            return new BoundingBox([-this.maxRadius, -this.maxHeight + this.startingY, -this.maxRadius], [2 * this.maxRadius + 2, 2 * this.maxHeight + 2, 2 * this.maxRadius + 2])
         }
 
         return JigsawStructure.getBBFromElement(this.pieces[nr])
